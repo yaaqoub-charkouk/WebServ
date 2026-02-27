@@ -39,7 +39,7 @@ This is **evaluation-safe** and **team-safe**.
 * build responses
 * execute CGI
 
----
+--------------------------------------------------------------------------
 
 ### 2️⃣ `Client`
 
