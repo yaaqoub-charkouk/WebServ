@@ -4,6 +4,9 @@
 # include <netinet/in.h>
 # include <arpa/inet.h>
 # include <unistd.h>
+# include <fstream>
+# include <sstream>
+
 // struct sockaddr_in {
 //     short sin_family;      // Address family (AF_INET for IPv4)
 //     unsigned short sin_port; // Port number (in network byte order)
@@ -32,6 +35,7 @@ int main(void)
     nic.sin_port = htons(8080); // why htons ?
     inet_pton(nic.sin_family, "0.0.0.0", &nic.sin_addr);
 
+
     // 3 - bind the socket to (ip - port)
     int opt = 1;
     setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
@@ -49,25 +53,44 @@ int main(void)
     client_fd = accept(server_socket, reinterpret_cast<struct sockaddr*>(&client), &len);
 
     // 6 - receive an http request 
-    // recv();
-
     ssize_t bytes;
     char buffer[4096];
-    while ((bytes = read(client_fd, buffer, sizeof(buffer))) > 0);
+    bytes = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
+    buffer[bytes] = '\0';
+    // while ((bytes = read(client_fd, buffer, sizeof(buffer))) > 0);
     std::cout << buffer << std::endl;
 
-    // std::cout << "client : " << client.sin_addr << "sent a request" << std::endl;
    printf("Client IP: %s\n", inet_ntoa(client.sin_addr));
    printf("Client port: %d\n", ntohs(client.sin_port));
 
-    std::string response =
-        "HTTP/1.1 200 OK\r\n"
-        "Content-Type: text/plain\r\n"
-        "Content-Length: 5\r\n"
-        "\r\n"
-        "Hello";
+
+
+
+
+    std::ifstream file("index.html");
+    if (!file.is_open())
+    {
+        std::cerr << "Failed to open file\n";
+        return 1;
+    }
+    std::stringstream buffer_stream;
+    buffer_stream << file.rdbuf();
+    std::string body = buffer_stream.str();
+
+
+
+    std::stringstream response;
+    response << "HTTP/1.1 200 OK\r\n";
+    response << "Content-Type: text/html\r\n";
+    response << "Content-Length: " << body.size() << "\r\n";
+    response << "Connection: close\r\n";
+    response << "\r\n";
+    response << body;
+
+
+    std::string response_str = response.str();
     
-   send(client_fd, response.c_str(), response.size(), 0);
+   send(client_fd, response_str.c_str(), response_str.size(), 0);
    
    close(client_fd);
 }

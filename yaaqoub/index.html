@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>webserv — Structure & Task Split</title>
+  <style>
+    :root{
+      --bg: #0b1020;
+      --panel: rgba(255,255,255,.06);
+      --panel2: rgba(255,255,255,.08);
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.70);
+      --line: rgba(255,255,255,.14);
+      --accent: #7c5cff;
+      --accent2: #2ee9a6;
+      --shadow: 0 16px 50px rgba(0,0,0,.45);
+      --radius: 16px;
+    }
+
+    *{ box-sizing: border-box; }
+    html,body{ height: 100%; }
+    body{
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background:
+        radial-gradient(900px 500px at 15% 5%, rgba(124,92,255,.28), transparent 60%),
+        radial-gradient(700px 420px at 80% 15%, rgba(46,233,166,.20), transparent 55%),
+        radial-gradient(900px 700px at 60% 110%, rgba(124,92,255,.18), transparent 60%),
+        var(--bg);
+      color: var(--text);
+    }
+
+    code{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: .95em;
+      background: rgba(255,255,255,.08);
+      padding: .14rem .35rem;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.10);
+    }
+
+    .top{
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(10px);
+      background: linear-gradient(to bottom, rgba(11,16,32,.85), rgba(11,16,32,.40));
+      border-bottom: 1px solid var(--line);
+    }
+
+    .brand{
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 18px 18px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .dot{
+      width: 12px; height: 12px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      box-shadow: 0 0 0 6px rgba(124,92,255,.14);
+    }
+
+    h1{
+      margin: 0;
+      font-size: 1.15rem;
+      letter-spacing: .4px;
+    }
+    .subtitle{
+      margin: 2px 0 0 0;
+      color: var(--muted);
+      font-size: .92rem;
+    }
+
+    .wrap{
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 22px 18px 60px;
+    }
+
+    .hero{
+      margin-top: 14px;
+      padding: 18px 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, var(--panel), transparent);
+      box-shadow: var(--shadow);
+    }
+    .hero h2{ margin: 0 0 8px 0; font-size: 1.25rem; }
+    .hero p{ margin: 0; color: var(--muted); line-height: 1.55; }
+
+    .grid{
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .card{
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, var(--panel2), rgba(255,255,255,.02));
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+
+    .card h3{
+      margin: 0 0 10px 0;
+      font-size: 1.05rem;
+      letter-spacing: .3px;
+    }
+
+    .card ul{
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 10px;
+    }
+
+    .card li{
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      line-height: 1.35;
+      color: rgba(255,255,255,.86);
+    }
+
+    .num{
+      flex: 0 0 auto;
+      width: 30px;
+      height: 26px;
+      display: inline-grid;
+      place-items: center;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(0,0,0,.18);
+      color: rgba(255,255,255,.92);
+      font-weight: 700;
+    }
+
+    .struct{
+      margin-top: 22px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, var(--panel), transparent);
+      box-shadow: var(--shadow);
+    }
+
+    .struct h2{
+      margin: 0 0 14px 0;
+      font-size: 1.1rem;
+    }
+
+    .struct-grid{
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .pill{
+      padding: 14px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.18);
+    }
+    .pill h4{
+      margin: 0 0 6px 0;
+      font-size: .95rem;
+    }
+    .pill p{
+      margin: 0;
+      color: var(--muted);
+      font-size: .92rem;
+      line-height: 1.5;
+    }
+
+    .footer{
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: .95rem;
+      padding: 0 2px;
+    }
+
+    @media (max-width: 980px){
+      .grid{ grid-template-columns: 1fr; }
+      .struct-grid{ grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 520px){
+      .struct-grid{ grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <div class="dot"></div>
+      <div>
+        <h1>webserv</h1>
+        <p class="subtitle">Structure overview & responsibilities</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="hero">
+      <h2>Team split</h2>
+      <p>
+        This page summarizes the main building blocks of <strong>webserv</strong> and
+        what work is demanded from each part / teammate.
+      </p>
+    </section>
+
+    <section class="grid" aria-label="Team responsibilities">
+      <article class="card">
+        <h3>Yaaqoub</h3>
+        <ul>
+          <li><span class="num">1</span> Setup basic socket</li>
+          <li><span class="num">4</span> Master <code>poll()</code> event loop</li>
+          <li><span class="num">12</span> Multi-port & virtual hosts</li>
+        </ul>
+      </article>
+
+      <article class="card">
+        <h3>TAHALLA</h3>
+        <ul>
+          <li><span class="num">2</span> Parse configuration file</li>
+          <li><span class="num">5</span> Parse HTTP request</li>
+          <li><span class="num">7</span> HTTP <strong>GET</strong> & <strong>POST</strong></li>
+          <li><span class="num">8</span> HTTP <strong>DELETE</strong></li>
+          <li><span class="num">11</span> POST + CGI integration</li>
+          <li><span class="num">15</span> Session cookies management</li>
+        </ul>
+      </article>
+
+      <article class="card">
+        <h3>Adnane</h3>
+        <ul>
+          <li><span class="num">6</span> Build HTTP response</li>
+          <li><span class="num">13</span> HTTP redirection</li>
+          <li><span class="num">9</span> Setup CGI environment</li>
+          <li><span class="num">10</span> Execute CGI</li>
+          <li><span class="num">14</span> CGI (bonus)</li>
+        </ul>
+      </article>
+    </section>
+
+    <section class="struct">
+      <h2>Typical webserv structure (high-level)</h2>
+
+      <div class="struct-grid">
+        <div class="pill">
+          <h4>Config parsing</h4>
+          <p>Read config → build servers, locations, routes, limits.</p>
+        </div>
+        <div class="pill">
+          <h4>Networking</h4>
+          <p>Socket setup → bind/listen → accept clients.</p>
+        </div>
+        <div class="pill">
+          <h4>Event loop</h4>
+          <p><code>poll()</code> drives non-blocking read/write for all fds.</p>
+        </div>
+        <div class="pill">
+          <h4>HTTP parsing</h4>
+          <p>Request line, headers, body (incl. chunked if supported).</p>
+        </div>
+        <div class="pill">
+          <h4>Routing</h4>
+          <p>Match host/port → server → location → method rules.</p>
+        </div>
+        <div class="pill">
+          <h4>Response</h4>
+          <p>Status line + headers + body, errors, redirects, autoindex.</p>
+        </div>
+        <div class="pill">
+          <h4>CGI</h4>
+          <p>Build env, spawn process, connect stdin/stdout, collect output.</p>
+        </div>
+        <div class="pill">
+          <h4>Sessions</h4>
+          <p>Cookie parsing/setting, persistence strategy, expiry.</p>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      
+    </footer>
+  </main>
+</body>
+</html>
