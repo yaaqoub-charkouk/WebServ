@@ -6,6 +6,17 @@
 # include <map>
 # include <string>
 # include <poll.h>
+# include <cstring>
+
+# include <sys/socket.h>
+# include <netinet/in.h>
+# include <arpa/inet.h>
+# include <unistd.h>
+# include <fstream>
+# include <sstream>
+# include <fcntl.h>
+
+
 
 class Client;
 
