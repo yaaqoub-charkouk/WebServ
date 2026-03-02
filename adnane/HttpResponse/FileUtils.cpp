@@ -18,13 +18,11 @@ FileInfo FileUtils::getInfo(const std::string &path)
 std::string FileUtils::getContent(const std::string &path)
 {
     std::ifstream file(path.c_str(), std::ios::binary);
-    std::string content;
     std::stringstream buff;
 
     if (!file.is_open())
         return ("");
     
     buff << file.rdbuf();
-    content = buff.str();
-    return content;
+    return buff.str();
 }

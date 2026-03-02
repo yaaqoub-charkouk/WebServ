@@ -2,7 +2,7 @@
 
 
 HttpResponse::HttpResponse() :
-status(-1), status_msg(""), body(""), headers(){}
+status(-1), status_msg(""), headers(), body(""){}
 
 void    HttpResponse::setStatus(int code, const std::string &msg)
 {
@@ -18,6 +18,25 @@ void    HttpResponse::setBody(const std::string &body)
 void    HttpResponse::setHeaders(const std::string &key, const std::string &val)
 {
     headers.insert(std::make_pair(key, val));
+}
+
+std::string HttpResponse::getStatusMsg(int code)
+{
+    switch (code)
+    {
+        case 200: return "OK";
+        case 201: return "Created";
+        case 204: return "No Content";
+        case 301: return "Moved Permanently";
+        case 302: return "Found";
+        case 400: return "Bad Request";
+        case 403: return "Forbidden";
+        case 404: return "Not Found";
+        case 405: return "Method Not Allowed";
+        case 413: return "Content Too Large";
+        case 500: return "Internal Server Error";
+        default:  return "Unknown";
+    }
 }
 
 std::string HttpResponse::getFileType(const std::string &extension)
@@ -52,7 +71,6 @@ std::string HttpResponse::getFileExtension(const std::string &filename)
     return extension;
 }
 
-// std::string CRLN = "\r\n";
 
 // Response example
 // HTTP/1.1 200 OK\r\n
@@ -63,7 +81,95 @@ std::string HttpResponse::getFileExtension(const std::string &filename)
 
 std::string HttpResponse::getResponse() const
 {
-    std::stringstream code;
-    code << status;
+    std::string CRLF = "\r\n";
+    std::stringstream rs;
+    std::map<std::string, std::string>::const_iterator it;
+
+    rs << "HTTP/1.0 " << status << " " << status_msg << CRLF;
+
+    for (it = headers.begin(); it != headers.end(); it++)
+        rs << it->first << ": " << it->second << CRLF;
+
+    rs << CRLF;
+    rs << body;
+
+    return (rs.str());
+}
+
+
+HttpResponse HttpResponse::makeErrorRes(int code, const std::string &path)
+{
+    HttpResponse res;
+    FileInfo info;
+    std::string content;
+    std::stringstream size;
+    std::stringstream def;
+
     
+    info = FileUtils::getInfo(path);
+    
+    if (info.exist && info.isReadable && info.isFile)
+    {
+        size << info.size;
+        content = FileUtils::getContent(path);
+    }
+    else
+    {
+        def << "<html><body><h1>" << code << " " 
+        << getStatusMsg(code) <<"</h1></body></html>";
+        content = def.str();
+        size << content.size();
+    }
+    
+    res.setStatus(code, getStatusMsg(code));
+    res.setHeaders("Content-Type", "text/html");
+    res.setHeaders("Content-Length", size.str());
+    res.setBody(content);
+    
+    return res;
+}
+
+// Redirection example
+// HTTP/1.0 301 Moved Permanently\r\n
+// Location: /new-url\r\n
+// Content-Length: 0\r\n
+// \r\n
+
+HttpResponse HttpResponse::makeRedireRes(int code, const std::string &location)
+{
+    HttpResponse res;
+    
+    res.setStatus(code, getStatusMsg(code));
+    res.setHeaders("Location", location);
+    res.setHeaders("Content-Length", "0");
+
+    return res;
+}
+
+HttpResponse HttpResponse::makeFileRes(const std::string &path)
+{
+    HttpResponse res;
+    FileInfo info;
+    std::string content;
+    std::string mime;
+    std::stringstream size;
+
+    info = FileUtils::getInfo(path);
+
+    if (!info.exist)
+        return (makeErrorRes(404, "404.html"));
+    if (!info.isReadable)
+        return (makeErrorRes(403, "403.html"));
+    if (!info.isFile)
+        return (makeErrorRes(403, "403.html"));
+
+    size << info.size;
+    content = FileUtils::getContent(path);
+    mime = getFileType(getFileExtension(path));
+   
+    res.setStatus(200, "OK");
+    res.setHeaders("Content-Type", mime);
+    res.setHeaders("Content-Length", size.str());
+    res.setBody(content);
+    return res;
 }

@@ -14,7 +14,6 @@ private:
     std::string status_msg;
     std::map<std::string,std::string> headers;
     std::string body;
-    std::string response;
 
 
 public:
@@ -23,13 +22,14 @@ public:
     void    setStatus(int code, const std::string &msg);
     void    setHeaders(const std::string &key, const std::string &val);
     void    setBody(const std::string &body);
-
+    static std::string getStatusMsg(int code);
+    
     std::string getResponse() const;
 
     //Responses type
     static HttpResponse makeFileRes(const std::string &path);
     static HttpResponse makeErrorRes(int code, const std::string &path);
-    static HttpResponse makeRedireRes(int code, const std::string &path);
+    static HttpResponse makeRedireRes(int code, const std::string &location);
     
     // For files (if the extension is .html the type is text/html)
    static  std::string getFileType(const std::string &extension);
