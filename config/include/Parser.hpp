@@ -13,7 +13,7 @@ class Parser
 private:
 	std::vector<Token> token;
 	size_t index;
-	std::vector<ServerConfig> _servers;
+	std::vector<ServerConfig> servers;
 
 	// Token navigation
 	const Token& currentToken() const;

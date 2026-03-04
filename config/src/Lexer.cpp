@@ -44,11 +44,10 @@ void Lexer::removeComments()
 	{
 		if (content[i] == '#')
 		{
-			// Skip until end of line
 			while (i < content.size() && content[i] != '\n')
 				++i;
 			if (i < content.size())
-				result += content[i]; // Keep the newline
+				result += content[i];
 		}
 		else
 		{

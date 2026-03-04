@@ -12,10 +12,10 @@ private:
 	std::string root;
 	std::string index;
 	bool autoindex;
-	std::string _uploadStore;
-	std::string _cgiExtension;
-	int _redirectCode;
-	std::string _redirectUrl;
+	std::string uploadStore;
+	std::string cgiExtension;
+	int redirectCode;
+	std::string redirectUrl;
 
 public:
 	LocationConfig();
@@ -24,7 +24,6 @@ public:
 	LocationConfig& operator=(const LocationConfig& other);
 	~LocationConfig();
 
-	// Getters
 	const std::string& getPath() const;
 	const std::vector<std::string>& getMethods() const;
 	const std::string& getRoot() const;
@@ -35,7 +34,6 @@ public:
 	int getRedirectCode() const;
 	const std::string& getRedirectUrl() const;
 
-	// Setters
 	void setPath(const std::string& path);
 	void addMethod(const std::string& method);
 	void setRoot(const std::string& root);
@@ -45,7 +43,6 @@ public:
 	void setCgiExtension(const std::string& cgiExtension);
 	void setRedirect(int code, const std::string& url);
 
-	// Helpers
 	bool hasMethod(const std::string& method) const;
 	bool hasRedirect() const;
 };
@@ -56,18 +53,18 @@ inline const std::vector<std::string>& LocationConfig::getMethods() const { retu
 inline const std::string& LocationConfig::getRoot() const { return root; }
 inline const std::string& LocationConfig::getIndex() const { return index; }
 inline bool LocationConfig::getAutoindex() const { return autoindex; }
-inline const std::string& LocationConfig::getUploadStore() const { return _uploadStore; }
-inline const std::string& LocationConfig::getCgiExtension() const { return _cgiExtension; }
-inline int LocationConfig::getRedirectCode() const { return _redirectCode; }
-inline const std::string& LocationConfig::getRedirectUrl() const { return _redirectUrl; }
+inline const std::string& LocationConfig::getUploadStore() const { return uploadStore; }
+inline const std::string& LocationConfig::getCgiExtension() const { return cgiExtension; }
+inline int LocationConfig::getRedirectCode() const { return redirectCode; }
+inline const std::string& LocationConfig::getRedirectUrl() const { return redirectUrl; }
 
-inline void LocationConfig::setPath(const std::string& path) { path = path; }
+inline void LocationConfig::setPath(const std::string& path) { this->path = path; }
 inline void LocationConfig::addMethod(const std::string& method) { methods.push_back(method); }
-inline void LocationConfig::setRoot(const std::string& root) { root = root; }
-inline void LocationConfig::setIndex(const std::string& index) { index = index; }
-inline void LocationConfig::setAutoindex(bool autoindex) { autoindex = autoindex; }
-inline void LocationConfig::setUploadStore(const std::string& uploadStore) { _uploadStore = uploadStore; }
-inline void LocationConfig::setCgiExtension(const std::string& cgiExtension) { _cgiExtension = cgiExtension; }
-inline bool LocationConfig::hasRedirect() const { return _redirectCode != 0; }
+inline void LocationConfig::setRoot(const std::string& root) { this->root = root; }
+inline void LocationConfig::setIndex(const std::string& index) { this->index = index; }
+inline void LocationConfig::setAutoindex(bool autoindex) { this->autoindex = autoindex; }
+inline void LocationConfig::setUploadStore(const std::string& uploadStore) { this->uploadStore = uploadStore; }
+inline void LocationConfig::setCgiExtension(const std::string& cgiExtension) { this->cgiExtension = cgiExtension; }
+inline bool LocationConfig::hasRedirect() const { return redirectCode != 0; }
 
 #endif

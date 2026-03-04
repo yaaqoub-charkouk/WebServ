@@ -9,7 +9,7 @@
 
 // struct sockaddr_in {
 //     short sin_family;      // Address family (AF_INET for IPv4)
-//     unsigned short sin_port; // Port number (in network byte order)
+//     unsigned short sinport; // Port number (in network byte order)
 //     struct in_addr sin_addr; // Internet address (IPv4 address)
 //     char sin_zero[8];      // Padding to make the structure the same size as sockaddr
 // };
@@ -32,7 +32,7 @@ int main(void)
     memset(&nic, 0, sizeof(nic));
 
     nic.sin_family = AF_INET;
-    nic.sin_port = htons(8080); // why htons ?
+    nic.sinport = htons(8080); // why htons ?
     inet_pton(nic.sin_family, "0.0.0.0", &nic.sin_addr);
 
 
@@ -61,7 +61,7 @@ int main(void)
     std::cout << buffer << std::endl;
 
    printf("Client IP: %s\n", inet_ntoa(client.sin_addr));
-   printf("Client port: %d\n", ntohs(client.sin_port));
+   printf("Client port: %d\n", ntohs(client.sinport));
 
 
 

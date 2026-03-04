@@ -436,7 +436,7 @@ classDiagram
     }
 
     class ConfigException {
-        -string _message
+        -string message
         +what() const char*
     }
 
@@ -1095,7 +1095,7 @@ Token Lexer::<span class="function">readWord</span>() {
 flowchart TD
     subgraph Hierarchy["Exception Inheritance"]
         direction TB
-        A["std::exception"] --> B["ConfigException<br/>_message: string"]
+        A["std::exception"] --> B["ConfigException<br/>message: string"]
         B --> C["LexerException<br/>Prepends 'Lexer Error: '"]
         B --> D["ParserException<br/>Prepends 'Parser Error: '"]
         B --> E["ValidatorException<br/>Prepends 'Validator Error: '"]

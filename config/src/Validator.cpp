@@ -2,7 +2,7 @@
 #include <sstream>
 
 Validator::Validator(const std::vector<ServerConfig>& servers)
-	: _servers(servers)
+	: servers(servers)
 {
 }
 
@@ -12,7 +12,7 @@ Validator::~Validator()
 
 void Validator::validate()
 {
-	if (_servers.empty())
+	if (servers.empty())
 		throw ValidatorException("No servers to validate");
 
 	validateServers();
@@ -21,15 +21,14 @@ void Validator::validate()
 
 void Validator::validateServers()
 {
-	for (size_t i = 0; i < _servers.size(); ++i)
+	for (size_t i = 0; i < servers.size(); ++i)
 	{
-		validateServer(_servers[i]);
+		validateServer(servers[i]);
 	}
 }
 
 void Validator::validateServer(const ServerConfig& server)
 {
-	// Validate port
 	int port = server.getPort();
 	if (!isValidPort(port))
 	{
@@ -38,19 +37,15 @@ void Validator::validateServer(const ServerConfig& server)
 		throw ValidatorException(ss.str());
 	}
 
-	// Validate root
 	if (server.getRoot().empty())
 		throw ValidatorException("Server root cannot be empty");
 
-	// Validate client_max_body_size
 	if (server.getClientMaxBodySize() == 0)
 		throw ValidatorException("client_max_body_size must be greater than 0");
 
-	// Validate host
 	if (server.getHost().empty())
 		throw ValidatorException("Server host cannot be empty");
 
-	// Validate error pages
 	const std::map<int, std::string>& errorPages = server.getErrorPages();
 	for (std::map<int, std::string>::const_iterator it = errorPages.begin(); it != errorPages.end(); ++it)
 	{
@@ -68,7 +63,6 @@ void Validator::validateServer(const ServerConfig& server)
 		}
 	}
 
-	// Validate locations
 	const std::vector<LocationConfig>& locations = server.getLocations();
 	for (size_t i = 0; i < locations.size(); ++i)
 	{
@@ -78,11 +72,9 @@ void Validator::validateServer(const ServerConfig& server)
 
 void Validator::validateLocation(const LocationConfig& location)
 {
-	// Validate path
 	if (location.getPath().empty())
 		throw ValidatorException("Location path cannot be empty");
 
-	// Validate methods
 	const std::vector<std::string>& methods = location.getMethods();
 	for (size_t i = 0; i < methods.size(); ++i)
 	{
@@ -94,7 +86,6 @@ void Validator::validateLocation(const LocationConfig& location)
 		}
 	}
 
-	// Validate redirect
 	if (location.hasRedirect())
 	{
 		int code = location.getRedirectCode();
@@ -109,7 +100,6 @@ void Validator::validateLocation(const LocationConfig& location)
 			throw ValidatorException("Redirect URL cannot be empty");
 	}
 
-	// Validate CGI extension
 	if (!location.getCgiExtension().empty())
 	{
 		if (!isValidCgiExtension(location.getCgiExtension()))
@@ -120,7 +110,6 @@ void Validator::validateLocation(const LocationConfig& location)
 		}
 	}
 
-	// Validate upload_store with POST method
 	if (!location.getUploadStore().empty())
 	{
 		if (!location.hasMethod("POST"))
@@ -134,9 +123,9 @@ void Validator::checkDuplicatePorts()
 {
 	std::set<int> ports;
 
-	for (size_t i = 0; i < _servers.size(); ++i)
+	for (size_t i = 0; i < servers.size(); ++i)
 	{
-		int port = _servers[i].getPort();
+		int port = servers[i].getPort();
 		
 		if (ports.find(port) != ports.end())
 		{

@@ -6,7 +6,7 @@
 Parser::Parser(const std::vector<Token>& tokens)
 	: token(tokens),
 	  index(0),
-	  _servers()
+	  servers()
 {
 }
 
@@ -21,17 +21,13 @@ void Parser::parse()
 
 const std::vector<ServerConfig>& Parser::getServers() const
 {
-	return _servers;
+	return servers;
 }
-
-// ============================================================================
-// Token Navigation
-// ============================================================================
 
 const Token& Parser::currentToken() const
 {
 	if (index >= token.size())
-		return token[token.size() - 1]; // Return END token
+		return token[token.size() - 1];
 	return token[index];
 }
 
@@ -54,9 +50,6 @@ bool Parser::isAtEnd() const
 	return currentToken().type == TOKEN_END;
 }
 
-// ============================================================================
-// Expectation Helpers
-// ============================================================================
 
 void Parser::expect(TokenType type, const std::string& context)
 {
@@ -101,9 +94,6 @@ std::string Parser::expectWord(const std::string& context)
 	return value;
 }
 
-// ============================================================================
-// Main Parsing
-// ============================================================================
 
 void Parser::parseConfiguration()
 {
@@ -121,7 +111,7 @@ void Parser::parseConfiguration()
 		}
 	}
 
-	if (_servers.empty())
+	if (servers.empty())
 		throw ParserException("Configuration must contain at least one server block");
 }
 
@@ -143,7 +133,7 @@ void Parser::parseServer()
 	expect(TOKEN_CLOSE_BRACE, "server block");
 	advance();
 
-	_servers.push_back(server);
+	servers.push_back(server);
 }
 
 void Parser::parseServerDirective(ServerConfig& server)
@@ -232,13 +222,9 @@ void Parser::parseLocationDirective(LocationConfig& location)
 	}
 }
 
-// ============================================================================
-// Server Directive Parsers
-// ============================================================================
-
 void Parser::parseListen(ServerConfig& server)
 {
-	advance(); // skip 'listen'
+	advance();
 	
 	std::string portStr = expectWord("listen directive");
 	int port = parseNumber(portStr);
@@ -275,7 +261,7 @@ void Parser::parseServerName(ServerConfig& server)
 
 void Parser::parseRoot(ServerConfig& server)
 {
-	advance(); // skip 'root'
+	advance();
 	
 	std::string root = expectWord("root directive");
 	
@@ -287,7 +273,7 @@ void Parser::parseRoot(ServerConfig& server)
 
 void Parser::parseIndex(ServerConfig& server)
 {
-	advance(); // skip 'index'
+	advance();
 	
 	std::string index = expectWord("index directive");
 	
@@ -299,7 +285,7 @@ void Parser::parseIndex(ServerConfig& server)
 
 void Parser::parseClientMaxBodySize(ServerConfig& server)
 {
-	advance(); // skip 'client_max_body_size'
+	advance();
 	
 	std::string sizeStr = expectWord("client_max_body_size directive");
 	size_t size = parseBodySize(sizeStr);
@@ -312,7 +298,7 @@ void Parser::parseClientMaxBodySize(ServerConfig& server)
 
 void Parser::parseErrorPage(ServerConfig& server)
 {
-	advance(); // skip 'error_page'
+	advance();
 	
 	std::string codeStr = expectWord("error_page directive");
 	int code = parseNumber(codeStr);
@@ -325,13 +311,10 @@ void Parser::parseErrorPage(ServerConfig& server)
 	server.addErrorPage(code, path);
 }
 
-// ============================================================================
-// Location Directive Parsers
-// ============================================================================
 
 void Parser::parseLocationRoot(LocationConfig& location)
 {
-	advance(); // skip 'root'
+	advance();
 	
 	std::string root = expectWord("root directive");
 	
@@ -343,7 +326,7 @@ void Parser::parseLocationRoot(LocationConfig& location)
 
 void Parser::parseLocationIndex(LocationConfig& location)
 {
-	advance(); // skip 'index'
+	advance();
 	
 	std::string index = expectWord("index directive");
 	
@@ -355,9 +338,8 @@ void Parser::parseLocationIndex(LocationConfig& location)
 
 void Parser::parseMethods(LocationConfig& location)
 {
-	advance(); // skip 'methods'
+	advance();
 	
-	// Read methods until semicolon
 	while (!isAtEnd() && currentToken().type == TOKEN_WORD)
 	{
 		std::string method = currentToken().value;
@@ -371,7 +353,7 @@ void Parser::parseMethods(LocationConfig& location)
 
 void Parser::parseAutoindex(LocationConfig& location)
 {
-	advance(); // skip 'autoindex'
+	advance();
 	
 	std::string value = expectWord("autoindex directive");
 	
@@ -392,7 +374,7 @@ void Parser::parseAutoindex(LocationConfig& location)
 
 void Parser::parseUploadStore(LocationConfig& location)
 {
-	advance(); // skip 'upload_store'
+	advance();
 	
 	std::string path = expectWord("upload_store directive");
 	
@@ -404,7 +386,7 @@ void Parser::parseUploadStore(LocationConfig& location)
 
 void Parser::parseCgiExtension(LocationConfig& location)
 {
-	advance(); // skip 'cgi_extension'
+	advance(); 
 	
 	std::string ext = expectWord("cgi_extension directive");
 	
@@ -416,7 +398,7 @@ void Parser::parseCgiExtension(LocationConfig& location)
 
 void Parser::parseReturn(LocationConfig& location)
 {
-	advance(); // skip 'return'
+	advance();
 	
 	std::string codeStr = expectWord("return directive");
 	int code = parseNumber(codeStr);
@@ -429,9 +411,7 @@ void Parser::parseReturn(LocationConfig& location)
 	location.setRedirect(code, url);
 }
 
-// ============================================================================
-// Utility Functions
-// ============================================================================
+
 
 size_t Parser::parseBodySize(const std::string& value)
 {

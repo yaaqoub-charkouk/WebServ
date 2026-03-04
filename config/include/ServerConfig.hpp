@@ -9,14 +9,14 @@
 class ServerConfig
 {
 private:
-	int _port;
-	std::string _host;
-	std::string _serverName;
+	int port;
+	std::string host;
+	std::string serverName;
 	std::string root;
 	std::string index;
-	size_t _clientMaxBodySize;
-	std::map<int, std::string> _errorPages;
-	std::vector<LocationConfig> _locations;
+	size_t clientMaxBodySize;
+	std::map<int, std::string> errorPages;
+	std::vector<LocationConfig> locations;
 
 public:
 	ServerConfig();
@@ -24,7 +24,6 @@ public:
 	ServerConfig& operator=(const ServerConfig& other);
 	~ServerConfig();
 
-	// Getters
 	int getPort() const;
 	const std::string& getHost() const;
 	const std::string& getServerName() const;
@@ -43,28 +42,27 @@ public:
 	void addErrorPage(int code, const std::string& path);
 	void addLocation(const LocationConfig& location);
 
-	// Helpers
 	std::string getErrorPage(int code) const;
 	const LocationConfig* findLocation(const std::string& path) const;
 };
 
 // Inline implementations for simple getters
-inline int ServerConfig::getPort() const { return _port; }
-inline const std::string& ServerConfig::getHost() const { return _host; }
-inline const std::string& ServerConfig::getServerName() const { return _serverName; }
+inline int ServerConfig::getPort() const { return port; }
+inline const std::string& ServerConfig::getHost() const { return host; }
+inline const std::string& ServerConfig::getServerName() const { return serverName; }
 inline const std::string& ServerConfig::getRoot() const { return root; }
 inline const std::string& ServerConfig::getIndex() const { return index; }
-inline size_t ServerConfig::getClientMaxBodySize() const { return _clientMaxBodySize; }
-inline const std::map<int, std::string>& ServerConfig::getErrorPages() const { return _errorPages; }
-inline const std::vector<LocationConfig>& ServerConfig::getLocations() const { return _locations; }
+inline size_t ServerConfig::getClientMaxBodySize() const { return clientMaxBodySize; }
+inline const std::map<int, std::string>& ServerConfig::getErrorPages() const { return errorPages; }
+inline const std::vector<LocationConfig>& ServerConfig::getLocations() const { return locations; }
 
-inline void ServerConfig::setPort(int port) { _port = port; }
-inline void ServerConfig::setHost(const std::string& host) { _host = host; }
-inline void ServerConfig::setServerName(const std::string& serverName) { _serverName = serverName; }
-inline void ServerConfig::setRoot(const std::string& root) { root = root; }
-inline void ServerConfig::setIndex(const std::string& index) { index = index; }
-inline void ServerConfig::setClientMaxBodySize(size_t size) { _clientMaxBodySize = size; }
-inline void ServerConfig::addErrorPage(int code, const std::string& path) { _errorPages[code] = path; }
-inline void ServerConfig::addLocation(const LocationConfig& location) { _locations.push_back(location); }
+inline void ServerConfig::setPort(int port) { this->port = port; }
+inline void ServerConfig::setHost(const std::string& host) { this->host = host; }
+inline void ServerConfig::setServerName(const std::string& serverName) { this->serverName = serverName; }
+inline void ServerConfig::setRoot(const std::string& root) { this->root = root; }
+inline void ServerConfig::setIndex(const std::string& index) { this->index = index; }
+inline void ServerConfig::setClientMaxBodySize(size_t size) { this->clientMaxBodySize = size; }
+inline void ServerConfig::addErrorPage(int code, const std::string& path) { errorPages[code] = path; }
+inline void ServerConfig::addLocation(const LocationConfig& location) { locations.push_back(location); }
 
 #endif

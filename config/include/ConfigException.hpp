@@ -7,15 +7,15 @@
 class ConfigException : public std::exception
 {
 private:
-	std::string _message;
+	std::string message;
 
 public:
-	explicit ConfigException(const std::string& message) : _message(message) {}
+	explicit ConfigException(const std::string& message) : message(message) {}
 	virtual ~ConfigException() throw() {}
 
 	virtual const char* what() const throw()
 	{
-		return _message.c_str();
+		return message.c_str();
 	}
 };
 

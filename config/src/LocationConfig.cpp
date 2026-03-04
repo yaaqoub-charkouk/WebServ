@@ -6,10 +6,10 @@ LocationConfig::LocationConfig()
 	  root(""),
 	  index(""),
 	  autoindex(false),
-	  _uploadStore(""),
-	  _cgiExtension(""),
-	  _redirectCode(0),
-	  _redirectUrl("")
+	  uploadStore(""),
+	  cgiExtension(""),
+	  redirectCode(0),
+	  redirectUrl("")
 {
 }
 
@@ -19,10 +19,10 @@ LocationConfig::LocationConfig(const std::string& path)
 	  root(""),
 	  index(""),
 	  autoindex(false),
-	  _uploadStore(""),
-	  _cgiExtension(""),
-	  _redirectCode(0),
-	  _redirectUrl("")
+	  uploadStore(""),
+	  cgiExtension(""),
+	  redirectCode(0),
+	  redirectUrl("")
 {
 }
 
@@ -32,10 +32,10 @@ LocationConfig::LocationConfig(const LocationConfig& other)
 	  root(other.root),
 	  index(other.index),
 	  autoindex(other.autoindex),
-	  _uploadStore(other._uploadStore),
-	  _cgiExtension(other._cgiExtension),
-	  _redirectCode(other._redirectCode),
-	  _redirectUrl(other._redirectUrl)
+	  uploadStore(other.uploadStore),
+	  cgiExtension(other.cgiExtension),
+	  redirectCode(other.redirectCode),
+	  redirectUrl(other.redirectUrl)
 {
 }
 
@@ -48,10 +48,10 @@ LocationConfig& LocationConfig::operator=(const LocationConfig& other)
 		root = other.root;
 		index = other.index;
 		autoindex = other.autoindex;
-		_uploadStore = other._uploadStore;
-		_cgiExtension = other._cgiExtension;
-		_redirectCode = other._redirectCode;
-		_redirectUrl = other._redirectUrl;
+		uploadStore = other.uploadStore;
+		cgiExtension = other.cgiExtension;
+		redirectCode = other.redirectCode;
+		redirectUrl = other.redirectUrl;
 	}
 	return *this;
 }
@@ -62,8 +62,8 @@ LocationConfig::~LocationConfig()
 
 void LocationConfig::setRedirect(int code, const std::string& url)
 {
-	_redirectCode = code;
-	_redirectUrl = url;
+	redirectCode = code;
+	redirectUrl = url;
 }
 
 bool LocationConfig::hasMethod(const std::string& method) const

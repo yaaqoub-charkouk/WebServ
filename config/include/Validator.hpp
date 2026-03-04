@@ -11,14 +11,12 @@
 class Validator
 {
 private:
-	const std::vector<ServerConfig>& _servers;
+	const std::vector<ServerConfig>& servers;
 
-	// Validation functions
 	void validateServers();
 	void validateServer(const ServerConfig& server);
 	void validateLocation(const LocationConfig& location);
 	
-	// Specific validation checks
 	void checkDuplicatePorts();
 	bool isValidPort(int port) const;
 	bool isValidRedirectCode(int code) const;
