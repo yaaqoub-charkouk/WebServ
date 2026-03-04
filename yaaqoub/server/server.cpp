@@ -67,21 +67,48 @@ void    Server::run()
         if (ret < 0)
             throw std::runtime_error("poll failed can't listen on servers sockets");
         
-        std::vector<struct pollfd>::iterator it = pollFds.begin();
-        std::vector<struct pollfd>::iterator end = pollFds.end();
+        // std::vector<struct pollfd>::iterator it = pollFds.begin();
+        // std::vector<struct pollfd>::iterator end = pollFds.end();
     
-        while (it != end)
+        for (size_t i = 0; i < pollFds.size(); ++i)
         {
-            if (it->revents & POLLIN)
+            if (pollFds[i].revents & POLLIN)
             {
                 struct sockaddr_in client;
                 socklen_t len = sizeof(client);
                 
                 memset(&client, 0, len);
-                
-                int client_fd = -1;
-                client_fd = accept(it->fd, reinterpret_cast<sockaddr*>(&client), &len);
-                
+                                
+                if (isListeningSocket(pollFds[i].fd))
+                {
+                    // accept a new client
+                    // add the new client to pollFds 
+                    int client_fd = accept(pollFds[i].fd, reinterpret_cast<sockaddr*>(&client), &len);
+                    if (client_fd == -1)
+                    {
+                        
+                        throw std::runtime_error("Failed to add new client accept failed");
+                    }
+                    
+                    if (fcntl(client_fd, F_SETFL, O_NONBLOCK) == -1)
+                    {
+                        close(client_fd);
+                        throw std::runtime_error("Failed to make client_fd non block");
+                    }
+
+                    struct pollfd pfd;
+                    pfd.fd = client_fd;
+                    pfd.events = POLLIN;
+                    pfd.revents = 0;
+
+                    pollFds.push_back(pfd);
+
+                }
+                else
+                {
+                    // receive from a client
+                }
+
 
             }
             it++;
@@ -90,4 +117,11 @@ void    Server::run()
     }
 
 
+}
+
+bool Server::isListeningSocket(int fd)
+{
+    return std::find(listenSockets.begin(),
+                     listenSockets.end(),
+                     fd) != listenSockets.end();
 }

@@ -34,7 +34,7 @@ private:
     void    readFromClient(int clientFd);
     void    writeToClient(int clientFd);
     void    closeClient(int clientFd);
-
+    bool    Server::isListeningSocket(int fd)
 
 public:
     void    addListeningSocket(int port); // setup
