@@ -11,8 +11,8 @@
 class Parser
 {
 private:
-	std::vector<Token> _tokens;
-	size_t _index;
+	std::vector<Token> token;
+	size_t index;
 	std::vector<ServerConfig> _servers;
 
 	// Token navigation

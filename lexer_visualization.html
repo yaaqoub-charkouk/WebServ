@@ -394,12 +394,12 @@
                 <div class="mermaid">
 classDiagram
     class Lexer {
-        -string _filename
-        -string _content
-        -vector~Token~ _tokens
-        -size_t _pos
-        -size_t _line
-        -size_t _column
+        -string filename
+        -string content
+        -vector~Token~ token
+        -size_t pos
+        -size_t line
+        -size_t column
         +Lexer(filename: string)
         +~Lexer()
         +getTokens() vector~Token~
@@ -458,12 +458,12 @@ classDiagram
                 <table>
                     <thead><tr><th>Member</th><th>Type</th><th>Purpose</th></tr></thead>
                     <tbody>
-                        <tr><td><code>_filename</code></td><td>string</td><td>Path to config file</td></tr>
-                        <tr><td><code>_content</code></td><td>string</td><td>Entire file content as string</td></tr>
-                        <tr><td><code>_tokens</code></td><td>vector&lt;Token&gt;</td><td>Output token list</td></tr>
-                        <tr><td><code>_pos</code></td><td>size_t</td><td>Current position in _content</td></tr>
-                        <tr><td><code>_line</code></td><td>size_t</td><td>Current line number (1-based)</td></tr>
-                        <tr><td><code>_column</code></td><td>size_t</td><td>Current column number (1-based)</td></tr>
+                        <tr><td><code>filename</code></td><td>string</td><td>Path to config file</td></tr>
+                        <tr><td><code>content</code></td><td>string</td><td>Entire file content as string</td></tr>
+                        <tr><td><code>token</code></td><td>vector&lt;Token&gt;</td><td>Output token list</td></tr>
+                        <tr><td><code>pos</code></td><td>size_t</td><td>Current position in content</td></tr>
+                        <tr><td><code>line</code></td><td>size_t</td><td>Current line number (1-based)</td></tr>
+                        <tr><td><code>column</code></td><td>size_t</td><td>Current column number (1-based)</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -494,12 +494,12 @@ classDiagram
             <div class="mermaid-container">
                 <div class="mermaid">
 flowchart TD
-    A["🔨 Lexer Constructor<br/>Lexer(filename)"] --> B["Initialize Members<br/>_pos=0, _line=1, _column=1"]
+    A["🔨 Lexer Constructor<br/>Lexer(filename)"] --> B["Initialize Members<br/>pos=0, line=1, column=1"]
     B --> C["📄 Stage 1: readFile()"]
     
     C --> C1{"File opens?"}
     C1 -->|No| C2["❌ throw LexerException<br/>Cannot open file"]
-    C1 -->|Yes| C3["Read file → _content"]
+    C1 -->|Yes| C3["Read file → content"]
     C3 --> C4{"Empty?"}
     C4 -->|Yes| C5["❌ throw LexerException<br/>File is empty"]
     C4 -->|No| D
@@ -507,7 +507,7 @@ flowchart TD
     D["🧹 Stage 2: removeComments()"] --> D1["Remove # ... \\n<br/>Keep newlines"]
     D1 --> E
 
-    E["⚙️ Stage 3: tokenize()"] --> E1["Loop through _content"]
+    E["⚙️ Stage 3: tokenize()"] --> E1["Loop through content"]
     E1 --> E2{"char type?"}
     E2 -->|";"| E5["TOKEN_SEMICOLON"]
     E2 -->|"{"| E6["TOKEN_OPEN_BRACE"]
@@ -540,21 +540,21 @@ flowchart TD
                 <div class="step-num">1</div>
                 <div class="step-content">
                     <h4>readFile() → File to String</h4>
-                    <p>Disk file <code>test.conf</code> → entire content stored in <code>_content</code> (std::string)</p>
+                    <p>Disk file <code>test.conf</code> → entire content stored in <code>content</code> (std::string)</p>
                 </div>
             </div>
             <div class="step">
                 <div class="step-num">2</div>
                 <div class="step-content">
                     <h4>removeComments() → Clean String</h4>
-                    <p><code>_content</code> with <code># comments</code> → <code>_content</code> without comments (newlines preserved)</p>
+                    <p><code>content</code> with <code># comments</code> → <code>content</code> without comments (newlines preserved)</p>
                 </div>
             </div>
             <div class="step">
                 <div class="step-num">3</div>
                 <div class="step-content">
                     <h4>tokenize() → Token Vector</h4>
-                    <p>Clean <code>_content</code> string → <code>_tokens</code> vector of Token structs with type, value, line, column</p>
+                    <p>Clean <code>content</code> string → <code>token</code> vector of Token structs with type, value, line, column</p>
                 </div>
             </div>
         </div>
@@ -571,15 +571,15 @@ flowchart TD
             <div class="mermaid-container">
                 <div class="mermaid">
 flowchart TD
-    A["readFile() called"] --> B["Create ifstream<br/>file(_filename.c_str())"]
+    A["readFile() called"] --> B["Create ifstream<br/>file(filename.c_str())"]
     B --> C{"file.is_open()?"}
-    C -->|"❌ No"| D["throw LexerException<br/>'Cannot open file: ' + _filename"]
+    C -->|"❌ No"| D["throw LexerException<br/>'Cannot open file: ' + filename"]
     C -->|"✅ Yes"| E["Create stringstream buffer"]
     E --> F["buffer << file.rdbuf()<br/>Read ENTIRE file at once"]
-    F --> G["_content = buffer.str()"]
+    F --> G["content = buffer.str()"]
     G --> H["file.close()"]
-    H --> I{"_content.empty()?"}
-    I -->|"❌ Yes"| J["throw LexerException<br/>'File is empty: ' + _filename"]
+    H --> I{"content.empty()?"}
+    I -->|"❌ Yes"| J["throw LexerException<br/>'File is empty: ' + filename"]
     I -->|"✅ No"| K["✅ Return successfully"]
 
     style D fill:#ff6b6b,color:white
@@ -618,7 +618,7 @@ flowchart TD
     A["removeComments()"] --> B["result = empty string<br/>reserve size"]
     B --> C["i = 0"]
     C --> D{"i < size?"}
-    D -->|No| H["_content = result ✅"]
+    D -->|No| H["content = result ✅"]
     D -->|Yes| E{"content[i] == '#' ?"}
     E -->|No| F["result += content[i]"]
     F --> G["i++"] --> D
@@ -723,17 +723,17 @@ stateDiagram-v2
             <h3>⚡ skipWhitespace() — Line & Column Tracking</h3>
             <div class="code-block">
 <span class="keyword">void</span> Lexer::<span class="function">skipWhitespace</span>() {
-    <span class="keyword">while</span> (_pos < _content.size() && <span class="function">isWhitespace</span>(<span class="function">currentChar</span>())) {
+    <span class="keyword">while</span> (pos < content.size() && <span class="function">isWhitespace</span>(<span class="function">currentChar</span>())) {
         <span class="keyword">if</span> (<span class="function">currentChar</span>() == <span class="string">'\n'</span>) {
-            ++_line;      <span class="comment">// ← Move to next line</span>
-            _column = 0;  <span class="comment">// ← Reset column (advance() will make it 1)</span>
+            ++line;      <span class="comment">// ← Move to next line</span>
+            column = 0;  <span class="comment">// ← Reset column (advance() will make it 1)</span>
         }
-        <span class="function">advance</span>();        <span class="comment">// ← Always: ++_pos, ++_column</span>
+        <span class="function">advance</span>();        <span class="comment">// ← Always: ++pos, ++column</span>
     }
 }
             </div>
             <p style="color:var(--text-secondary); margin-top:10px;">
-                When <code>\n</code> is encountered: <code>_line++</code>, <code>_column = 0</code>. Then <code>advance()</code> does <code>_column++</code> making it 1. So the next character starts at column 1 of the new line. ✅
+                When <code>\n</code> is encountered: <code>line++</code>, <code>column = 0</code>. Then <code>advance()</code> does <code>column++</code> making it 1. So the next character starts at column 1 of the new line. ✅
             </p>
         </div>
 
@@ -741,11 +741,11 @@ stateDiagram-v2
             <h3>📖 readWord() — Accumulating Word Characters</h3>
             <div class="code-block">
 Token Lexer::<span class="function">readWord</span>() {
-    size_t startLine = _line;     <span class="comment">// ← Save position BEFORE reading</span>
-    size_t startColumn = _column;
+    size_t startLine = line;     <span class="comment">// ← Save position BEFORE reading</span>
+    size_t startColumn = column;
     std::string word;
 
-    <span class="keyword">while</span> (_pos < _content.size() && <span class="function">isWordChar</span>(<span class="function">currentChar</span>())) {
+    <span class="keyword">while</span> (pos < content.size() && <span class="function">isWordChar</span>(<span class="function">currentChar</span>())) {
         word += <span class="function">currentChar</span>();    <span class="comment">// ← Accumulate characters</span>
         <span class="function">advance</span>();                <span class="comment">// ← Move forward</span>
     }
@@ -781,8 +781,8 @@ Token Lexer::<span class="function">readWord</span>() {
                 <thead>
                     <tr>
                         <th>Step</th>
-                        <th>_pos</th>
-                        <th>_line:_col</th>
+                        <th>pos</th>
+                        <th>line:_col</th>
                         <th>Char</th>
                         <th>Action</th>
                         <th>Token Emitted</th>
@@ -817,7 +817,7 @@ Token Lexer::<span class="function">readWord</span>() {
                     <tr>
                         <td>5</td><td>8</td><td>1:9</td>
                         <td><code>\n</code></td>
-                        <td>skipWhitespace() → _line=2, _col=1</td>
+                        <td>skipWhitespace() → line=2, _col=1</td>
                         <td>—</td>
                     </tr>
 
@@ -855,7 +855,7 @@ Token Lexer::<span class="function">readWord</span>() {
                     <tr>
                         <td>11</td><td>22</td><td>2:14</td>
                         <td><code>\n</code></td>
-                        <td>skipWhitespace() → _line=3, _col=1</td>
+                        <td>skipWhitespace() → line=3, _col=1</td>
                         <td>—</td>
                     </tr>
 
@@ -896,21 +896,21 @@ Token Lexer::<span class="function">readWord</span>() {
 
         <div class="card">
             <h3>🎬 Visual: How readWord("server") Works</h3>
-            <div class="ascii-walk"><span class="dim">_content:</span>  s  e  r  v  e  r  ·  {  \n ...
+            <div class="ascii-walk"><span class="dim">content:</span>  s  e  r  v  e  r  ·  {  \n ...
             <span class="pointer">▲</span>
-            <span class="dim">_pos=0, word=""</span>
+            <span class="dim">pos=0, word=""</span>
 
-<span class="action">Step 1:</span>  isWordChar('s')=YES → word="<span class="highlight">s</span>", advance → _pos=1
-<span class="action">Step 2:</span>  isWordChar('e')=YES → word="<span class="highlight">se</span>", advance → _pos=2
-<span class="action">Step 3:</span>  isWordChar('r')=YES → word="<span class="highlight">ser</span>", advance → _pos=3
-<span class="action">Step 4:</span>  isWordChar('v')=YES → word="<span class="highlight">serv</span>", advance → _pos=4
-<span class="action">Step 5:</span>  isWordChar('e')=YES → word="<span class="highlight">serve</span>", advance → _pos=5
-<span class="action">Step 6:</span>  isWordChar('r')=YES → word="<span class="highlight">server</span>", advance → _pos=6
+<span class="action">Step 1:</span>  isWordChar('s')=YES → word="<span class="highlight">s</span>", advance → pos=1
+<span class="action">Step 2:</span>  isWordChar('e')=YES → word="<span class="highlight">se</span>", advance → pos=2
+<span class="action">Step 3:</span>  isWordChar('r')=YES → word="<span class="highlight">ser</span>", advance → pos=3
+<span class="action">Step 4:</span>  isWordChar('v')=YES → word="<span class="highlight">serv</span>", advance → pos=4
+<span class="action">Step 5:</span>  isWordChar('e')=YES → word="<span class="highlight">serve</span>", advance → pos=5
+<span class="action">Step 6:</span>  isWordChar('r')=YES → word="<span class="highlight">server</span>", advance → pos=6
 <span class="action">Step 7:</span>  isWordChar(' ')=<span class="emit">NO</span> → <span class="emit">STOP!</span> Return Token(WORD, "server", 1, 1)
 
-<span class="dim">_content:</span>  s  e  r  v  e  r  ·  {  \n ...
+<span class="dim">content:</span>  s  e  r  v  e  r  ·  {  \n ...
                               <span class="pointer">▲</span>
-                              <span class="dim">_pos=6 (now points to space)</span></div>
+                              <span class="dim">pos=6 (now points to space)</span></div>
         </div>
     </div>
 

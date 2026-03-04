@@ -7,11 +7,11 @@
 class LocationConfig
 {
 private:
-	std::string _path;
-	std::vector<std::string> _methods;
-	std::string _root;
-	std::string _index;
-	bool _autoindex;
+	std::string path;
+	std::vector<std::string> methods;
+	std::string root;
+	std::string index;
+	bool autoindex;
 	std::string _uploadStore;
 	std::string _cgiExtension;
 	int _redirectCode;
@@ -51,21 +51,21 @@ public:
 };
 
 // Inline implementations for simple getters
-inline const std::string& LocationConfig::getPath() const { return _path; }
-inline const std::vector<std::string>& LocationConfig::getMethods() const { return _methods; }
-inline const std::string& LocationConfig::getRoot() const { return _root; }
-inline const std::string& LocationConfig::getIndex() const { return _index; }
-inline bool LocationConfig::getAutoindex() const { return _autoindex; }
+inline const std::string& LocationConfig::getPath() const { return path; }
+inline const std::vector<std::string>& LocationConfig::getMethods() const { return methods; }
+inline const std::string& LocationConfig::getRoot() const { return root; }
+inline const std::string& LocationConfig::getIndex() const { return index; }
+inline bool LocationConfig::getAutoindex() const { return autoindex; }
 inline const std::string& LocationConfig::getUploadStore() const { return _uploadStore; }
 inline const std::string& LocationConfig::getCgiExtension() const { return _cgiExtension; }
 inline int LocationConfig::getRedirectCode() const { return _redirectCode; }
 inline const std::string& LocationConfig::getRedirectUrl() const { return _redirectUrl; }
 
-inline void LocationConfig::setPath(const std::string& path) { _path = path; }
-inline void LocationConfig::addMethod(const std::string& method) { _methods.push_back(method); }
-inline void LocationConfig::setRoot(const std::string& root) { _root = root; }
-inline void LocationConfig::setIndex(const std::string& index) { _index = index; }
-inline void LocationConfig::setAutoindex(bool autoindex) { _autoindex = autoindex; }
+inline void LocationConfig::setPath(const std::string& path) { path = path; }
+inline void LocationConfig::addMethod(const std::string& method) { methods.push_back(method); }
+inline void LocationConfig::setRoot(const std::string& root) { root = root; }
+inline void LocationConfig::setIndex(const std::string& index) { index = index; }
+inline void LocationConfig::setAutoindex(bool autoindex) { autoindex = autoindex; }
 inline void LocationConfig::setUploadStore(const std::string& uploadStore) { _uploadStore = uploadStore; }
 inline void LocationConfig::setCgiExtension(const std::string& cgiExtension) { _cgiExtension = cgiExtension; }
 inline bool LocationConfig::hasRedirect() const { return _redirectCode != 0; }

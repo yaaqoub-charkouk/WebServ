@@ -3,12 +3,12 @@
 #include <sstream>
 
 Lexer::Lexer(const std::string& filename)
-	: _filename(filename),
-	  _content(""),
-	  _tokens(),
-	  _pos(0),
-	  _line(1),
-	  _column(1)
+	: filename(filename),
+	  content(""),
+	  token(),
+	  pos(0),
+	  line(1),
+	  column(1)
 {
 	readFile();
 	removeComments();
@@ -22,54 +22,54 @@ Lexer::~Lexer()
 
 void Lexer::readFile()
 {
-	std::ifstream file(_filename.c_str());
+	std::ifstream file(filename.c_str());
 	if (!file.is_open())
-		throw LexerException("Cannot open file: " + _filename);
+		throw LexerException("Cannot open file: " + filename);
 
 	std::stringstream buffer;
 	buffer << file.rdbuf();
-	_content = buffer.str();
+	content = buffer.str();
 	file.close();
 
-	if (_content.empty())
-		throw LexerException("File is empty: " + _filename);
+	if (content.empty())
+		throw LexerException("File is empty: " + filename);
 }
 
 void Lexer::removeComments()
 {
 	std::string result;
-	result.reserve(_content.size());
+	result.reserve(content.size());
 
-	for (size_t i = 0; i < _content.size(); ++i)
+	for (size_t i = 0; i < content.size(); ++i)
 	{
-		if (_content[i] == '#')
+		if (content[i] == '#')
 		{
 			// Skip until end of line
-			while (i < _content.size() && _content[i] != '\n')
+			while (i < content.size() && content[i] != '\n')
 				++i;
-			if (i < _content.size())
-				result += _content[i]; // Keep the newline
+			if (i < content.size())
+				result += content[i]; // Keep the newline
 		}
 		else
 		{
-			result += _content[i];
+			result += content[i];
 		}
 	}
 
-	_content = result;
+	content = result;
 }
 
 void Lexer::tokenize()
 {
-	_pos = 0;
-	_line = 1;
-	_column = 1;
+	pos = 0;
+	line = 1;
+	column = 1;
 
-	while (_pos < _content.size())
+	while (pos < content.size())
 	{
 		skipWhitespace();
 		
-		if (_pos >= _content.size())
+		if (pos >= content.size())
 			break;
 
 		char c = currentChar();
@@ -91,12 +91,12 @@ void Lexer::tokenize()
 		}
 		else if (isWordChar(c))
 		{
-			_tokens.push_back(readWord());
+			token.push_back(readWord());
 		}
 		else
 		{
 			std::stringstream ss;
-			ss << "Unexpected character '" << c << "' at line " << _line << ", column " << _column;
+			ss << "Unexpected character '" << c << "' at line " << line << ", column " << column;
 			throw LexerException(ss.str());
 		}
 	}
@@ -118,12 +118,12 @@ bool Lexer::isWordChar(char c) const
 
 void Lexer::skipWhitespace()
 {
-	while (_pos < _content.size() && isWhitespace(currentChar()))
+	while (pos < content.size() && isWhitespace(currentChar()))
 	{
 		if (currentChar() == '\n')
 		{
-			++_line;
-			_column = 0;
+			++line;
+			column = 0;
 		}
 		advance();
 	}
@@ -131,11 +131,11 @@ void Lexer::skipWhitespace()
 
 Token Lexer::readWord()
 {
-	size_t startLine = _line;
-	size_t startColumn = _column;
+	size_t startLine = line;
+	size_t startColumn = column;
 	std::string word;
 
-	while (_pos < _content.size() && isWordChar(currentChar()))
+	while (pos < content.size() && isWordChar(currentChar()))
 	{
 		word += currentChar();
 		advance();
@@ -146,42 +146,42 @@ Token Lexer::readWord()
 
 void Lexer::addToken(TokenType type, const std::string& value)
 {
-	_tokens.push_back(Token(type, value, _line, _column));
+	token.push_back(Token(type, value, line, column));
 }
 
 char Lexer::currentChar() const
 {
-	if (_pos >= _content.size())
+	if (pos >= content.size())
 		return '\0';
-	return _content[_pos];
+	return content[pos];
 }
 
 char Lexer::peekChar(size_t offset) const
 {
-	if (_pos + offset >= _content.size())
+	if (pos + offset >= content.size())
 		return '\0';
-	return _content[_pos + offset];
+	return content[pos + offset];
 }
 
 void Lexer::advance()
 {
-	if (_pos < _content.size())
+	if (pos < content.size())
 	{
-		++_pos;
-		++_column;
+		++pos;
+		++column;
 	}
 }
 
 const std::vector<Token>& Lexer::getTokens() const
 {
-	return _tokens;
+	return token;
 }
 
 void Lexer::printTokens() const
 {
-	for (size_t i = 0; i < _tokens.size(); ++i)
+	for (size_t i = 0; i < token.size(); ++i)
 	{
-		const Token& tok = _tokens[i];
+		const Token& tok = token[i];
 		std::cout << "Token(";
 		
 		switch (tok.type)

@@ -4,8 +4,8 @@
 #include <cctype>
 
 Parser::Parser(const std::vector<Token>& tokens)
-	: _tokens(tokens),
-	  _index(0),
+	: token(tokens),
+	  index(0),
 	  _servers()
 {
 }
@@ -30,23 +30,23 @@ const std::vector<ServerConfig>& Parser::getServers() const
 
 const Token& Parser::currentToken() const
 {
-	if (_index >= _tokens.size())
-		return _tokens[_tokens.size() - 1]; // Return END token
-	return _tokens[_index];
+	if (index >= token.size())
+		return token[token.size() - 1]; // Return END token
+	return token[index];
 }
 
 const Token& Parser::peekToken(size_t offset) const
 {
-	size_t peekIndex = _index + offset;
-	if (peekIndex >= _tokens.size())
-		return _tokens[_tokens.size() - 1];
-	return _tokens[peekIndex];
+	size_t peekIndex = index + offset;
+	if (peekIndex >= token.size())
+		return token[token.size() - 1];
+	return token[peekIndex];
 }
 
 void Parser::advance()
 {
-	if (_index < _tokens.size())
-		++_index;
+	if (index < token.size())
+		++index;
 }
 
 bool Parser::isAtEnd() const

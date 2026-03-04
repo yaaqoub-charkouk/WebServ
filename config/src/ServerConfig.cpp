@@ -4,8 +4,8 @@ ServerConfig::ServerConfig()
 	: _port(80),
 	  _host("0.0.0.0"),
 	  _serverName(""),
-	  _root(""),
-	  _index("index.html"),
+	  root(""),
+	  index("index.html"),
 	  _clientMaxBodySize(1048576), // 1MB default
 	  _errorPages(),
 	  _locations()
@@ -16,8 +16,8 @@ ServerConfig::ServerConfig(const ServerConfig& other)
 	: _port(other._port),
 	  _host(other._host),
 	  _serverName(other._serverName),
-	  _root(other._root),
-	  _index(other._index),
+	  root(other.root),
+	  index(other.index),
 	  _clientMaxBodySize(other._clientMaxBodySize),
 	  _errorPages(other._errorPages),
 	  _locations(other._locations)
@@ -31,8 +31,8 @@ ServerConfig& ServerConfig::operator=(const ServerConfig& other)
 		_port = other._port;
 		_host = other._host;
 		_serverName = other._serverName;
-		_root = other._root;
-		_index = other._index;
+		root = other.root;
+		index = other.index;
 		_clientMaxBodySize = other._clientMaxBodySize;
 		_errorPages = other._errorPages;
 		_locations = other._locations;

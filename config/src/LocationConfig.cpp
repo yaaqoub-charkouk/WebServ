@@ -1,11 +1,11 @@
 #include "../include/LocationConfig.hpp"
 
 LocationConfig::LocationConfig()
-	: _path(""),
-	  _methods(),
-	  _root(""),
-	  _index(""),
-	  _autoindex(false),
+	: path(""),
+	  methods(),
+	  root(""),
+	  index(""),
+	  autoindex(false),
 	  _uploadStore(""),
 	  _cgiExtension(""),
 	  _redirectCode(0),
@@ -14,11 +14,11 @@ LocationConfig::LocationConfig()
 }
 
 LocationConfig::LocationConfig(const std::string& path)
-	: _path(path),
-	  _methods(),
-	  _root(""),
-	  _index(""),
-	  _autoindex(false),
+	: path(path),
+	  methods(),
+	  root(""),
+	  index(""),
+	  autoindex(false),
 	  _uploadStore(""),
 	  _cgiExtension(""),
 	  _redirectCode(0),
@@ -27,11 +27,11 @@ LocationConfig::LocationConfig(const std::string& path)
 }
 
 LocationConfig::LocationConfig(const LocationConfig& other)
-	: _path(other._path),
-	  _methods(other._methods),
-	  _root(other._root),
-	  _index(other._index),
-	  _autoindex(other._autoindex),
+	: path(other.path),
+	  methods(other.methods),
+	  root(other.root),
+	  index(other.index),
+	  autoindex(other.autoindex),
 	  _uploadStore(other._uploadStore),
 	  _cgiExtension(other._cgiExtension),
 	  _redirectCode(other._redirectCode),
@@ -43,11 +43,11 @@ LocationConfig& LocationConfig::operator=(const LocationConfig& other)
 {
 	if (this != &other)
 	{
-		_path = other._path;
-		_methods = other._methods;
-		_root = other._root;
-		_index = other._index;
-		_autoindex = other._autoindex;
+		path = other.path;
+		methods = other.methods;
+		root = other.root;
+		index = other.index;
+		autoindex = other.autoindex;
 		_uploadStore = other._uploadStore;
 		_cgiExtension = other._cgiExtension;
 		_redirectCode = other._redirectCode;
@@ -68,9 +68,9 @@ void LocationConfig::setRedirect(int code, const std::string& url)
 
 bool LocationConfig::hasMethod(const std::string& method) const
 {
-	for (size_t i = 0; i < _methods.size(); ++i)
+	for (size_t i = 0; i < methods.size(); ++i)
 	{
-		if (_methods[i] == method)
+		if (methods[i] == method)
 			return true;
 	}
 	return false;

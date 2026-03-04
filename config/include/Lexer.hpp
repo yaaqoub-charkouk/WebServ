@@ -10,19 +10,17 @@
 class Lexer
 {
 private:
-	std::string _filename;
-	std::string _content;
-	std::vector<Token> _tokens;
-	size_t _pos;
-	size_t _line;
-	size_t _column;
+	std::string filename;
+	std::string content;
+	std::vector<Token> token;
+	size_t pos;
+	size_t line;
+	size_t column;
 
-	// Core lexing functions
 	void readFile();
 	void removeComments();
 	void tokenize();
 	
-	// Helper functions
 	bool isWhitespace(char c) const;
 	bool isWordChar(char c) const;
 	void skipWhitespace();
