@@ -1,6 +1,8 @@
 # include "server.hpp"
+#include <cstring>
+#include <iterator>
+#include <netinet/in.h>
 #include <stdexcept>
-#include <string>
 #include <sys/socket.h>
 
 
@@ -37,6 +39,8 @@ void    Server::addListeningSocket(int port)
         throw std::runtime_error("Failed to listen on socket binded to port : " + std::to_string(port));
     }
 
+
+
     if (fcntl(newServSocket, F_SETFL, O_NONBLOCK) == -1) {
         close(newServSocket);
         throw std::runtime_error("Failed to make the socket non Blocking" + std::to_string(port));
@@ -49,6 +53,41 @@ void    Server::addListeningSocket(int port)
     
     listenSockets.push_back(newServSocket);
     pollFds.push_back(pfd);
+
+    // now i have all servers sockets & poll in 
 }
 
-// what is TX in kernel when send ?
+
+void    Server::run()
+{
+    while (1337)
+    {
+        int ret = poll(pollFds.data(), pollFds.size(), -1);
+    
+        if (ret < 0)
+            throw std::runtime_error("poll failed can't listen on servers sockets");
+        
+        std::vector<struct pollfd>::iterator it = pollFds.begin();
+        std::vector<struct pollfd>::iterator end = pollFds.end();
+    
+        while (it != end)
+        {
+            if (it->revents & POLLIN)
+            {
+                struct sockaddr_in client;
+                socklen_t len = sizeof(client);
+                
+                memset(&client, 0, len);
+                
+                int client_fd = -1;
+                client_fd = accept(it->fd, reinterpret_cast<sockaddr*>(&client), &len);
+                
+
+            }
+            it++;
+        }
+
+    }
+
+
+}
