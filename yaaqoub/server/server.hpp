@@ -4,6 +4,7 @@
 
 # include <vector>
 # include <map>
+# include <algorithm>
 # include <string>
 # include <poll.h>
 # include <cstring>
@@ -18,7 +19,12 @@
 
 
 
-class Client;
+class Client
+{
+public:
+    std::string request;
+    std::string response;
+};
 
 
 
@@ -30,11 +36,11 @@ private:
     std::vector<struct pollfd>      pollFds;
 
 private:
-    void    acceptClient(int listenFd); // session creation
+    void    acceptClient(int serverFd); // session creation
     void    readFromClient(int clientFd);
     void    writeToClient(int clientFd);
     void    closeClient(int clientFd);
-    bool    Server::isListeningSocket(int fd)
+    bool    isListeningSocket(int fd);
 
 public:
     void    addListeningSocket(int port); // setup
