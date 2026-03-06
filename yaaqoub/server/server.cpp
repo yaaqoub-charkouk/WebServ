@@ -1,6 +1,10 @@
 # include "server.hpp"
+#include <cerrno>
+#include <cstring>
+#include <iterator>
+#include <netinet/in.h>
 #include <stdexcept>
-#include <string>
+#include <sys/poll.h>
 #include <sys/socket.h>
 
 
@@ -37,6 +41,8 @@ void    Server::addListeningSocket(int port)
         throw std::runtime_error("Failed to listen on socket binded to port : " + std::to_string(port));
     }
 
+
+
     if (fcntl(newServSocket, F_SETFL, O_NONBLOCK) == -1) {
         close(newServSocket);
         throw std::runtime_error("Failed to make the socket non Blocking" + std::to_string(port));
@@ -49,6 +55,55 @@ void    Server::addListeningSocket(int port)
     
     listenSockets.push_back(newServSocket);
     pollFds.push_back(pfd);
+
+    // now i have all servers sockets & poll in 
 }
 
-// what is TX in kernel when send ?
+
+void    Server::run()
+{
+    while (1337)
+    {
+        int ret = poll(pollFds.data(), pollFds.size(), -1);
+    
+        if (ret < 0)
+            throw std::runtime_error("poll failed can't listen on servers sockets");
+    
+        for (size_t i = 0; i < pollFds.size(); ++i)
+        {
+            if (pollFds[i].revents == 0)
+                continue ; // just to optimise ignore sockets with no events . 
+            if (pollFds[i].revents & POLLIN)
+            {                                
+                if (isListeningSocket(pollFds[i].fd))
+                    acceptClient(pollFds[i].fd);
+                else
+                    readFromClient(pollFds[i]);
+            }
+            if (pollFds[i].revents & POLLOUT)
+            {
+                writeToClient(pollFds[i]);
+            }
+        }
+
+    }
+
+
+}
+
+
+bool Server::isListeningSocket(int fd)
+{
+    return std::find(listenSockets.begin(),
+                     listenSockets.end(),
+                     fd) != listenSockets.end();
+}
+
+int main(void)
+{
+    Server server;
+
+    server.addListeningSocket(8080);
+    server.addListeningSocket(1337);
+    server.run();
+}

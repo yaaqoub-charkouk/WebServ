@@ -4,6 +4,7 @@
 
 # include <vector>
 # include <map>
+# include <algorithm>
 # include <string>
 # include <poll.h>
 # include <cstring>
@@ -15,10 +16,17 @@
 # include <fstream>
 # include <sstream>
 # include <fcntl.h>
+# include <iostream>
+# include <cerrno>
 
 
 
-class Client;
+class Client
+{
+public:
+    std::string request;
+    std::string response;
+};
 
 
 
@@ -30,11 +38,11 @@ private:
     std::vector<struct pollfd>      pollFds;
 
 private:
-    void    acceptClient(int listenFd); // session creation
-    void    readFromClient(int clientFd);
-    void    writeToClient(int clientFd);
+    void    acceptClient(int serverFd); // session creation
+    void    readFromClient(struct pollfd& pfd);
+    void    writeToClient(struct pollfd& pfd);
     void    closeClient(int clientFd);
-
+    bool    isListeningSocket(int fd);
 
 public:
     void    addListeningSocket(int port); // setup
@@ -45,11 +53,11 @@ public:
     void        sendResponse(int clientFd, const std::string& data);
 
 
-public:
-    Server();
-    Server(const Server& other);
-    Server& operator=(const Server& other);
-    ~Server();
+// public:
+//     Server();
+//     Server(const Server& other);
+//     Server& operator=(const Server& other);
+//     ~Server();
 };
 
 
