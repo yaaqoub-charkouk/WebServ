@@ -16,6 +16,8 @@
 # include <fstream>
 # include <sstream>
 # include <fcntl.h>
+# include <iostream>
+# include <cerrno>
 
 
 
@@ -37,8 +39,8 @@ private:
 
 private:
     void    acceptClient(int serverFd); // session creation
-    void    readFromClient(int clientFd);
-    void    writeToClient(int clientFd);
+    void    readFromClient(struct pollfd& pfd);
+    void    writeToClient(struct pollfd& pfd);
     void    closeClient(int clientFd);
     bool    isListeningSocket(int fd);
 
@@ -51,11 +53,11 @@ public:
     void        sendResponse(int clientFd, const std::string& data);
 
 
-public:
-    Server();
-    Server(const Server& other);
-    Server& operator=(const Server& other);
-    ~Server();
+// public:
+//     Server();
+//     Server(const Server& other);
+//     Server& operator=(const Server& other);
+//     ~Server();
 };
 
 

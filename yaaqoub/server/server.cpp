@@ -71,16 +71,18 @@ void    Server::run()
     
         for (size_t i = 0; i < pollFds.size(); ++i)
         {
+            if (pollFds[i].revents == 0)
+                continue ; // just to optimise ignore sockets with no events . 
             if (pollFds[i].revents & POLLIN)
             {                                
                 if (isListeningSocket(pollFds[i].fd))
                     acceptClient(pollFds[i].fd);
                 else
-                    readFromClient(pollFds[i].fd);
+                    readFromClient(pollFds[i]);
             }
             if (pollFds[i].revents & POLLOUT)
             {
-                writeToClient(pollFds[i].fd); // need to be implemented .
+                writeToClient(pollFds[i]);
             }
         }
 
@@ -89,94 +91,19 @@ void    Server::run()
 
 }
 
-void    Server::acceptClient(int serverFd)
-{
-    // add a while (true) to accept multiple clients in one poll cycle
-    struct sockaddr_in client;
-    socklen_t len = sizeof(client);
-    
-    memset(&client, 0, len);
-
-    int client_fd = accept(serverFd, reinterpret_cast<sockaddr*>(&client), &len);
-    if (client_fd == -1)
-    {
-        if (errno == EAGAIN || errno == EWOULDBLOCK)
-            return ;
-        throw std::runtime_error("Failed to add new client accept failed");
-    }
-
-    // we're adding a new client . so make it non blocking & add it to pollFds;
-    if (fcntl(client_fd, F_SETFL, O_NONBLOCK) == -1)
-    {
-        close(client_fd);
-        throw std::runtime_error("Failed to make client_fd non block");
-    }
-
-    struct pollfd pfd;
-    pfd.fd = client_fd;
-    pfd.events = POLLIN;
-    pfd.revents = 0;
-
-    pollFds.push_back(pfd);
-
-    clients[client_fd] = Client();
-}
-
-
-void    Server::readFromClient(int clientFd)
-{
-    char buffer[4096];
-
-    while (true)
-    {
-        int n = recv(clientFd, buffer, sizeof(buffer), 0); // why 0?
-
-        if (n > 0)
-        {
-            clients[clientFd].request.append(buffer, n);
-            // need to check for end of request "\r\n\r\n"
-            if (clients[clientFd].request.find("\n\r\n\r", 0) != std::string::npos)
-            {
-                // pfd.events = POLLOUT;
-                // pfd.revets = 0;
-            }
-        }
-        else if (n == 0)
-        {
-            closeClient(clientFd);
-            return ;
-        }
-        else
-        {
-            if (errno == EAGAIN || errno == EWOULDBLOCK)
-                break ;
-            closeClient(clientFd);
-            return ;
-        }
-    }
-}
-
-void Server::closeClient(int clientFd)
-{
-    close(clientFd);
-
-    // remove from pollFds
-    for (size_t i = 0; i < pollFds.size(); ++i)
-    {
-        if (pollFds[i].fd == clientFd)
-        {
-            pollFds.erase(pollFds.begin() + i);
-            break;
-        }
-    }
-
-    // remove client session
-    clients.erase(clientFd);
-}
 
 bool Server::isListeningSocket(int fd)
 {
     return std::find(listenSockets.begin(),
                      listenSockets.end(),
                      fd) != listenSockets.end();
+}
+
+int main(void)
+{
+    Server server;
+
+    server.addListeningSocket(8080);
+    server.addListeningSocket(1337);
+    server.run();
 }
