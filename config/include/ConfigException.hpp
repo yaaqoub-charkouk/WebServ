@@ -27,20 +27,5 @@ public:
 	virtual ~LexerException() throw() {}
 };
 
-class ParserException : public ConfigException
-{
-public:
-	explicit ParserException(const std::string& message) 
-		: ConfigException("Parser Error: " + message) {}
-	virtual ~ParserException() throw() {}
-};
-
-class ValidatorException : public ConfigException
-{
-public:
-	explicit ValidatorException(const std::string& message) 
-		: ConfigException("Validator Error: " + message) {}
-	virtual ~ValidatorException() throw() {}
-};
 
 #endif

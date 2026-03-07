@@ -13,22 +13,13 @@ NAME = config_parser
 # Source files
 SRCS = main.cpp \
        $(CONFIG_SRC_DIR)/Lexer.cpp \
-       $(CONFIG_SRC_DIR)/Parser.cpp \
-       $(CONFIG_SRC_DIR)/Validator.cpp \
-       $(CONFIG_SRC_DIR)/LocationConfig.cpp \
-       $(CONFIG_SRC_DIR)/ServerConfig.cpp
 
 # Object files
 OBJS = $(SRCS:.cpp=.o)
 
 # Header files (for dependencies)
 HEADERS = $(CONFIG_INCLUDE_DIR)/ConfigException.hpp \
-          $(CONFIG_INCLUDE_DIR)/Token.hpp \
-          $(CONFIG_INCLUDE_DIR)/LocationConfig.hpp \
-          $(CONFIG_INCLUDE_DIR)/ServerConfig.hpp \
-          $(CONFIG_INCLUDE_DIR)/Lexer.hpp \
-          $(CONFIG_INCLUDE_DIR)/Parser.hpp \
-          $(CONFIG_INCLUDE_DIR)/Validator.hpp
+          $(CONFIG_INCLUDE_DIR)/Token.hpp
 
 # Colors for output
 GREEN = \033[0;32m
