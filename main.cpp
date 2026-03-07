@@ -1,5 +1,5 @@
 #include <iostream>
-#include "config/include/Lexer.hpp"
+#include "tahalla/include/Lexer.hpp"
 
 int main(int ac, char **av)
 {

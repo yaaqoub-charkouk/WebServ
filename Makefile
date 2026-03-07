@@ -4,8 +4,8 @@ CXXFLAGS = -Wall -Wextra -Werror -std=c++98
 INCLUDES = -I.
 
 # Directories
-CONFIG_SRC_DIR = config/src/
-CONFIG_INCLUDE_DIR = config/include/
+CONFIG_SRC_DIR = tahalla/src/
+CONFIG_INCLUDE_DIR = tahalla/include/
 
 # Target executable
 NAME = config_parser
