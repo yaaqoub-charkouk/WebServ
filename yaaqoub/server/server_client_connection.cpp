@@ -47,17 +47,17 @@ void    Server::readFromClient(struct pollfd& pfd)
 
     while (true)
     {
-        int n = recv(pfd.fd, buffer, sizeof(buffer), 0); // why 0?
+        int n = recv(pfd.fd, buffer, sizeof(buffer), 0);
 
         if (n > 0)
         {
             clients[pfd.fd].request.append(buffer, n);
-            // need to check for end of request "\r\n\r\n"
-            if (clients[pfd.fd].request.find("\r\n\r\n", 0) != std::string::npos)
+            // need to check for end of request "\r\n\r\n" 
+            if (clients[pfd.fd].request.find("\r\n\r\n", 0) != std::string::npos) // TAHALLA
             {
                 pfd.events = POLLOUT;
                 pfd.revents = 0;
-            }
+            } // keep it until http handler start getting requests
         }
         else if (n == 0)
         {
