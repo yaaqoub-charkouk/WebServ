@@ -32,6 +32,12 @@ void    Server::acceptClient(int serverFd)
     pollFds.push_back(pfd);
 
     clients[client_fd] = Client();
+
+
+    // just for debugging :
+    // printf("Client IP: %s\n", inet_ntoa(client.sin_addr));
+    printf("Client port: %d\n", ntohs(client.sin_port));
+        
 }
 
 
