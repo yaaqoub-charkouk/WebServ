@@ -78,17 +78,17 @@ void    Server::run()
                 if (isListeningSocket(pollFds[i].fd))
                     acceptClient(pollFds[i].fd);
                 else
+                {
                     readFromClient(pollFds[i]);
+                    // call the http handler TAHALLA
+                }
             }
             if (pollFds[i].revents & POLLOUT)
             {
                 writeToClient(pollFds[i]);
             }
         }
-
     }
-
-
 }
 
 
