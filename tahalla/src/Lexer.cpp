@@ -14,7 +14,7 @@ Lexer::Lexer(const std::string& filename)
 	removeComments();
 	tokenize();
 	addToken(TOKEN_END, "");
-	printTokens();
+	// printTokens(); // debug output disabled
 }
 
 Lexer::~Lexer()

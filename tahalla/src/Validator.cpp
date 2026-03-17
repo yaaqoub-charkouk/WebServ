@@ -121,20 +121,21 @@ void Validator::validateLocation(const LocationConfig& location)
 
 void Validator::checkDuplicatePorts()
 {
-	std::set<int> ports;
-
+	// Allow multiple servers on the same port only if they have distinct server_names
+	// (virtual hosting). Reject only when both port AND server_name are identical.
 	for (size_t i = 0; i < servers.size(); ++i)
 	{
-		int port = servers[i].getPort();
-		
-		if (ports.find(port) != ports.end())
+		for (size_t j = i + 1; j < servers.size(); ++j)
 		{
-			std::stringstream ss;
-			ss << "Duplicate port number: " << port;
-			throw ValidatorException(ss.str());
+			if (servers[i].getPort() == servers[j].getPort() &&
+			    servers[i].getServerName() == servers[j].getServerName())
+			{
+				std::stringstream ss;
+				ss << "Duplicate server block: port " << servers[i].getPort()
+				   << " with server_name \"" << servers[i].getServerName() << "\"";
+				throw ValidatorException(ss.str());
+			}
 		}
-		
-		ports.insert(port);
 	}
 }
 

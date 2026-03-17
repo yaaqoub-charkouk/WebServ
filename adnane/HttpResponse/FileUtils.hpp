@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fstream>
@@ -8,20 +9,26 @@
 
 struct FileInfo
 {
-    bool exist = false;
-    bool isFile = false;
-    bool isDir = false;
-    bool isReadable = false;
-    long size = -1;
+    bool exist;
+    bool isFile;
+    bool isDir;
+    bool isReadable;
+    long size;
 
-    //For c++98 struct initialization
-    //  FileInfo() : exist(false), isFile(false), isDir(false),
-    //              isReadable(false), size(-1) {}
+    FileInfo() : exist(false), isFile(false), isDir(false),
+                 isReadable(false), size(-1) {}
+};
+
+struct DirEntry
+{
+    std::string name;
+    bool        isDir;
 };
 
 class   FileUtils
 {
 public:
-    static FileInfo getInfo(const std::string &path);
-    static std::string getContent(const std::string &path);
+    static FileInfo               getInfo(const std::string &path);
+    static std::string            getContent(const std::string &path);
+    static std::vector<DirEntry>  listDir(const std::string &path);
 };

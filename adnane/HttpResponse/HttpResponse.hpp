@@ -30,6 +30,8 @@ public:
     static HttpResponse makeFileRes(const std::string &path);
     static HttpResponse makeErrorRes(int code, const std::string &path);
     static HttpResponse makeRedireRes(int code, const std::string &location);
+    static HttpResponse makeAutoindexRes(const std::string &dirPath,
+                                         const std::string &urlPath);
     
     // For files (if the extension is .html the type is text/html)
    static  std::string getFileType(const std::string &extension);

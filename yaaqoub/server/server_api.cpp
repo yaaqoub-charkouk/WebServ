@@ -16,14 +16,17 @@ std::string Server::getRequest(int clientFd)
 
 void    Server::sendResponse(int clientFd, const std::string& data)
 {
-    clients[clientFd].response = data;
+    std::map<int, Client>::iterator it = clients.find(clientFd);
+    if (it == clients.end())
+        return;
+
+    it->second.response = data;
 
     for (size_t i = 0; i < pollFds.size(); i++)
     {
         if (pollFds[i].fd == clientFd)
         {
             pollFds[i].events = POLLOUT;
-            // pollFds[i].revents = 0; // important ??
             break;
         }
     }

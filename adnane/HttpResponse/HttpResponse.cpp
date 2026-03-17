@@ -1,4 +1,6 @@
 #include "HttpResponse.hpp"
+#include <vector>
+#include <sstream>
 
 
 HttpResponse::HttpResponse() :
@@ -143,6 +145,61 @@ HttpResponse HttpResponse::makeRedireRes(int code, const std::string &location)
     res.setHeaders("Location", location);
     res.setHeaders("Content-Length", "0");
 
+    return res;
+}
+
+HttpResponse HttpResponse::makeAutoindexRes(const std::string &dirPath,
+                                             const std::string &urlPath)
+{
+    std::vector<DirEntry> entries = FileUtils::listDir(dirPath);
+
+    std::string title = "Index of " + urlPath;
+    std::stringstream html;
+    html << "<!DOCTYPE html><html><head><meta charset=\"UTF-8\"><title>"
+         << title << "</title>"
+         << "<style>body{font-family:monospace;margin:20px}"
+         << "a{display:block;padding:2px 0;text-decoration:none;color:#00e}"
+         << "a:hover{text-decoration:underline}"
+         << "h1{border-bottom:1px solid #ccc;padding-bottom:8px}"
+         << "</style></head><body>"
+         << "<h1>" << title << "</h1><hr>";
+
+    // Parent link
+    if (urlPath != "/")
+    {
+        std::string parent = urlPath;
+        if (!parent.empty() && parent[parent.size() - 1] == '/')
+            parent = parent.substr(0, parent.size() - 1);
+        size_t last = parent.rfind('/');
+        parent = (last == std::string::npos) ? "/" : parent.substr(0, last + 1);
+        html << "<a href=\"" << parent << "\">../</a>";
+    }
+
+    for (size_t i = 0; i < entries.size(); ++i)
+    {
+        const DirEntry& e = entries[i];
+        std::string href  = urlPath;
+        if (!href.empty() && href[href.size() - 1] != '/')
+            href += '/';
+        href += e.name;
+        if (e.isDir)
+            href += '/';
+
+        html << "<a href=\"" << href << "\">"
+             << e.name << (e.isDir ? "/" : "") << "</a>";
+    }
+
+    html << "<hr></body></html>";
+
+    std::string content = html.str();
+    std::ostringstream size;
+    size << content.size();
+
+    HttpResponse res;
+    res.setStatus(200, "OK");
+    res.setHeaders("Content-Type", "text/html");
+    res.setHeaders("Content-Length", size.str());
+    res.setBody(content);
     return res;
 }
 

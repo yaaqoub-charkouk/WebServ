@@ -1,23 +1,24 @@
 # include "server.hpp"
+#include "srcs/HttpRequest.hpp"
+#include "srcs/RequestHandler.hpp"
+#include <sstream>
 
 
 void    Server::acceptClient(int serverFd)
 {
-    // add a while (true) to accept multiple clients in one poll cycle
     struct sockaddr_in client;
     socklen_t len = sizeof(client);
-    
+
     memset(&client, 0, len);
 
     int client_fd = accept(serverFd, reinterpret_cast<sockaddr*>(&client), &len);
     if (client_fd == -1)
     {
         if (errno == EAGAIN || errno == EWOULDBLOCK)
-            return ;
+            return;
         throw std::runtime_error("Failed to add new client accept failed");
     }
 
-    // we're adding a new client . so make it non blocking & add it to pollFds;
     if (fcntl(client_fd, F_SETFL, O_NONBLOCK) == -1)
     {
         close(client_fd);
@@ -25,19 +26,15 @@ void    Server::acceptClient(int serverFd)
     }
 
     struct pollfd pfd;
-    pfd.fd = client_fd;
-    pfd.events = POLLIN;
+    pfd.fd      = client_fd;
+    pfd.events  = POLLIN;
     pfd.revents = 0;
 
     pollFds.push_back(pfd);
 
-    clients[client_fd] = Client();
-
-
-    // just for debugging :
-    // printf("Client IP: %s\n", inet_ntoa(client.sin_addr));
-    printf("Client port: %d\n", ntohs(client.sin_port));
-        
+    Client c;
+    c.listenPort = listenFdToPort.count(serverFd) ? listenFdToPort[serverFd] : 0;
+    clients[client_fd] = c;
 }
 
 
@@ -51,67 +48,133 @@ void    Server::readFromClient(struct pollfd& pfd)
 
         if (n > 0)
         {
-            clients[pfd.fd].request.append(buffer, n);
-            // need to check for end of request "\r\n\r\n" 
-            if (clients[pfd.fd].request.find("\r\n\r\n", 0) != std::string::npos) // TAHALLA
+            clients[pfd.fd].request.append(buffer, static_cast<size_t>(n));
+
+            // Check if request is complete
+            if (HttpRequest::isRequestComplete(clients[pfd.fd].request))
             {
-                pfd.events = POLLOUT;
-                pfd.revents = 0;
-            } // keep it until http handler start getting requests
+                // Determine the server config to get client_max_body_size.
+                // Try to extract Host header from what we have so far.
+                int         port    = clients[pfd.fd].listenPort;
+                std::string rawReq  = clients[pfd.fd].request;
+                std::string host;
+                size_t      hostPos = rawReq.find("\r\nHost:");
+                if (hostPos == std::string::npos)
+                    hostPos = rawReq.find("\r\nhost:");
+                if (hostPos != std::string::npos)
+                {
+                    size_t vs = hostPos + 7; // skip "\r\nHost:"
+                    while (vs < rawReq.size() && rawReq[vs] == ' ')
+                        ++vs;
+                    size_t ve = rawReq.find("\r\n", vs);
+                    if (ve != std::string::npos)
+                        host = rawReq.substr(vs, ve - vs);
+                }
+
+                const ServerConfig& cfg = findServerConfig(port, host);
+                size_t maxBody = cfg.getClientMaxBodySize();
+
+                // Check for oversize body
+                size_t headerEnd = rawReq.find("\r\n\r\n");
+                if (headerEnd != std::string::npos)
+                {
+                    size_t bodySize = rawReq.size() - (headerEnd + 4);
+                    if (maxBody > 0 && bodySize > maxBody)
+                    {
+                        HttpResponse errResp = HttpResponse::makeErrorRes(413, "");
+                        std::string  raw     = errResp.getResponse();
+                        clients[pfd.fd].response       = raw;
+                        clients[pfd.fd].rawCgiResponse  = false;
+                        pfd.events  = POLLOUT;
+                        pfd.revents = 0;
+                        return;
+                    }
+                }
+                processRequest(pfd);
+                return;
+            }
         }
         else if (n == 0)
         {
             closeClient(pfd.fd);
-            return ;
+            return;
         }
         else
         {
             if (errno == EAGAIN || errno == EWOULDBLOCK)
-                break ;
+                break;
             closeClient(pfd.fd);
-            return ;
+            return;
         }
     }
 }
 
+
+void    Server::processRequest(struct pollfd& pfd)
+{
+    Client& client = clients[pfd.fd];
+
+    HttpRequest req;
+    if (!req.parse(client.request))
+    {
+        int code = (req.errorCode != 0) ? req.errorCode : 400;
+        HttpResponse errResp = HttpResponse::makeErrorRes(code, "");
+        client.response      = errResp.getResponse();
+        client.rawCgiResponse = false;
+        pfd.events  = POLLOUT;
+        pfd.revents = 0;
+        return;
+    }
+
+    // Find matching server config
+    std::string host = req.getHeader("host");
+    const ServerConfig& cfg = findServerConfig(client.listenPort, host);
+
+    RequestHandler handler(cfg);
+    HttpResponse   resp = handler.handle(req);
+
+    // If the response body is already a full raw HTTP response (from CGI),
+    // send it verbatim; otherwise use getResponse()
+    std::string raw = resp.getResponse();
+    client.response      = raw;
+    client.rawCgiResponse = false;
+    pfd.events  = POLLOUT;
+    pfd.revents = 0;
+}
+
+
 void Server::writeToClient(struct pollfd& pfd)
 {
-    // hardcoded write to client for now . wait until adnane build response 
+    Client& client = clients[pfd.fd];
 
-    std::ifstream file("../index.html");
-    if (!file.is_open())
+    if (client.response.empty())
     {
-        std::cerr << "Failed to open file\n";
-        throw std::runtime_error("Failed to open index.html");
+        closeClient(pfd.fd);
+        return;
     }
-    std::stringstream buffer_stream;
-    buffer_stream << file.rdbuf();
-    std::string body = buffer_stream.str();
 
-    
-    
-    std::stringstream response;
-    response << "HTTP/1.1 200 OK\r\n";
-    response << "Content-Type: text/html\r\n";
-    response << "Content-Length: " << body.size() << "\r\n";
-    response << "Connection: close\r\n";
-    response << "\r\n";
-    response << body;
+    ssize_t sent = send(pfd.fd,
+                        client.response.c_str(),
+                        client.response.size(),
+                        0);
 
-
-    std::string response_str = response.str();
-    
-    send(pfd.fd, response_str.c_str(), response_str.size(), 0);
-
-    // maybe i'll keep the client alive since the browser can use only one tcp three way handshake 
-    closeClient(pfd.fd);
+    if (sent > 0)
+    {
+        client.response.erase(0, static_cast<size_t>(sent));
+        if (client.response.empty())
+            closeClient(pfd.fd);
+    }
+    else if (sent == 0 || (errno != EAGAIN && errno != EWOULDBLOCK))
+    {
+        closeClient(pfd.fd);
+    }
 }
+
 
 void Server::closeClient(int clientFd)
 {
     close(clientFd);
 
-    // remove from pollFds
     for (size_t i = 0; i < pollFds.size(); ++i)
     {
         if (pollFds[i].fd == clientFd)
@@ -121,6 +184,6 @@ void Server::closeClient(int clientFd)
         }
     }
 
-    // remove client session
     clients.erase(clientFd);
 }
+
