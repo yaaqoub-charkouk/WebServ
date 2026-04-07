@@ -8,19 +8,25 @@ CONFIG_SRC_DIR = tahalla/src/
 CONFIG_INCLUDE_DIR = tahalla/include/
 
 # Target executable
-NAME = config_parser
+NAME = server
 
 # Source files
+SERVER = server/server.cpp server/server_client_connection.cpp server/server_api.cpp
+
 SRCS = main.cpp \
-       $(CONFIG_SRC_DIR)/Lexer.cpp \
-       $(CONFIG_SRC_DIR)/Parser.cpp \
+	$(CONFIG_SRC_DIR)/Lexer.cpp \
+	$(CONFIG_SRC_DIR)/Parser.cpp \
 	$(CONFIG_SRC_DIR)/ParserBlocks.cpp \
 	$(CONFIG_SRC_DIR)/ParserServerDirectives.cpp \
 	$(CONFIG_SRC_DIR)/ParserLocationDirectives.cpp \
 	$(CONFIG_SRC_DIR)/ParserUtils.cpp \
-       $(CONFIG_SRC_DIR)/Validator.cpp \
-       $(CONFIG_SRC_DIR)/LocationConfig.cpp \
-       $(CONFIG_SRC_DIR)/ServerConfig.cpp
+	$(CONFIG_SRC_DIR)/Validator.cpp \
+	$(CONFIG_SRC_DIR)/LocationConfig.cpp \
+	$(CONFIG_SRC_DIR)/ServerConfig.cpp \
+	$(SERVER)
+
+
+
 
 # Object files
 OBJS = $(SRCS:.cpp=.o)

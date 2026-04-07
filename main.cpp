@@ -2,6 +2,9 @@
 #include "tahalla/include/Lexer.hpp"
 #include "tahalla/include/Parser.hpp"
 #include "tahalla/include/Validator.hpp"
+#include "server/server.hpp"
+
+
 
 int main(int ac, char **av)
 {
@@ -24,6 +27,10 @@ int main(int ac, char **av)
 		Validator validator(parser.getServers());
 		validator.validate();
 		std::cout << "--- Validator Complete ---" << std::endl;
+
+		Server		server(parser.getServers());
+		
+		
 
 		return 0;
 	}

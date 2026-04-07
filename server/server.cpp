@@ -7,6 +7,13 @@
 #include <sys/poll.h>
 #include <sys/socket.h>
 
+Server::Server(const std::vector<ServerConfig>& servers)
+{
+    for (size_t i = 0; i < servers.size(); ++i)
+    {
+        addListeningSocket(servers[i].getPort());
+    }
+}
 
 void    Server::addListeningSocket(int port)
 {
@@ -99,11 +106,11 @@ bool Server::isListeningSocket(int fd)
                      fd) != listenSockets.end();
 }
 
-int main(void)
-{
-    Server server;
+// int main(void)
+// {
+//     Server server;
 
-    server.addListeningSocket(8080);
-    server.addListeningSocket(1337);
-    server.run();
-}
+//     server.addListeningSocket(8080);
+//     // server.addListeningSocket(1337);
+//     server.run();
+// }

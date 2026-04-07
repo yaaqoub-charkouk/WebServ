@@ -19,6 +19,7 @@
 # include <iostream>
 # include <cerrno>
 
+# include "../tahalla/include/Parser.hpp"
 
 
 class Client
@@ -45,6 +46,7 @@ private:
     bool    isListeningSocket(int fd);
 
 public:
+    Server(const std::vector<ServerConfig>& servers);
     void    addListeningSocket(int port); // setup
     void    run();
 
