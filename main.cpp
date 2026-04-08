@@ -1,10 +1,8 @@
 #include <iostream>
-#include "tahalla/include/Lexer.hpp"
-#include "tahalla/include/Parser.hpp"
-#include "tahalla/include/Validator.hpp"
+#include "config/Lexer.hpp"
+#include "config/Parser.hpp"
+#include "config/Validator.hpp"
 #include "server/server.hpp"
-
-
 
 int main(int ac, char **av)
 {
@@ -29,8 +27,7 @@ int main(int ac, char **av)
 		std::cout << "--- Validator Complete ---" << std::endl;
 
 		Server		server(parser.getServers());
-		
-		
+		server.run();
 
 		return 0;
 	}

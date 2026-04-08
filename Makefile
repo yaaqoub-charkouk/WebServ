@@ -1,52 +1,53 @@
 # Compiler and flags
 CXX = c++
 CXXFLAGS = -Wall -Wextra -Werror -std=c++98
-INCLUDES = -I.
+INCLUDES = -Iinclude
 
 # Directories
-CONFIG_SRC_DIR = tahalla/src/
-CONFIG_INCLUDE_DIR = tahalla/include/
+SRC_DIR = src
+CONFIG_SRC = src/config
+SERVER_SRC = src/server
+RESPONSE_SRC = src/response
+CGI_SRC = src/cgi
 
-# Target executable
-NAME = server
-
-# Source files
-SERVER = server/server.cpp server/server_client_connection.cpp server/server_api.cpp
+NAME = webserv
 
 SRCS = main.cpp \
-	$(CONFIG_SRC_DIR)/Lexer.cpp \
-	$(CONFIG_SRC_DIR)/Parser.cpp \
-	$(CONFIG_SRC_DIR)/ParserBlocks.cpp \
-	$(CONFIG_SRC_DIR)/ParserServerDirectives.cpp \
-	$(CONFIG_SRC_DIR)/ParserLocationDirectives.cpp \
-	$(CONFIG_SRC_DIR)/ParserUtils.cpp \
-	$(CONFIG_SRC_DIR)/Validator.cpp \
-	$(CONFIG_SRC_DIR)/LocationConfig.cpp \
-	$(CONFIG_SRC_DIR)/ServerConfig.cpp \
-	$(SERVER)
+	$(CONFIG_SRC)/Lexer.cpp \
+	$(CONFIG_SRC)/Parser.cpp \
+	$(CONFIG_SRC)/ParserBlocks.cpp \
+	$(CONFIG_SRC)/ParserServerDirectives.cpp \
+	$(CONFIG_SRC)/ParserLocationDirectives.cpp \
+	$(CONFIG_SRC)/ParserUtils.cpp \
+	$(CONFIG_SRC)/Validator.cpp \
+	$(CONFIG_SRC)/LocationConfig.cpp \
+	$(CONFIG_SRC)/ServerConfig.cpp \
+	$(SERVER_SRC)/server.cpp \
+	$(SERVER_SRC)/server_client_connection.cpp \
+	$(SERVER_SRC)/server_api.cpp \
+	$(RESPONSE_SRC)/HttpResponse.cpp \
+	$(RESPONSE_SRC)/FileUtils.cpp \
+	$(CGI_SRC)/Cgi.cpp
 
-
-
-
-# Object files
 OBJS = $(SRCS:.cpp=.o)
 
-# Header files (for dependencies)
-HEADERS = $(CONFIG_INCLUDE_DIR)/ConfigException.hpp \
-          $(CONFIG_INCLUDE_DIR)/Token.hpp \
-          $(CONFIG_INCLUDE_DIR)/LocationConfig.hpp \
-          $(CONFIG_INCLUDE_DIR)/ServerConfig.hpp \
-          $(CONFIG_INCLUDE_DIR)/Lexer.hpp \
-          $(CONFIG_INCLUDE_DIR)/Parser.hpp \
-          $(CONFIG_INCLUDE_DIR)/Validator.hpp
+HEADERS = include/config/ConfigException.hpp \
+          include/config/Token.hpp \
+          include/config/LocationConfig.hpp \
+          include/config/ServerConfig.hpp \
+          include/config/Lexer.hpp \
+          include/config/Parser.hpp \
+          include/config/Validator.hpp \
+          include/server/server.hpp \
+          include/response/HttpResponse.hpp \
+          include/response/FileUtils.hpp \
+          include/cgi/Cgi.hpp
 
-# Colors for output
 GREEN = \033[0;32m
 RED = \033[0;31m
 YELLOW = \033[0;33m
-NC = \033[0m # No Color
+NC = \033[0m
 
-# Rules
 all: $(NAME)
 
 $(NAME): $(OBJS)
