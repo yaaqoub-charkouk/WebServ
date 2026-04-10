@@ -78,7 +78,9 @@ void Server::writeToClient(struct pollfd& pfd)
 {
     // hardcoded write to client for now . wait until adnane build response 
 
-    std::ifstream file("../index.html");
+    std::ifstream file("index.html");
+    if (!file.is_open())
+        file.open("../index.html");
     if (!file.is_open())
     {
         std::cerr << "Failed to open file\n";

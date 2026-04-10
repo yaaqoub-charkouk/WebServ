@@ -9,6 +9,7 @@ CONFIG_SRC = src/config
 SERVER_SRC = src/server
 RESPONSE_SRC = src/response
 CGI_SRC = src/cgi
+REQUEST_SRC = src/request
 
 NAME = webserv
 
@@ -27,7 +28,9 @@ SRCS = main.cpp \
 	$(SERVER_SRC)/server_api.cpp \
 	$(RESPONSE_SRC)/HttpResponse.cpp \
 	$(RESPONSE_SRC)/FileUtils.cpp \
-	$(CGI_SRC)/Cgi.cpp
+	$(CGI_SRC)/Cgi.cpp \
+	$(REQUEST_SRC)/HttpRequest.cpp \
+	$(REQUEST_SRC)/RequestHandler.cpp
 
 OBJS = $(SRCS:.cpp=.o)
 
@@ -41,7 +44,9 @@ HEADERS = include/config/ConfigException.hpp \
           include/server/server.hpp \
           include/response/HttpResponse.hpp \
           include/response/FileUtils.hpp \
-          include/cgi/Cgi.hpp
+          include/cgi/Cgi.hpp \
+          include/request/HttpRequest.hpp \
+          include/request/RequestHandler.hpp
 
 GREEN = \033[0;32m
 RED = \033[0;31m
