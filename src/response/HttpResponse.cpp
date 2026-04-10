@@ -1,4 +1,4 @@
-#include "response/HttpResponse.hpp"
+#include "../../include/response/HttpResponse.hpp"
 
 
 HttpResponse::HttpResponse() :
@@ -96,6 +96,54 @@ std::string HttpResponse::getResponse() const
     return (rs.str());
 }
 
+// <!doctype html>
+// <html>
+// <head><meta charset="utf-8"><title>Index of /images/</title></head>
+// <body>
+//   <h1>Index of /images/</h1>
+//   <hr>
+//   <ul>
+//     <li><a href="../">../</a></li>
+//     <li><a href="/images/cat.jpg">cat.jpg</a></li>
+//     <li><a href="/images/icons/">icons/</a></li>
+//     <li><a href="/images/notes.txt">notes.txt</a></li>
+//   </ul>
+//   <hr>
+// </body>
+// </html>
+HttpResponse HttpResponse::makeAutoindexRes(const std::string &path)
+{
+    DIR *dir;
+    struct dirent *entry;
+    std::stringstream body;
+    std::stringstream size;
+    HttpResponse res;
+    
+    dir = opendir(path.c_str());
+    if (!dir)
+        return (makeErrorRes(403, "403.html"));
+    
+    body << "<!DOCTYPE html>\n<html>\n<head><meta charset=\"utf-8\"><title>Index of " << path << "</title></head>"
+        << "<body><h1>Index of " << path << "</h1><hr><ul>\n";
+        while ((entry = readdir(dir)) != NULL)
+        {
+            std::string name = entry->d_name;
+            if (name == ".")
+                continue;
+            if ( entry->d_type == DT_DIR)
+                name += "/";
+            body << "<li><a href=\"" << name << "\">" << name << "</a></li>\n";
+
+        }
+    body << "</ul><hr></body>\n</html>";
+    closedir(dir);
+    res.setStatus(200, "OK");
+    res.setHeaders("Content-Type", "text/html");
+    size << body.str().size();
+    res.setHeaders("Content-Length", size.str());
+    res.setBody(body.str());
+    return res;
+}
 
 HttpResponse HttpResponse::makeErrorRes(int code, const std::string &path)
 {
