@@ -3,8 +3,8 @@
 #include <string>
 #include <map>
 #include <sstream>
-#include "response/FileUtils.hpp"
-
+#include "FileUtils.hpp"
+#include <dirent.h>
 
 
 class HttpResponse
@@ -27,6 +27,7 @@ public:
     std::string getResponse() const;
 
     //Responses type
+    static HttpResponse makeAutoindexRes(const std::string &path);
     static HttpResponse makeFileRes(const std::string &path);
     static HttpResponse makeErrorRes(int code, const std::string &path);
     static HttpResponse makeRedireRes(int code, const std::string &location);
