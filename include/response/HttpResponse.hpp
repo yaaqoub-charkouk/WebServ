@@ -31,7 +31,7 @@ public:
     static HttpResponse makeFileRes(const std::string &path);
     static HttpResponse makeErrorRes(int code, const std::string &path);
     static HttpResponse makeRedireRes(int code, const std::string &location);
-    
+    static HttpResponse makeCgiRes(const std::string &body, std::map<std::string, std::string> &headers);
     // For files (if the extension is .html the type is text/html)
    static  std::string getFileType(const std::string &extension);
    static  std::string getFileExtension(const std::string &filename);
