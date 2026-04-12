@@ -1,5 +1,6 @@
 #pragma once
 #include "../request/HttpRequest.hpp"
+#include "../response/HttpResponse.hpp"
 
 #include <ctime>
 #include <sys/types.h>
@@ -8,11 +9,13 @@
 #include <map>
 #include <sys/wait.h>
 #include <sstream>
-
-
+#include <iostream>
+#include <cstring>
 
 enum CgiStatus
 {
+    CGI_IDLE,
+    CGI_ENV_ERROR,
     CGI_SUCCESS,
     CGI_EXEC_ERROR,
     CGI_PIPE_ERROR,
@@ -37,15 +40,23 @@ private:
     std::string script_interpreter;
     CgiStatus cgi_status;
     std::map<std::string, std::string> headers;
+    std::string body;
+    HttpResponse res;
+    
     void closePipes();
     std::string ultostr(size_t num);
     void free_envp();
     void buildEnvp(const HttpRequest &req);
+    void buildHeaders(const HttpRequest &req);
+    void parseOutputHeaders(const std::string &output);
 public:
     Cgi();
     Cgi(const HttpRequest &req, const std::string &scriptPath, time_t timeout = 5);
     ~Cgi();
-    static std::string execute(const std::string& scriptPath, const std::string& input);
+    std::string execute(const std::string&, const std::string& input);
+    void parseOutput(const std::string &output);
     bool checkTimeout();
+    void makeResponse();
+    HttpResponse getResponse() const;
 
 };

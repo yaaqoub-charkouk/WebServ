@@ -194,6 +194,45 @@ HttpResponse HttpResponse::makeRedireRes(int code, const std::string &location)
     return res;
 }
 
+HttpResponse HttpResponse::makeCgiRes(const std::string &body, std::map<std::string, std::string> &headers)
+{
+    HttpResponse res;
+    std::map<std::string, std::string>::const_iterator it;
+    std::stringstream ss;
+
+    if (headers.find("Status") != headers.end())
+    {
+        std::string status_line = headers.at("Status");
+        size_t space_pos = status_line.find(' ');
+        if (space_pos != std::string::npos)
+        {
+            ss << status_line.substr(0, space_pos);
+            int code;
+            ss >> code;
+            std::string msg = status_line.substr(space_pos + 1);
+            res.setStatus(code, msg);
+        }
+        else
+            res.setStatus(200, "OK");
+        headers.erase("Status");
+    }
+    else
+        res.setStatus(200, "OK");
+    if (headers.find("Content-Length") == headers.end())
+    {
+        ss.str("");
+        ss << body.size();
+        res.setHeaders("Content-Length", ss.str());
+    }
+    
+    for (it = headers.begin(); it != headers.end(); it++)
+        res.setHeaders(it->first, it->second);
+    res.setBody(body);
+
+    return res;
+}
+
+
 HttpResponse HttpResponse::makeFileRes(const std::string &path)
 {
     HttpResponse res;
