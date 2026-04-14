@@ -1,26 +1,24 @@
-# include "server/server.hpp"
-#include <cerrno>
-#include <cstring>
-#include <iterator>
-#include <netinet/in.h>
-#include <stdexcept>
-#include <sys/poll.h>
-#include <sys/socket.h>
-#include <sstream>
+# include "../../include/server/server.hpp"
 
-static std::string intToString(int value)
-{
-    std::ostringstream oss;
-    oss << value;
-    return oss.str();
-}
+
 
 Server::Server(const std::vector<ServerConfig>& servers)
 {
     for (size_t i = 0; i < servers.size(); ++i)
     {
         addListeningSocket(servers[i].getPort());
+        std::cout << "listening on : " <<  servers[i].getPort() << std::endl;
     }
+}
+
+
+
+
+static std::string intToString(int value)
+{
+    std::ostringstream oss;
+    oss << value;
+    return oss.str();
 }
 
 void    Server::addListeningSocket(int port)
@@ -51,7 +49,7 @@ void    Server::addListeningSocket(int port)
         throw std::runtime_error("Failed to bind socket with port " + intToString(port));
     }
 
-    if (listen(newServSocket, 10) == -1) {
+    if (listen(newServSocket, SOMAXCONN) == -1) {
         close(newServSocket);
         throw std::runtime_error("Failed to listen on socket binded to port : " + intToString(port));
     }
@@ -95,6 +93,7 @@ void    Server::run()
                 else
                 {
                     readFromClient(pollFds[i]);
+                    
                     // call the http handler TAHALLA
                 }
             }

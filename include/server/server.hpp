@@ -6,12 +6,7 @@
 # include <map>
 # include <algorithm>
 # include <string>
-# include <poll.h>
 # include <cstring>
-
-# include <sys/socket.h>
-# include <netinet/in.h>
-# include <arpa/inet.h>
 # include <unistd.h>
 # include <fstream>
 # include <sstream>
@@ -19,16 +14,14 @@
 # include <iostream>
 # include <cerrno>
 
+# include <poll.h>
+# include <sys/socket.h>
+# include <netinet/in.h>
+# include <arpa/inet.h>
+
 # include "../config/Parser.hpp"
-
-
-class Client
-{
-public:
-    std::string request;
-    std::string response;
-};
-
+# include "../request/HttpRequest.hpp"
+# include "../client/Client.hpp"
 
 
 class Server

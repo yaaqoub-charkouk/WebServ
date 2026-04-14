@@ -18,7 +18,6 @@ public:
 
     HttpRequest(): method("GET"), uri("/"), body(""), clientAddr(""), serverName(""), serverPort(0), contentLength(0) {}
 
-    static HttpRequest parse(const std::string& rawRequest); // must do by yaaqoub
 };
 
 #endif

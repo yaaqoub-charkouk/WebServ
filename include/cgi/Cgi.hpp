@@ -11,6 +11,7 @@
 #include <sstream>
 #include <iostream>
 #include <cstring>
+#include <signal.h> // Added for kill() function
 
 enum CgiStatus
 {

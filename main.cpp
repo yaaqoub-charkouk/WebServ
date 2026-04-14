@@ -1,8 +1,8 @@
 #include <iostream>
-#include "config/Lexer.hpp"
-#include "config/Parser.hpp"
-#include "config/Validator.hpp"
-#include "server/server.hpp"
+#include "include/config/Lexer.hpp"
+#include "include/config/Parser.hpp"
+#include "include/config/Validator.hpp"
+#include "include/server/server.hpp"
 
 int main(int ac, char **av)
 {
