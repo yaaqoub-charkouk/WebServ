@@ -1,43 +1,47 @@
-# include "server/server.hpp"
+# include "../../include/server/server.hpp"
+#include <sys/poll.h>
+
 
 
 void    Server::acceptClient(int serverFd)
 {
     // add a while (true) to accept multiple clients in one poll cycle
-    struct sockaddr_in client;
-    socklen_t len = sizeof(client);
-    
-    memset(&client, 0, len);
-
-    int client_fd = accept(serverFd, reinterpret_cast<sockaddr*>(&client), &len);
-    if (client_fd == -1)
+    while (true)
     {
-        if (errno == EAGAIN || errno == EWOULDBLOCK)
-            return ;
-        throw std::runtime_error("Failed to add new client accept failed");
-    }
-
-    // we're adding a new client . so make it non blocking & add it to pollFds;
-    if (fcntl(client_fd, F_SETFL, O_NONBLOCK) == -1)
-    {
-        close(client_fd);
-        throw std::runtime_error("Failed to make client_fd non block");
-    }
-
-    struct pollfd pfd;
-    pfd.fd = client_fd;
-    pfd.events = POLLIN;
-    pfd.revents = 0;
-
-    pollFds.push_back(pfd);
-
-    clients[client_fd] = Client();
-
-
-    // just for debugging :
-    // printf("Client IP: %s\n", inet_ntoa(client.sin_addr));
-    printf("Client port: %d\n", ntohs(client.sin_port));
+        struct sockaddr_in client;
+        socklen_t len = sizeof(client);
         
+        memset(&client, 0, len);
+
+        int client_fd = accept(serverFd, reinterpret_cast<sockaddr*>(&client), &len);
+        if (client_fd == -1)
+        {
+            if (errno == EAGAIN || errno == EWOULDBLOCK)
+                return ;
+            throw std::runtime_error("Failed to add new client accept failed");
+        }
+
+        // we're adding a new client . so make it non blocking & add it to pollFds;
+        if (fcntl(client_fd, F_SETFL, O_NONBLOCK) == -1)
+        {
+            close(client_fd);
+            throw std::runtime_error("Failed to make client_fd non block");
+        }
+
+        struct pollfd pfd;
+        pfd.fd = client_fd;
+        pfd.events = POLLIN;
+        pfd.revents = 0;
+
+        pollFds.push_back(pfd);
+
+        clients[client_fd] = Client();
+
+
+        // just for debugging :
+        // printf("Client IP: %s\n", inet_ntoa(client.sin_addr));
+        printf("Client port: %d\n", ntohs(client.sin_port));
+    }     
 }
 
 
@@ -51,12 +55,27 @@ void    Server::readFromClient(struct pollfd& pfd)
 
         if (n > 0)
         {
-            clients[pfd.fd].request.append(buffer, n);
-            // need to check for end of request "\r\n\r\n" 
-            if (clients[pfd.fd].request.find("\r\n\r\n", 0) != std::string::npos) // TAHALLA
-            {
+            Client& client = clients[pfd.fd];
+
+            client.request_str.append(buffer, n);
+            // std::cout << client.request_str << std::endl;
+            client.parseRequest();
+
+            // check client.state
+            if (client.state == COMPLETE) {
                 pfd.events = POLLOUT;
-                pfd.revents = 0;
+            }
+
+
+
+            // calling Request.parse() instead of server api ;
+            // HttpRequest req = HttpRequest::parse(clients[pfd.fd].request_str);
+
+            // need to check for end of request "\r\n\r\n" : Moved to Httprequest.parse()
+            if (clients[pfd.fd].request_str.find("\r\n\r\n", 0) != std::string::npos) // TAHALLA
+            {
+                // pfd.events = POLLOUT; // !!! set it only when done with response . how? i don't know .
+                // pfd.revents = 0;
             } // keep it until http handler start getting requests
         }
         else if (n == 0)
@@ -79,8 +98,7 @@ void Server::writeToClient(struct pollfd& pfd)
     // hardcoded write to client for now . wait until adnane build response 
 
     std::ifstream file("index.html");
-    if (!file.is_open())
-        file.open("../index.html");
+
     if (!file.is_open())
     {
         std::cerr << "Failed to open file\n";
