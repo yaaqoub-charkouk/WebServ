@@ -8,6 +8,7 @@
 enum ParseState {
     READING_HEADERS,
     READING_BODY,
+    INCOMPLETE,
     COMPLETE,
     ERROR
 };

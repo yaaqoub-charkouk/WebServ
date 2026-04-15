@@ -2,9 +2,9 @@
 
 
 
-Client::Client() : status(ParseState::READING_HEADERS) {}
+Client::Client() {}
 
 void Client::parseRequest()
 {
-
+    std::sstream
 }

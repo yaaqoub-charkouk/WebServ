@@ -57,15 +57,15 @@ void    Server::readFromClient(struct pollfd& pfd)
             Client& client = clients[pfd.fd];
 
             client.request_str.append(buffer, n);
-
-            client.parseRequest();
+            std::cout << client.request_str << std::endl;
+            // client.parseRequest();
 
             // check client.status
 
 
 
             // calling Request.parse() instead of server api ;
-            HttpRequest req = HttpRequest::parse(clients[pfd.fd].request_str);
+            // HttpRequest req = HttpRequest::parse(clients[pfd.fd].request_str);
 
             // need to check for end of request "\r\n\r\n" : Moved to Httprequest.parse()
             if (clients[pfd.fd].request_str.find("\r\n\r\n", 0) != std::string::npos) // TAHALLA
