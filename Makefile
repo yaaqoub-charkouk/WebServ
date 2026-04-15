@@ -7,6 +7,7 @@ INCLUDES = -Iinclude
 SRC_DIR = src
 CONFIG_SRC = src/config
 SERVER_SRC = src/server
+CLIENT_SRC = src/client
 RESPONSE_SRC = src/response
 CGI_SRC = src/cgi
 REQUEST_SRC = src/request
@@ -26,6 +27,7 @@ SRCS = main.cpp \
 	$(SERVER_SRC)/server.cpp \
 	$(SERVER_SRC)/server_client_connection.cpp \
 	$(SERVER_SRC)/server_api.cpp \
+	$(CLIENT_SRC)/Client.cpp \
 	$(RESPONSE_SRC)/HttpResponse.cpp \
 	$(RESPONSE_SRC)/FileUtils.cpp \
 	$(CGI_SRC)/Cgi.cpp \
@@ -42,6 +44,7 @@ HEADERS = include/config/ConfigException.hpp \
           include/config/Parser.hpp \
           include/config/Validator.hpp \
           include/server/server.hpp \
+		  include/client/Client.hpp \
           include/response/HttpResponse.hpp \
           include/response/FileUtils.hpp \
           include/cgi/Cgi.hpp \

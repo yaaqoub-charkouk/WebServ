@@ -9,7 +9,7 @@ std::string Server::getRequest(int clientFd)
     if (it == clients.end())
         return "";
 
-    return it->second.request;
+    return it->second.request_str;
 }
 
 

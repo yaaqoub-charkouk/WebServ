@@ -1,4 +1,5 @@
 # include "../../include/server/server.hpp"
+#include <sys/poll.h>
 
 
 
@@ -57,10 +58,13 @@ void    Server::readFromClient(struct pollfd& pfd)
             Client& client = clients[pfd.fd];
 
             client.request_str.append(buffer, n);
-            std::cout << client.request_str << std::endl;
-            // client.parseRequest();
+            // std::cout << client.request_str << std::endl;
+            client.parseRequest();
 
-            // check client.status
+            // check client.state
+            if (client.state == COMPLETE) {
+                pfd.events = POLLOUT;
+            }
 
 
 
