@@ -71,6 +71,7 @@ void    Server::readFromClient(struct pollfd& pfd)
             if (client.state == COMPLETE) { // call request handler
                 pfd.events = POLLOUT;
                 pfd.revents = 0;
+                std::cout << "completed request and pollout ready" << std::endl;
             }
 
 
