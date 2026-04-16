@@ -27,9 +27,12 @@
 class Server
 {
 private:
-    std::vector<int>                listenSockets;
-    std::map<int, Client>           clients;
-    std::vector<struct pollfd>      pollFds;
+    std::vector<int>                    listenSockets;
+    std::map<int, const ServerConfig>   configs;
+    std::map<int, Client>               clients;
+    std::vector<struct pollfd>          pollFds;
+
+    bool    clientRemoved;
 
 private:
     void    acceptClient(int serverFd); // session creation
@@ -37,10 +40,10 @@ private:
     void    writeToClient(struct pollfd& pfd);
     void    closeClient(int clientFd);
     bool    isListeningSocket(int fd);
+    
+    int     addListeningSocket(int port); // setup
 
 public:
-    Server(const std::vector<ServerConfig>& servers);
-    void    addListeningSocket(int port); // setup
     void    run();
 
     // APIs
@@ -48,7 +51,8 @@ public:
     void        sendResponse(int clientFd, const std::string& data);
 
 
-// public:
+public:
+    Server(const std::vector<ServerConfig>& servers);
 //     Server();
 //     Server(const Server& other);
 //     Server& operator=(const Server& other);

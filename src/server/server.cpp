@@ -6,9 +6,13 @@ Server::Server(const std::vector<ServerConfig>& servers)
 {
     for (size_t i = 0; i < servers.size(); ++i)
     {
-        addListeningSocket(servers[i].getPort());
-        std::cout << "listening on : " <<  servers[i].getPort() << std::endl;
+        int newServerSocket = addListeningSocket(servers[i].getPort());
+        // configs[newServerSocket] = servers[i];
+        configs.insert(std::make_pair(newServerSocket, servers[i])); // may need to check if exists
+
+        std::cout << "listening on : " <<  servers[i].getPort() << "  fd :" << newServerSocket << std::endl; // for debugging
     }
+    clientRemoved = false;
 }
 
 
@@ -21,7 +25,7 @@ static std::string intToString(int value)
     return oss.str();
 }
 
-void    Server::addListeningSocket(int port)
+int    Server::addListeningSocket(int port)
 {
     int newServSocket;
 
@@ -68,8 +72,9 @@ void    Server::addListeningSocket(int port)
     
     listenSockets.push_back(newServSocket);
     pollFds.push_back(pfd);
-
     // now i have all servers sockets & poll in 
+
+    return (newServSocket);
 }
 
 
@@ -81,26 +86,35 @@ void    Server::run()
     
         if (ret < 0)
             throw std::runtime_error("poll failed can't listen on servers sockets");
-    
-        for (size_t i = 0; i < pollFds.size(); ++i)
+        
+        for (size_t i = 0; i < pollFds.size();)
         {
-            if (pollFds[i].revents == 0)
+            struct pollfd pfd = pollFds[i];
+
+            if (pfd.revents == 0) {
+                ++i;
                 continue ; // just to optimise ignore sockets with no events . 
-            if (pollFds[i].revents & POLLIN)
-            {                                
-                if (isListeningSocket(pollFds[i].fd))
-                    acceptClient(pollFds[i].fd);
+            }
+            clientRemoved = false;
+            if (pfd.revents & POLLIN)
+            {
+                if (isListeningSocket(pfd.fd))
+                    acceptClient(pfd.fd);
                 else
                 {
-                    readFromClient(pollFds[i]);
+                    readFromClient(pfd);
                     
                     // call the http handler TAHALLA
                 }
             }
-            if (pollFds[i].revents & POLLOUT)
+            if (!clientRemoved && (pfd.revents & POLLOUT))
             {
-                writeToClient(pollFds[i]);
+                writeToClient(pfd);
             }
+
+
+            if (!clientRemoved)
+                ++i;
         }
     }
 }

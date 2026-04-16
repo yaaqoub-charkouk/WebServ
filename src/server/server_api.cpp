@@ -15,8 +15,8 @@ std::string Server::getRequest(int clientFd)
 
 void    Server::sendResponse(int clientFd, const std::string& data)
 {
-    clients[clientFd].response_str = data;
-
+    // clients[clientFd].response_str = data;
+    (void)data;
     for (size_t i = 0; i < pollFds.size(); i++)
     {
         if (pollFds[i].fd == clientFd)

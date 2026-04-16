@@ -32,19 +32,25 @@ void    Server::acceptClient(int serverFd)
         pfd.fd = client_fd;
         pfd.events = POLLIN;
         pfd.revents = 0;
-
         pollFds.push_back(pfd);
 
-        clients[client_fd] = Client();
+        // clients[client_fd] = Client(configs[serverFd]);
+        clients.insert(std::make_pair(client_fd, Client(configs[serverFd],
+                     ntohs(client.sin_port), inet_ntoa(client.sin_addr))));
 
 
-        // just for debugging :
-        // printf("Client IP: %s\n", inet_ntoa(client.sin_addr));
+        // just for debugging : 
+        printf("Client IP: %s\n", inet_ntoa(client.sin_addr));
         printf("Client port: %d\n", ntohs(client.sin_port));
+
     }     
 }
 
-
+// if (pollFds[i].revents & (POLLERR | POLLHUP | POLLNVAL))
+// {
+//     closeClient(pollFds[i].fd);
+//     continue;
+// }
 void    Server::readFromClient(struct pollfd& pfd)
 {
     char buffer[4096];
@@ -55,15 +61,15 @@ void    Server::readFromClient(struct pollfd& pfd)
 
         if (n > 0)
         {
-            Client& client = clients[pfd.fd];
+            Client& client = clients.at(pfd.fd);
 
             client.request_str.append(buffer, n);
             // std::cout << client.request_str << std::endl;
             client.parseRequest();
 
             // check client.state
-            if (client.state == COMPLETE) {
-                pfd.events = POLLOUT;
+            if (client.state == COMPLETE) { // call request handler
+                // pfd.events = POLLOUT;
             }
 
 
@@ -72,13 +78,13 @@ void    Server::readFromClient(struct pollfd& pfd)
             // HttpRequest req = HttpRequest::parse(clients[pfd.fd].request_str);
 
             // need to check for end of request "\r\n\r\n" : Moved to Httprequest.parse()
-            if (clients[pfd.fd].request_str.find("\r\n\r\n", 0) != std::string::npos) // TAHALLA
-            {
-                // pfd.events = POLLOUT; // !!! set it only when done with response . how? i don't know .
-                // pfd.revents = 0;
-            } // keep it until http handler start getting requests
+            // if (client.request_str.find("\r\n\r\n", 0) != std::string::npos) // TAHALLA
+            // {
+            //     // pfd.events = POLLOUT; // !!! set it only when done with response . how? i don't know .
+            //     // pfd.revents = 0;
+            // } // keep it until http handler start getting requests
         }
-        else if (n == 0)
+        else if (n == 0) // client closed connection
         {
             closeClient(pfd.fd);
             return ;
@@ -143,4 +149,6 @@ void Server::closeClient(int clientFd)
 
     // remove client session
     clients.erase(clientFd);
+
+    clientRemoved = true;
 }
