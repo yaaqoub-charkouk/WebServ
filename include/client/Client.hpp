@@ -5,6 +5,8 @@
 # include <iostream>
 # include "../config/Parser.hpp"
 # include "../request/HttpRequest.hpp"
+# include "../response/HttpResponse.hpp"
+
 #include <algorithm>
 
 
@@ -32,6 +34,7 @@ public:
     std::string header_str;
 
     std::string         response_str;
+    HttpResponse        response;
     // needs response buffering , send()
     
     Client(const ServerConfig& serverConfig, int clientPort, std::string clientAddress);
