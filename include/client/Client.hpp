@@ -5,11 +5,12 @@
 # include <iostream>
 # include "../config/Parser.hpp"
 # include "../request/HttpRequest.hpp"
+#include <algorithm>
+
 
 enum ParseState {
     READING_HEADERS,
     READING_BODY,
-    INCOMPLETE,
     COMPLETE,
     ERROR
 };
@@ -18,9 +19,10 @@ enum ParseState {
 class Client // needs config file .
 {
 public:
-    
-
-    std::string response_str;
+    // server config
+    const ServerConfig& serverConfig;
+    int                 clientPort;
+    std::string         clientAddress;
     
     // request parsing
     std::string request_str;
@@ -29,8 +31,14 @@ public:
     size_t      header_end_pos;
     std::string header_str;
 
-    Client();
+    std::string         response_str;
+    // needs response buffering , send()
+    
+    Client(const ServerConfig& serverConfig, int clientPort, std::string clientAddress);
+    // Client& operator=(const Client& newClient);
     void    parseRequest();
+    void    parseRequestHeaders();
+    void    parseRequestBody();
 };
 
 std::string trim(const std::string& str);
