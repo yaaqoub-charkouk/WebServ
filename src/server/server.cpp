@@ -89,32 +89,38 @@ void    Server::run()
         
         for (size_t i = 0; i < pollFds.size();)
         {
-            struct pollfd pfd = pollFds[i];
+            std::cout << "  poll size :" << pollFds.size() << std::endl
+                    << "    i : " << i << std::endl;
+            // struct pollfd pfd = pollFds[i];
 
-            if (pfd.revents == 0) {
+            if (pollFds[i].revents == 0) {
                 ++i;
                 continue ; // just to optimise ignore sockets with no events . 
             }
             clientRemoved = false;
-            if (pfd.revents & (POLLERR | POLLHUP | POLLNVAL)) {
-                closeSocket(pfd.fd);
+            if (pollFds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
+                closeSocket(pollFds[i].fd);
                 continue ;
             }
 
-            if (pfd.revents & POLLIN)
+            if (pollFds[i].revents & POLLIN)
             {
-                if (isListeningSocket(pfd.fd))
-                    acceptClient(pfd.fd);
+                if (isListeningSocket(pollFds[i].fd))
+                    acceptClient(pollFds[i].fd);
                 else
                 {
-                    readFromClient(pfd);
+                    readFromClient(pollFds[i]);
                     
                     // call the http handler TAHALLA
                 }
             }
-            if (!clientRemoved && (pfd.revents & POLLOUT))
+            std::cout << "client Removed " << clientRemoved << std::endl;
+            std::cout << "write condition : " << (!clientRemoved && pollFds[i].revents & POLLOUT) << std::endl;
+            if (!clientRemoved && (pollFds[i].revents & POLLOUT))
             {
-                writeToClient(pfd);
+                 std::cout << "write to client  poll size :" << pollFds.size() << std::endl
+                    << "    i : " << i << std::endl;
+                writeToClient(pollFds[i]);
             }
 
 
