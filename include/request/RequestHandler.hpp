@@ -4,9 +4,9 @@
 #include <string>
 #include <vector>
 #include <map>
-#include "config/ServerConfig.hpp"
-#include "config/LocationConfig.hpp"
-#include "response/HttpResponse.hpp"
+#include "../config/ServerConfig.hpp"
+#include "../config/LocationConfig.hpp"
+#include "../response/HttpResponse.hpp"
 
 class RequestHandler
 {

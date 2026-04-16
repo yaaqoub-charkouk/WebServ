@@ -69,6 +69,12 @@ void    Server::readFromClient(struct pollfd& pfd)
 
             // check client.state
             if (client.state == COMPLETE) { // call request handler
+                client.response  = RequestHandler::handleRequest(client.request.method,
+                                            client.request.uri,
+                                            client.request.body,
+                                            client.serverConfig,
+                                            client.request.contentLength);
+                
                 pfd.events = POLLOUT;
                 pfd.revents = 0;
                 std::cout << "completed request and pollout ready" << std::endl;
@@ -103,33 +109,39 @@ void    Server::readFromClient(struct pollfd& pfd)
 
 void Server::writeToClient(struct pollfd& pfd)
 {
+    Client& client = clients.at(pfd.fd);
+    client.response_str = client.response.getResponse();
+
+    // fine for now . but i still need to implement partial send logic !!!
+    send(pfd.fd, client.response_str.c_str(), client.response_str.size(), 0);
+
     // hardcoded write to client for now . wait until adnane build response 
 
-    std::ifstream file("index.html");
+    // std::ifstream file("index.html");
 
-    if (!file.is_open())
-    {
-        std::cerr << "Failed to open file\n";
-        throw std::runtime_error("Failed to open index.html");
-    }
-    std::stringstream buffer_stream;
-    buffer_stream << file.rdbuf();
-    std::string body = buffer_stream.str();
+    // if (!file.is_open())
+    // {
+    //     std::cerr << "Failed to open file\n";
+    //     throw std::runtime_error("Failed to open index.html");
+    // }
+    // std::stringstream buffer_stream;
+    // buffer_stream << file.rdbuf();
+    // std::string body = buffer_stream.str();
 
     
     
-    std::stringstream response;
-    response << "HTTP/1.1 200 OK\r\n";
-    response << "Content-Type: text/html\r\n";
-    response << "Content-Length: " << body.size() << "\r\n";
-    response << "Connection: close\r\n";
-    response << "\r\n";
-    response << body;
+    // std::stringstream response;
+    // response << "HTTP/1.1 200 OK\r\n";
+    // response << "Content-Type: text/html\r\n";
+    // response << "Content-Length: " << body.size() << "\r\n";
+    // response << "Connection: close\r\n";
+    // response << "\r\n";
+    // response << body;
 
 
-    std::string response_str = response.str();
+    // std::string response_str = response.str();
     
-    send(pfd.fd, response_str.c_str(), response_str.size(), 0);
+    // send(pfd.fd, response_str.c_str(), response_str.size(), 0);
 
     // maybe i'll keep the client alive since the browser can use only one tcp three way handshake 
     closeClient(pfd.fd);

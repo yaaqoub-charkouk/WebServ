@@ -21,6 +21,7 @@
 
 # include "../config/Parser.hpp"
 # include "../request/HttpRequest.hpp"
+# include "../request/RequestHandler.hpp"
 # include "../client/Client.hpp"
 
 
