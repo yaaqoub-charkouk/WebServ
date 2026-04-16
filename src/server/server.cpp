@@ -96,6 +96,11 @@ void    Server::run()
                 continue ; // just to optimise ignore sockets with no events . 
             }
             clientRemoved = false;
+            if (pfd.revents & (POLLERR | POLLHUP | POLLNVAL)) {
+                closeSocket(pfd.fd);
+                continue ;
+            }
+
             if (pfd.revents & POLLIN)
             {
                 if (isListeningSocket(pfd.fd))
@@ -125,6 +130,39 @@ bool Server::isListeningSocket(int fd)
     return std::find(listenSockets.begin(),
                      listenSockets.end(),
                      fd) != listenSockets.end();
+}
+
+void    Server::closeSocket(int fd)
+{
+    std::cout << "closeSocket called" << std::endl;
+    if (isListeningSocket(fd)) // if serverSocket remove it from listenSocket && configs.
+    {
+        configs.erase(fd);
+
+        for (size_t i = 0; i < listenSockets.size(); ++i)
+        {
+            if (listenSockets[i] == fd)
+            {
+                listenSockets.erase(listenSockets.begin() + i);
+                break;
+            }
+        }
+    }
+    else
+        clients.erase(fd);
+    
+    close(fd);
+
+    // remove from pollFds
+    for (size_t i = 0; i < pollFds.size(); ++i)
+    {
+        if (pollFds[i].fd == fd)
+        {
+            pollFds.erase(pollFds.begin() + i);
+            break;
+        }
+    }
+
 }
 
 // int main(void)

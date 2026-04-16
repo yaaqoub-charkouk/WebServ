@@ -69,7 +69,8 @@ void    Server::readFromClient(struct pollfd& pfd)
 
             // check client.state
             if (client.state == COMPLETE) { // call request handler
-                // pfd.events = POLLOUT;
+                pfd.events = POLLOUT;
+                pfd.revents = 0;
             }
 
 
@@ -135,6 +136,7 @@ void Server::writeToClient(struct pollfd& pfd)
 
 void Server::closeClient(int clientFd)
 {
+    std::cout << "closeClient called" << std::endl;
     close(clientFd);
 
     // remove from pollFds

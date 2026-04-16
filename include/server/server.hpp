@@ -40,7 +40,8 @@ private:
     void    writeToClient(struct pollfd& pfd);
     void    closeClient(int clientFd);
     bool    isListeningSocket(int fd);
-    
+    void    closeSocket(int fd);
+
     int     addListeningSocket(int port); // setup
 
 public:
