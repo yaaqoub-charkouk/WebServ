@@ -76,7 +76,7 @@ HttpResponse RequestHandler::handleGet(
         if (location && location->getAutoindex())
         {
             if (location->getIndex().empty())
-                return HttpResponse::makeFileRes(filePath + "/index.html");
+                return HttpResponse::makeAutoindexRes(uri);
             return HttpResponse::makeFileRes(filePath + "/" + location->getIndex());
         }
         return makeErrorResponse(403, server);
