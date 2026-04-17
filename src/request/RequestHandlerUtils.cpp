@@ -1,0 +1,105 @@
+#include "request/RequestHandler.hpp"
+#include <sys/stat.h>
+
+std::string RequestHandler::buildFilePath(
+    const std::string& uri,
+    const ServerConfig& server,
+    const LocationConfig* location)
+{
+    std::string root;
+    std::string uriPath = stripQueryString(uri);
+
+    if (location && !location->getRoot().empty())
+        root = location->getRoot();
+    else
+        root = server.getRoot();
+
+    if (root.empty())
+        root = ".";
+
+    std::string relativePath = uriPath;
+    if (location)
+    {
+        const std::string& locationPath = location->getPath();
+        if (!locationPath.empty() && uriPath.find(locationPath) == 0)
+        {
+            relativePath = uriPath.substr(locationPath.length());
+            if (relativePath.empty())
+                relativePath = "/";
+        }
+    }
+
+    if (!relativePath.empty() && relativePath[0] == '/')
+        relativePath = relativePath.substr(1);
+
+    std::string filePath = joinPath(root, relativePath);
+
+    if (fileExists(filePath + ".html"))
+        return filePath + ".html";
+    if (fileExists(filePath + "/index.html"))
+        return filePath + "/index.html";
+
+    return filePath;
+}
+
+std::string RequestHandler::stripQueryString(const std::string& uri)
+{
+    size_t qPos = uri.find('?');
+    if (qPos == std::string::npos)
+        return uri;
+    return uri.substr(0, qPos);
+}
+
+bool RequestHandler::isCgiRequest(const std::string& uri, const LocationConfig* location)
+{
+    if (!location)
+        return false;
+
+    const std::string& cgiExt = location->getCgiExtension();
+    if (cgiExt.empty())
+        return false;
+
+    std::string uriPath = stripQueryString(uri);
+    if (uriPath.length() < cgiExt.length())
+        return false;
+
+    return uriPath.compare(uriPath.length() - cgiExt.length(), cgiExt.length(), cgiExt) == 0;
+}
+
+HttpResponse RequestHandler::makeErrorResponse(
+    int code,
+    const ServerConfig& server)
+{
+    std::string customPage = server.getErrorPage(code);
+    if (!customPage.empty())
+    {
+        std::string fullPath = joinPath(server.getRoot(), customPage);
+        return HttpResponse::makeErrorRes(code, fullPath);
+    }
+
+    return HttpResponse::makeErrorRes(code, "");
+}
+
+bool RequestHandler::fileExists(const std::string& path)
+{
+    struct stat st;
+    return stat(path.c_str(), &st) == 0 && S_ISREG(st.st_mode);
+}
+
+bool RequestHandler::directoryExists(const std::string& path)
+{
+    struct stat st;
+    return stat(path.c_str(), &st) == 0 && S_ISDIR(st.st_mode);
+}
+
+std::string RequestHandler::joinPath(const std::string& a, const std::string& b)
+{
+    if (a.empty())
+        return b;
+    if (b.empty())
+        return a;
+
+    if (a[a.length() - 1] == '/')
+        return a + b;
+    return a + "/" + b;
+}

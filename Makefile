@@ -32,7 +32,8 @@ SRCS = main.cpp \
 	$(RESPONSE_SRC)/FileUtils.cpp \
 	$(CGI_SRC)/Cgi.cpp \
 	$(REQUEST_SRC)/HttpRequest.cpp \
-	$(REQUEST_SRC)/RequestHandler.cpp
+	$(REQUEST_SRC)/RequestHandler.cpp \
+	$(REQUEST_SRC)/RequestHandlerUtils.cpp
 
 OBJS = $(SRCS:.cpp=.o)
 
