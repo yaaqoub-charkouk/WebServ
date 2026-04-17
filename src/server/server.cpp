@@ -1,12 +1,22 @@
-# include "server/server.hpp"
-#include <cerrno>
-#include <cstring>
-#include <iterator>
-#include <netinet/in.h>
-#include <stdexcept>
-#include <sys/poll.h>
-#include <sys/socket.h>
-#include <sstream>
+# include "../../include/server/server.hpp"
+
+
+
+Server::Server(const std::vector<ServerConfig>& servers)
+{
+    for (size_t i = 0; i < servers.size(); ++i)
+    {
+        int newServerSocket = addListeningSocket(servers[i].getPort());
+        // configs[newServerSocket] = servers[i];
+        configs.insert(std::make_pair(newServerSocket, servers[i])); // may need to check if exists
+
+        std::cout << "listening on : " <<  servers[i].getPort() << "  fd :" << newServerSocket << std::endl; // for debugging
+    }
+    clientRemoved = false;
+}
+
+
+
 
 static std::string intToString(int value)
 {
@@ -15,15 +25,7 @@ static std::string intToString(int value)
     return oss.str();
 }
 
-Server::Server(const std::vector<ServerConfig>& servers)
-{
-    for (size_t i = 0; i < servers.size(); ++i)
-    {
-        addListeningSocket(servers[i].getPort());
-    }
-}
-
-void    Server::addListeningSocket(int port)
+int    Server::addListeningSocket(int port)
 {
     int newServSocket;
 
@@ -51,7 +53,7 @@ void    Server::addListeningSocket(int port)
         throw std::runtime_error("Failed to bind socket with port " + intToString(port));
     }
 
-    if (listen(newServSocket, 10) == -1) {
+    if (listen(newServSocket, SOMAXCONN) == -1) {
         close(newServSocket);
         throw std::runtime_error("Failed to listen on socket binded to port : " + intToString(port));
     }
@@ -70,8 +72,9 @@ void    Server::addListeningSocket(int port)
     
     listenSockets.push_back(newServSocket);
     pollFds.push_back(pfd);
-
     // now i have all servers sockets & poll in 
+
+    return (newServSocket);
 }
 
 
@@ -83,25 +86,46 @@ void    Server::run()
     
         if (ret < 0)
             throw std::runtime_error("poll failed can't listen on servers sockets");
-    
-        for (size_t i = 0; i < pollFds.size(); ++i)
+        
+        for (size_t i = 0; i < pollFds.size();)
         {
-            if (pollFds[i].revents == 0)
+            std::cout << "  poll size :" << pollFds.size() << std::endl
+                    << "    i : " << i << std::endl;
+            // struct pollfd pfd = pollFds[i];
+
+            if (pollFds[i].revents == 0) {
+                ++i;
                 continue ; // just to optimise ignore sockets with no events . 
+            }
+            clientRemoved = false;
+            if (pollFds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
+                closeSocket(pollFds[i].fd);
+                continue ;
+            }
+
             if (pollFds[i].revents & POLLIN)
-            {                                
+            {
                 if (isListeningSocket(pollFds[i].fd))
                     acceptClient(pollFds[i].fd);
                 else
                 {
                     readFromClient(pollFds[i]);
+                    
                     // call the http handler TAHALLA
                 }
             }
-            if (pollFds[i].revents & POLLOUT)
+            std::cout << "client Removed " << clientRemoved << std::endl;
+            std::cout << "write condition : " << (!clientRemoved && pollFds[i].revents & POLLOUT) << std::endl;
+            if (!clientRemoved && (pollFds[i].revents & POLLOUT))
             {
+                 std::cout << "write to client  poll size :" << pollFds.size() << std::endl
+                    << "    i : " << i << std::endl;
                 writeToClient(pollFds[i]);
             }
+
+
+            if (!clientRemoved)
+                ++i;
         }
     }
 }
@@ -112,6 +136,39 @@ bool Server::isListeningSocket(int fd)
     return std::find(listenSockets.begin(),
                      listenSockets.end(),
                      fd) != listenSockets.end();
+}
+
+void    Server::closeSocket(int fd)
+{
+    std::cout << "closeSocket called" << std::endl;
+    if (isListeningSocket(fd)) // if serverSocket remove it from listenSocket && configs.
+    {
+        configs.erase(fd);
+
+        for (size_t i = 0; i < listenSockets.size(); ++i)
+        {
+            if (listenSockets[i] == fd)
+            {
+                listenSockets.erase(listenSockets.begin() + i);
+                break;
+            }
+        }
+    }
+    else
+        clients.erase(fd);
+    
+    close(fd);
+
+    // remove from pollFds
+    for (size_t i = 0; i < pollFds.size(); ++i)
+    {
+        if (pollFds[i].fd == fd)
+        {
+            pollFds.erase(pollFds.begin() + i);
+            break;
+        }
+    }
+
 }
 
 // int main(void)

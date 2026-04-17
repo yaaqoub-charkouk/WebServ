@@ -4,10 +4,16 @@
 #include <string>
 #include <vector>
 #include <map>
+<<<<<<< HEAD
 #include "config/ServerConfig.hpp"
 #include "config/LocationConfig.hpp"
 #include "response/HttpResponse.hpp"
 #include "request/HttpRequest.hpp"
+=======
+#include "../config/ServerConfig.hpp"
+#include "../config/LocationConfig.hpp"
+#include "../response/HttpResponse.hpp"
+>>>>>>> 82884000dbafc00bf85c725f08fe7a4c11ad2b2a
 
 class RequestHandler
 {

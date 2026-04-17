@@ -1,5 +1,4 @@
-# include "server/server.hpp"
-#include <sys/poll.h>
+# include "../../include/server/server.hpp"
 
 
 
@@ -10,14 +9,14 @@ std::string Server::getRequest(int clientFd)
     if (it == clients.end())
         return "";
 
-    return it->second.request;
+    return it->second.request_str;
 }
 
 
 void    Server::sendResponse(int clientFd, const std::string& data)
 {
-    clients[clientFd].response = data;
-
+    // clients[clientFd].response_str = data;
+    (void)data;
     for (size_t i = 0; i < pollFds.size(); i++)
     {
         if (pollFds[i].fd == clientFd)

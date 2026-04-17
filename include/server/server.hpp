@@ -6,12 +6,7 @@
 # include <map>
 # include <algorithm>
 # include <string>
-# include <poll.h>
 # include <cstring>
-
-# include <sys/socket.h>
-# include <netinet/in.h>
-# include <arpa/inet.h>
 # include <unistd.h>
 # include <fstream>
 # include <sstream>
@@ -19,24 +14,26 @@
 # include <iostream>
 # include <cerrno>
 
+# include <poll.h>
+# include <sys/socket.h>
+# include <netinet/in.h>
+# include <arpa/inet.h>
+
 # include "../config/Parser.hpp"
-
-
-class Client
-{
-public:
-    std::string request;
-    std::string response;
-};
-
+# include "../request/HttpRequest.hpp"
+# include "../request/RequestHandler.hpp"
+# include "../client/Client.hpp"
 
 
 class Server
 {
 private:
-    std::vector<int>                listenSockets;
-    std::map<int, Client>           clients;
-    std::vector<struct pollfd>      pollFds;
+    std::vector<int>                    listenSockets;
+    std::map<int, const ServerConfig>   configs;
+    std::map<int, Client>               clients;
+    std::vector<struct pollfd>          pollFds;
+
+    bool    clientRemoved;
 
 private:
     void    acceptClient(int serverFd); // session creation
@@ -44,10 +41,11 @@ private:
     void    writeToClient(struct pollfd& pfd);
     void    closeClient(int clientFd);
     bool    isListeningSocket(int fd);
+    void    closeSocket(int fd);
+
+    int     addListeningSocket(int port); // setup
 
 public:
-    Server(const std::vector<ServerConfig>& servers);
-    void    addListeningSocket(int port); // setup
     void    run();
 
     // APIs
@@ -55,7 +53,8 @@ public:
     void        sendResponse(int clientFd, const std::string& data);
 
 
-// public:
+public:
+    Server(const std::vector<ServerConfig>& servers);
 //     Server();
 //     Server(const Server& other);
 //     Server& operator=(const Server& other);
