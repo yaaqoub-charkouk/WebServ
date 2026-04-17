@@ -5,6 +5,7 @@
 #include <sstream>
 #include <algorithm>
 #include <iostream>
+#include "cgi/Cgi.hpp"
 
 HttpResponse RequestHandler::handleRequest(
     const std::string& method,
@@ -19,6 +20,9 @@ HttpResponse RequestHandler::handleRequest(
     }
 
     const LocationConfig* location = findLocation(uri, server);
+
+    if ((method == "GET" || method == "POST") && isCgiRequest(uri, location))
+        return handleCgi(method, uri, body, server, location);
 
     if (method == "GET")
         return handleGet(uri, server, location);
@@ -144,12 +148,47 @@ HttpResponse RequestHandler::handleDelete(
     return response;
 }
 
+HttpResponse RequestHandler::handleCgi(
+    const std::string& method,
+    const std::string& uri,
+    const std::string& body,
+    const ServerConfig& server,
+    const LocationConfig* location)
+{
+    if (!location)
+        return makeErrorResponse(404, server);
+
+    if (!location->hasMethod(method))
+        return makeErrorResponse(405, server);
+
+    std::string scriptPath = buildFilePath(uri, server, location);
+    if (!fileExists(scriptPath))
+        return makeErrorResponse(404, server);
+    if (directoryExists(scriptPath))
+        return makeErrorResponse(403, server);
+
+    HttpRequest cgiRequest;
+    cgiRequest.method = method;
+    cgiRequest.uri = uri;
+    cgiRequest.body = body;
+    cgiRequest.contentLength = body.size();
+    cgiRequest.serverName = server.getServerName();
+    cgiRequest.serverPort = server.getPort();
+    std::ostringstream contentLength;
+    contentLength << cgiRequest.contentLength;
+    cgiRequest.headers["Content-Length"] = contentLength.str();
+
+    Cgi cgi(cgiRequest, scriptPath);
+    return cgi.getResponse();
+}
+
 std::string RequestHandler::buildFilePath(
     const std::string& uri,
     const ServerConfig& server,
     const LocationConfig* location)
 {
     std::string root;
+    std::string uriPath = stripQueryString(uri);
 
     if (location && !location->getRoot().empty())
         root = location->getRoot();
@@ -159,7 +198,22 @@ std::string RequestHandler::buildFilePath(
     if (root.empty())
         root = ".";
 
-    std::string filePath = joinPath(root, uri);
+    std::string relativePath = uriPath;
+    if (location)
+    {
+        const std::string& locationPath = location->getPath();
+        if (!locationPath.empty() && uriPath.find(locationPath) == 0)
+        {
+            relativePath = uriPath.substr(locationPath.length());
+            if (relativePath.empty())
+                relativePath = "/";
+        }
+    }
+
+    if (!relativePath.empty() && relativePath[0] == '/')
+        relativePath = relativePath.substr(1);
+
+    std::string filePath = joinPath(root, relativePath);
 
     if (fileExists(filePath + ".html"))
         return filePath + ".html";
@@ -167,6 +221,30 @@ std::string RequestHandler::buildFilePath(
         return filePath + "/index.html";
 
     return filePath;
+}
+
+std::string RequestHandler::stripQueryString(const std::string& uri)
+{
+    size_t qPos = uri.find('?');
+    if (qPos == std::string::npos)
+        return uri;
+    return uri.substr(0, qPos);
+}
+
+bool RequestHandler::isCgiRequest(const std::string& uri, const LocationConfig* location)
+{
+    if (!location)
+        return false;
+
+    const std::string& cgiExt = location->getCgiExtension();
+    if (cgiExt.empty())
+        return false;
+
+    std::string uriPath = stripQueryString(uri);
+    if (uriPath.length() < cgiExt.length())
+        return false;
+
+    return uriPath.compare(uriPath.length() - cgiExt.length(), cgiExt.length(), cgiExt) == 0;
 }
 
 HttpResponse RequestHandler::makeErrorResponse(

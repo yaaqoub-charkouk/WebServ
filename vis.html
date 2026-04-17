@@ -1,0 +1,1452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WebServ Project Evaluation Report</title>
+<style>
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+@keyframes glitch {
+    0% { text-shadow: 2px 0 #ff0040, -2px 0 #00ff40; }
+    25% { text-shadow: -2px 0 #ff0040, 2px 0 #00ff40; }
+    50% { text-shadow: 2px 2px #ff0040, -2px -2px #00ff40; }
+    75% { text-shadow: -2px 2px #ff0040, 2px -2px #00ff40; }
+    100% { text-shadow: 2px 0 #ff0040, -2px 0 #00ff40; }
+}
+@keyframes scanline {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(100vh); }
+}
+@keyframes headerGlow {
+    0%, 100% { box-shadow: 0 0 20px rgba(0, 255, 136, 0.3), inset 0 0 60px rgba(0, 255, 136, 0.05); }
+    50% { box-shadow: 0 0 40px rgba(0, 255, 136, 0.5), inset 0 0 100px rgba(0, 255, 136, 0.1); }
+}
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+:root {
+    --bg-primary: #0a0e14;
+    --bg-secondary: #111820;
+    --bg-tertiary: #1a2332;
+    --bg-card: #141c28;
+    --border-color: #2a3a4a;
+    --text-primary: #e6edf3;
+    --text-secondary: #8b949e;
+    --text-muted: #6e7681;
+    --accent-green: #00ff88;
+    --accent-cyan: #00d4ff;
+    --accent-yellow: #ffcc00;
+    --accent-orange: #ff9500;
+    --accent-red: #ff4757;
+    --accent-purple: #bd93f9;
+    --accent-pink: #ff79c6;
+    --font-mono: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+body {
+    font-family: var(--font-sans);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.6;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 2px,
+            rgba(0, 255, 136, 0.03) 2px,
+            rgba(0, 255, 136, 0.03) 4px
+        );
+    pointer-events: none;
+    z-index: 1000;
+    animation: scanline 8s linear infinite;
+}
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+header {
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+    border-bottom: 2px solid var(--accent-green);
+    padding: 40px 0;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    animation: headerGlow 4s ease-in-out infinite;
+}
+header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(circle at 20% 50%, rgba(0, 255, 136, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 50%, rgba(0, 212, 255, 0.1) 0%, transparent 50%);
+}
+header h1 {
+    font-family: var(--font-mono);
+    font-size: 3rem;
+    color: var(--accent-green);
+    text-shadow: 0 0 30px rgba(0, 255, 136, 0.5);
+    margin-bottom: 10px;
+    position: relative;
+    animation: glitch 3s infinite;
+}
+header .subtitle {
+    font-family: var(--font-mono);
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    position: relative;
+}
+header .meta {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+    position: relative;
+}
+header .meta span {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    padding: 5px 15px;
+    background: var(--bg-primary);
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+}
+.badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.badge-success {
+    background: rgba(0, 255, 136, 0.2);
+    color: var(--accent-green);
+    border: 1px solid var(--accent-green);
+}
+.badge-warning {
+    background: rgba(255, 204, 0, 0.2);
+    color: var(--accent-yellow);
+    border: 1px solid var(--accent-yellow);
+}
+.badge-danger {
+    background: rgba(255, 71, 87, 0.2);
+    color: var(--accent-red);
+    border: 1px solid var(--accent-red);
+}
+.badge-info {
+    background: rgba(0, 212, 255, 0.2);
+    color: var(--accent-cyan);
+    border: 1px solid var(--accent-cyan);
+}
+section {
+    margin: 30px 0;
+    animation: fadeIn 0.6s ease-out;
+}
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border-color);
+}
+.section-header h2 {
+    font-family: var(--font-mono);
+    font-size: 1.5rem;
+    color: var(--accent-cyan);
+}
+.section-header .icon {
+    font-size: 1.5rem;
+}
+.card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+}
+.card:hover {
+    border-color: var(--accent-cyan);
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.1);
+}
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+.card-title {
+    font-family: var(--font-mono);
+    font-size: 1.1rem;
+    color: var(--accent-yellow);
+}
+.file-tree {
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    background: var(--bg-primary);
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    overflow-x: auto;
+}
+.file-tree .folder {
+    color: var(--accent-yellow);
+}
+.file-tree .file {
+    color: var(--accent-cyan);
+}
+.file-tree .file-cpp {
+    color: var(--accent-purple);
+}
+.file-tree .file-hpp {
+    color: var(--accent-pink);
+}
+.file-tree .file-config {
+    color: var(--accent-green);
+}
+.file-tree .indent {
+    padding-left: 20px;
+}
+.file-tree .line {
+    padding: 3px 0;
+}
+.process-flow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    justify-content: center;
+    padding: 30px;
+    background: var(--bg-primary);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+.process-step {
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    padding: 15px 20px;
+    min-width: 150px;
+    text-align: center;
+    transition: all 0.3s ease;
+    position: relative;
+}
+.process-step.implemented {
+    border-color: var(--accent-green);
+    box-shadow: 0 0 15px rgba(0, 255, 136, 0.2);
+}
+.process-step.partial {
+    border-color: var(--accent-yellow);
+    box-shadow: 0 0 15px rgba(255, 204, 0, 0.2);
+}
+.process-step.missing {
+    border-color: var(--accent-red);
+    box-shadow: 0 0 15px rgba(255, 71, 87, 0.2);
+}
+.process-step .status {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+}
+.process-step.implemented .status {
+    background: var(--accent-green);
+    color: var(--bg-primary);
+}
+.process-step.partial .status {
+    background: var(--accent-yellow);
+    color: var(--bg-primary);
+}
+.process-step.missing .status {
+    background: var(--accent-red);
+    color: white;
+}
+.process-step .step-num {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-bottom: 5px;
+}
+.process-step .step-title {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+.arrow {
+    display: flex;
+    align-items: center;
+    color: var(--text-muted);
+    font-size: 1.5rem;
+}
+.status-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+.status-item {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 20px;
+    transition: all 0.3s ease;
+}
+.status-item:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent-cyan);
+}
+.status-item .item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+}
+.status-item .item-name {
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    color: var(--accent-yellow);
+}
+.status-item .item-desc {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 15px;
+}
+.status-item .item-notes {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-style: italic;
+    padding: 10px;
+    background: var(--bg-primary);
+    border-radius: 6px;
+    margin-top: 10px;
+}
+.progress-bar {
+    height: 8px;
+    background: var(--bg-primary);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 10px;
+}
+.progress-bar .fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.5s ease;
+}
+.progress-bar .fill.success {
+    background: linear-gradient(90deg, var(--accent-green), var(--accent-cyan));
+}
+.progress-bar .fill.warning {
+    background: linear-gradient(90deg, var(--accent-yellow), var(--accent-orange));
+}
+.progress-bar .fill.danger {
+    background: linear-gradient(90deg, var(--accent-red), var(--accent-orange));
+}
+.requirement-category {
+    margin-bottom: 25px;
+}
+.category-header {
+    font-family: var(--font-mono);
+    font-size: 1.1rem;
+    color: var(--accent-purple);
+    margin-bottom: 15px;
+    padding: 10px 15px;
+    background: rgba(189, 147, 249, 0.1);
+    border-left: 3px solid var(--accent-purple);
+    border-radius: 0 8px 8px 0;
+}
+.requirements-list {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    overflow: hidden;
+}
+.req-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--border-color);
+    transition: background 0.2s ease;
+}
+.req-item:last-child {
+    border-bottom: none;
+}
+.req-item:hover {
+    background: rgba(0, 212, 255, 0.05);
+}
+.req-item .req-status {
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+}
+.req-item .req-status.done {
+    background: rgba(0, 255, 136, 0.2);
+    color: var(--accent-green);
+}
+.req-item .req-status.partial {
+    background: rgba(255, 204, 0, 0.2);
+    color: var(--accent-yellow);
+}
+.req-item .req-status.missing {
+    background: rgba(255, 71, 87, 0.2);
+    color: var(--accent-red);
+}
+.req-item .req-content {
+    flex: 1;
+}
+.req-item .req-rule {
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    margin-bottom: 5px;
+}
+.req-item .req-detail {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+.issues-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+.issue-item {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 20px;
+    display: flex;
+    gap: 15px;
+    transition: all 0.3s ease;
+}
+.issue-item:hover {
+    border-color: var(--accent-orange);
+    transform: translateX(5px);
+}
+.issue-item.critical {
+    border-left: 4px solid var(--accent-red);
+}
+.issue-item.major {
+    border-left: 4px solid var(--accent-orange);
+}
+.issue-item.minor {
+    border-left: 4px solid var(--accent-yellow);
+}
+.issue-severity {
+    flex-shrink: 0;
+    width: 80px;
+    text-align: center;
+}
+.issue-content {
+    flex: 1;
+}
+.issue-title {
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    color: var(--text-primary);
+    margin-bottom: 5px;
+}
+.issue-desc {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+.issue-location {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    padding: 5px 10px;
+    background: var(--bg-primary);
+    border-radius: 4px;
+    display: inline-block;
+}
+.verdict-card {
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+    border: 2px solid var(--border-color);
+    border-radius: 16px;
+    padding: 40px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+.verdict-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(0, 255, 136, 0.1) 0%, transparent 50%);
+    animation: pulse 4s ease-in-out infinite;
+}
+.verdict-score {
+    font-family: var(--font-mono);
+    font-size: 5rem;
+    font-weight: 700;
+    margin: 20px 0;
+    position: relative;
+}
+.verdict-score .total {
+    font-size: 2rem;
+    color: var(--text-muted);
+}
+.verdict-badge {
+    font-family: var(--font-mono);
+    font-size: 1.5rem;
+    padding: 10px 30px;
+    border-radius: 30px;
+    display: inline-block;
+    margin: 20px 0;
+    position: relative;
+}
+.verdict-badge.fail {
+    background: rgba(255, 71, 87, 0.2);
+    color: var(--accent-red);
+    border: 2px solid var(--accent-red);
+}
+.verdict-badge.conditional {
+    background: rgba(255, 204, 0, 0.2);
+    color: var(--accent-yellow);
+    border: 2px solid var(--accent-yellow);
+}
+.verdict-badge.pass {
+    background: rgba(0, 255, 136, 0.2);
+    color: var(--accent-green);
+    border: 2px solid var(--accent-green);
+}
+.verdict-summary {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    max-width: 600px;
+    margin: 20px auto;
+    position: relative;
+}
+.verdict-fixes {
+    text-align: left;
+    margin-top: 30px;
+    padding: 25px;
+    background: var(--bg-primary);
+    border-radius: 12px;
+    position: relative;
+}
+.verdict-fixes h3 {
+    font-family: var(--font-mono);
+    color: var(--accent-orange);
+    margin-bottom: 15px;
+}
+.verdict-fixes ol {
+    padding-left: 25px;
+}
+.verdict-fixes li {
+    color: var(--text-secondary);
+    margin: 10px 0;
+    font-size: 0.95rem;
+}
+.verdict-fixes li strong {
+    color: var(--accent-red);
+}
+.collapsible {
+    cursor: pointer;
+    user-select: none;
+}
+.collapsible::after {
+    content: ' [+]';
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+.collapsible.active::after {
+    content: ' [-]';
+}
+.content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+}
+.content.show {
+    max-height: 5000px;
+}
+footer {
+    text-align: center;
+    padding: 30px;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    border-top: 1px solid var(--border-color);
+    margin-top: 50px;
+}
+footer span {
+    color: var(--accent-green);
+}
+@media (max-width: 768px) {
+    header h1 {
+        font-size: 2rem;
+    }
+    
+    .process-flow {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .arrow {
+        transform: rotate(90deg);
+    }
+    
+    .status-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .verdict-score {
+        font-size: 3.5rem;
+    }
+}
+</style>
+</head>
+<body>
+<header>
+    <div class="container">
+        <h1>WebServ</h1>
+        <p class="subtitle">HTTP Server Implementation Evaluation Report</p>
+        <div class="meta">
+            <span>Language: C++98</span>
+            <span>Standard: HTTP/1.1</span>
+            <span>Evaluator: Code Review System</span>
+            <span>Date: April 2026</span>
+        </div>
+    </div>
+</header>
+<div class="container">
+    <!-- Section 1: Project Overview -->
+    <section>
+        <div class="section-header">
+            <span class="icon">🗂️</span>
+            <h2>Project Overview</h2>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">Project Information</span>
+                <span class="badge badge-info">HTTP Server</span>
+            </div>
+            
+            <p style="margin-bottom: 20px; color: var(--text-secondary);">
+                <strong style="color: var(--accent-cyan);">WebServ</strong> is a custom HTTP server implementation developed as part of a school project (42 Network curriculum). The project aims to create a production-like web server similar to NGINX, supporting configuration file parsing, multi-port listening, HTTP request handling, and CGI execution.
+            </p>
+            
+            <h4 style="font-family: var(--font-mono); color: var(--accent-yellow); margin: 20px 0 10px;">Project Structure</h4>
+            <div class="file-tree">
+                <div class="line"><span class="folder">WEBSERV/</span></div>
+                <div class="line indent"><span class="folder">├── src/</span></div>
+                <div class="line indent indent"><span class="folder">│   ├── config/</span></div>
+                <div class="line indent indent indent"><span class="file file-cpp">Lexer.cpp</span>, <span class="file file-cpp">Parser.cpp</span>, <span class="file file-cpp">ParserBlocks.cpp</span>, <span class="file file-cpp">ParserServerDirectives.cpp</span>, <span class="file file-cpp">ParserLocationDirectives.cpp</span>, <span class="file file-cpp">ParserUtils.cpp</span>, <span class="file file-cpp">Validator.cpp</span>, <span class="file file-cpp">ServerConfig.cpp</span>, <span class="file file-cpp">LocationConfig.cpp</span></div>
+                <div class="line indent indent"><span class="folder">│   ├── server/</span></div>
+                <div class="line indent indent indent"><span class="file file-cpp">server.cpp</span>, <span class="file file-cpp">server_api.cpp</span>, <span class="file file-cpp">server_client_connection.cpp</span>, <span class="file file-cpp">server_orthodox.cpp</span></div>
+                <div class="line indent indent"><span class="folder">│   ├── request/</span></div>
+                <div class="line indent indent indent"><span class="file file-cpp">HttpRequest.cpp</span>, <span class="file file-cpp">RequestHandler.cpp</span></div>
+                <div class="line indent indent"><span class="folder">│   ├── response/</span></div>
+                <div class="line indent indent indent"><span class="file file-cpp">HttpResponse.cpp</span>, <span class="file file-cpp">FileUtils.cpp</span></div>
+                <div class="line indent indent"><span class="folder">│   └── cgi/</span></div>
+                <div class="line indent indent indent"><span class="file file-cpp">Cgi.cpp</span></div>
+                <div class="line indent"><span class="folder">├── include/</span></div>
+                <div class="line indent indent"><span class="folder">├── (header files)</span></div>
+                <div class="line indent"><span class="file file-config">test.conf</span>, <span class="file">index.html</span>, <span class="file">Makefile</span>, <span class="file">main.cpp</span></div>
+                <div class="line"><span class="folder">└── var/www/</span> (webroot)</div>
+            </div>
+            
+            <h4 style="font-family: var(--font-mono); color: var(--accent-yellow); margin: 25px 0 10px;">Key Technologies</h4>
+            <ul style="list-style: none; display: flex; flex-wrap: wrap; gap: 10px;">
+                <li><span class="badge badge-info">C++98</span></li>
+                <li><span class="badge badge-info">POSIX Sockets</span></li>
+                <li><span class="badge badge-info">poll() I/O Multiplexing</span></li>
+                <li><span class="badge badge-info">CGI/1.1</span></li>
+                <li><span class="badge badge-info">HTTP/1.1</span></li>
+            </ul>
+        </div>
+    </section>
+    <!-- Section 2: Process Visualization -->
+    <section>
+        <div class="section-header">
+            <span class="icon">🔄</span>
+            <h2>Process Visualization</h2>
+        </div>
+        
+        <div class="process-flow">
+            <div class="process-step implemented">
+                <span class="status">✓</span>
+                <div class="step-num">01</div>
+                <div class="step-title">Config Load</div>
+            </div>
+            <div class="arrow">→</div>
+            <div class="process-step implemented">
+                <span class="status">✓</span>
+                <div class="step-num">02</div>
+                <div class="step-title">Socket Setup</div>
+            </div>
+            <div class="arrow">→</div>
+            <div class="process-step implemented">
+                <span class="status">✓</span>
+                <div class="step-num">03</div>
+                <div class="step-title">Poll Loop</div>
+            </div>
+            <div class="arrow">→</div>
+            <div class="process-step partial">
+                <span class="status">!</span>
+                <div class="step-num">04</div>
+                <div class="step-title">Read Request</div>
+            </div>
+            <div class="arrow">→</div>
+            <div class="process-step missing">
+                <span class="status">✗</span>
+                <div class="step-num">05</div>
+                <div class="step-title">Parse Request</div>
+            </div>
+            <div class="arrow">→</div>
+            <div class="process-step missing">
+                <span class="status">✗</span>
+                <div class="step-num">06</div>
+                <div class="step-title">Route & Handle</div>
+            </div>
+            <div class="arrow">→</div>
+            <div class="process-step implemented">
+                <span class="status">✓</span>
+                <div class="step-num">07</div>
+                <div class="step-title">Build Response</div>
+            </div>
+            <div class="arrow">→</div>
+            <div class="process-step partial">
+                <span class="status">!</span>
+                <div class="step-num">08</div>
+                <div class="step-title">Send Response</div>
+            </div>
+        </div>
+        
+        <div style="display: flex; gap: 30px; margin-top: 20px; flex-wrap: wrap; justify-content: center;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="width: 16px; height: 16px; background: var(--accent-green); border-radius: 50%;"></div>
+                <span style="color: var(--text-secondary); font-size: 0.85rem;">✓ Implemented</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="width: 16px; height: 16px; background: var(--accent-yellow); border-radius: 50%;"></div>
+                <span style="color: var(--text-secondary); font-size: 0.85rem;">! Partial</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="width: 16px; height: 16px; background: var(--accent-red); border-radius: 50%;"></div>
+                <span style="color: var(--text-secondary); font-size: 0.85rem;">✗ Missing</span>
+            </div>
+        </div>
+        
+        <div class="card" style="margin-top: 20px;">
+            <h4 style="font-family: var(--font-mono); color: var(--accent-orange); margin-bottom: 10px;">⚠️ Critical Flow Disconnect</h4>
+            <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                <strong>Issue:</strong> The server reads client requests but never calls <code>RequestHandler</code>. 
+                The <code>writeToClient()</code> function hardcodes reading <code>index.html</code> directly from disk and returns it, 
+                completely bypassing the request parsing and routing logic.
+            </p>
+        </div>
+    </section>
+    <!-- Section 3: Implementation State -->
+    <section>
+        <div class="section-header">
+            <span class="icon">📊</span>
+            <h2>Implementation State</h2>
+        </div>
+        
+        <div class="status-grid">
+            <div class="status-item">
+                <div class="item-header">
+                    <span class="item-name">Config Parser</span>
+                    <span class="badge badge-success">Done</span>
+                </div>
+                <p class="item-desc">Lexer, Parser, Validator for config files with server and location blocks</p>
+                <div class="progress-bar"><div class="fill success" style="width: 90%;"></div></div>
+                <div class="item-notes">Supports listen, host, server_name, root, index, client_max_body_size, error_page, location blocks</div>
+            </div>
+            
+            <div class="status-item">
+                <div class="item-header">
+                    <span class="item-name">Server Socket Management</span>
+                    <span class="badge badge-success">Done</span>
+                </div>
+                <p class="item-desc">TCP socket creation, binding, listening with non-blocking mode</p>
+                <div class="progress-bar"><div class="fill success" style="width: 85%;"></div></div>
+                <div class="item-notes">Uses poll() for I/O multiplexing, handles multiple listening sockets</div>
+            </div>
+            
+            <div class="status-item">
+                <div class="item-header">
+                    <span class="item-name">HTTP Request Parsing</span>
+                    <span class="badge badge-danger">Missing</span>
+                </div>
+                <p class="item-desc">Parse raw HTTP request into structured HttpRequest object</p>
+                <div class="progress-bar"><div class="fill danger" style="width: 5%;"></div></div>
+                <div class="item-notes">⚠️ HttpRequest::parse() is a stub returning empty object</div>
+            </div>
+            
+            <div class="status-item">
+                <div class="item-header">
+                    <span class="item-name">Request Routing</span>
+                    <span class="badge badge-danger">Missing</span>
+                </div>
+                <p class="item-desc">Route requests to appropriate handlers based on URI and config</p>
+                <div class="progress-bar"><div class="fill danger" style="width: 0%;"></div></div>
+                <div class="item-notes">⚠️ Not integrated - RequestHandler exists but never called from Server</div>
+            </div>
+            
+            <div class="status-item">
+                <div class="item-header">
+                    <span class="item-name">GET Method Handler</span>
+                    <span class="badge badge-warning">Partial</span>
+                </div>
+                <p class="item-desc">Serve static files with proper MIME types</p>
+                <div class="progress-bar"><div class="fill warning" style="width: 60%;"></div></div>
+                <div class="item-notes">Implemented in RequestHandler but not integrated into request flow</div>
+            </div>
+            
+            <div class="status-item">
+                <div class="item-header">
+                    <span class="item-name">POST Method Handler</span>
+                    <span class="badge badge-warning">Partial</span>
+                </div>
+                <p class="item-desc">Handle file uploads to configured upload_store</p>
+                <div class="progress-bar"><div class="fill warning" style="width: 50%;"></div></div>
+                <div class="item-notes">Has upload logic but not integrated, filename generation needs improvement</div>
+            </div>
+            
+            <div class="status-item">
+                <div class="item-header">
+                    <span class="item-name">DELETE Method Handler</span>
+                    <span class="badge badge-warning">Partial</span>
+                </div>
+                <p class="item-desc">Delete files from the server filesystem</p>
+                <div class="progress-bar"><div class="fill warning" style="width: 50%;"></div></div>
+                <div class="item-notes">Implemented in RequestHandler but not integrated into request flow</div>
+            </div>
+            
+            <div class="status-item">
+                <div class="item-header">
+                    <span class="item-name">HTTP Response Builder</span>
+                    <span class="badge badge-success">Done</span>
+                </div>
+                <p class="item-desc">Build proper HTTP responses with headers and body</p>
+                <div class="progress-bar"><div class="fill success" style="width: 85%;"></div></div>
+                <div class="item-notes">Supports file responses, error pages, redirects, autoindex, CGI responses</div>
+            </div>
+            
+            <div class="status-item">
+                <div class="item-header">
+                    <span class="item-name">CGI Execution</span>
+                    <span class="badge badge-warning">Partial</span>
+                </div>
+                <p class="item-desc">Execute CGI scripts (Python, PHP) and capture output</p>
+                <div class="progress-bar"><div class="fill warning" style="width: 70%;"></div></div>
+                <div class="item-notes">Core logic implemented, environment variables set, but not integrated with routing</div>
+            </div>
+            
+            <div class="status-item">
+                <div class="item-header">
+                    <span class="item-name">Autoindex</span>
+                    <span class="badge badge-success">Done</span>
+                </div>
+                <p class="item-desc">Generate directory listing when no index file exists</p>
+                <div class="progress-bar"><div class="fill success" style="width: 90%;"></div></div>
+                <div class="item-notes">Proper HTML generation with file/directory icons</div>
+            </div>
+            
+            <div class="status-item">
+                <div class="item-header">
+                    <span class="item-name">Error Pages</span>
+                    <span class="badge badge-success">Done</span>
+                </div>
+                <p class="item-desc">Custom error pages based on configuration</p>
+                <div class="progress-bar"><div class="fill success" style="width: 80%;"></div></div>
+                <div class="item-notes">Supports 4xx and 5xx error codes, falls back to default messages</div>
+            </div>
+            
+            <div class="status-item">
+                <div class="item-header">
+                    <span class="item-name">Connection Handling</span>
+                    <span class="badge badge-danger">Missing</span>
+                </div>
+                <p class="item-desc">Keep-alive support, connection close, proper HTTP/1.1 handling</p>
+                <div class="progress-bar"><div class="fill danger" style="width: 10%;"></div></div>
+                <div class="item-notes">⚠️ Hardcoded "Connection: close", doesn't support keep-alive</div>
+            </div>
+        </div>
+    </section>
+    <!-- Section 4: Requirements Compliance -->
+    <section>
+        <div class="section-header">
+            <span class="icon">📋</span>
+            <h2>Requirements Compliance Checklist</h2>
+        </div>
+        
+        <div class="requirement-category">
+            <h3 class="category-header collapsible">📁 Configuration File Parsing</h3>
+            <div class="content">
+                <div class="requirements-list">
+                    <div class="req-item">
+                        <span class="req-status done">✓</span>
+                        <div class="req-content">
+                            <div class="req-rule">Must read configuration from a file</div>
+                            <div class="req-detail">Lexer and Parser implement file reading and tokenization</div>
+                        </div>
+                    </div>
+                    <div class="req-item">
+                        <span class="req-status done">✓</span>
+                        <div class="req-content">
+                            <div class="req-rule">Support for server blocks with listen directive</div>
+                            <div class="req-detail">Parser correctly handles 'listen' directive for port configuration</div>
+                        </div>
+                    </div>
+                    <div class="req-item">
+                        <span class="req-status done">✓</span>
+                        <div class="req-content">
+                            <div class="req-rule">Support for server_name directive</div>
+                            <div class="req-detail">Server names can be configured per server block</div>
+                        </div>
+                    </div>
+                    <div class="req-item">
+                        <span class="req-status done">✓</span>
+                        <div class="req-content">
+                            <div class="req-rule">Support for root directive</div>
+                            <div class="req-detail">Document root configurable at server and location levels</div>
+                        </div>
+                    </div>
+                    <div class="req-item">
+                        <span class="req-status done">✓</span>
+                        <div class="req-content">
+                            <div class="req-rule">Support for location blocks</div>
+                            <div class="req-detail">Nested location blocks with path matching</div>
+                        </div>
+                    </div>
+                    <div class="req-item">
+                        <span class="req-status done">✓</span>
+                        <div class="req-content">
+                            <div class="req-rule">Support for error_page directive</div>
+                            <div class="req-detail">Custom error pages for specific HTTP status codes</div>
+                        </div>
+                    </div>
+                    <div class="req-item">
+                        <span class="req-status done">✓</span>
+                        <div class="req-content">
+                            <div class="req-rule">Support for client_max_body_size directive</div>
+                            <div class="req-detail">Limits maximum request body size (validated > 0)</div>
+                        </div>
+                    </div>
+                    <div class="req-item">
+                        <span class="req-status partial">!</span>
+                        <div class="req-content">
+                            <div class="req-rule">Support for index directive</div>
+                            <div class="req-detail">Implemented but only for static files, not for directory index generation</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="requirement-category">
+            <h3 class="category-header collapsible">🌐 HTTP Methods</h3>
+            <div class="content">
+                <div class="requirements-list">
+                    <div class="req-item">
+                        <span class="req-status partial">!</span>
+                        <div class="req-content">
+                            <div class="req-rule">GET method - retrieve resources</div>
+                            <div class="req-detail">Handler implemented but not integrated into server flow</div>
+                        </div>
+                    </div>
+                    <div class="req-item">
+                        <span class="req-status partial">!</span>
+                        <div class="req-content">
+                            <div class="req-rule">POST method - submit data/file uploads</div>
+                            <div class="req-detail">Upload logic exists but lacks proper filename handling and path security</div>
+                        </div>
+                    </div>
+                    <div class="req-item">
+                        <span class="req-status partial">!</span>
+                        <div class="req-content">
+                            <div class="req-rule">DELETE method - remove resources</div>
+                            <div class="req-detail">Handler implemented but not integrated into server flow</div>
+                        </div>
+                    </div>
+                    <div class="req-item">
+                        <span class="req-status missing">✗</span>
+                        <div class="req-content">
+                            <div class="req-rule">HEAD method - retrieve headers only</div>
+                            <div class="req-detail">Not implemented</div>
+                        </div>
+                    </div>
+                    <div class="req-item">
+                        <span class="req-status missing">✗</span>
+                        <div class="req-content">
+                            <div class="req-rule">OPTIONS method - CORS preflight</div>
+                            <div class="req-detail">Not implemented</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="requirement-category">
+            <h3 class="category-header collapsible">🔧 Server Operations</h3>
+            <div class="content">
+                <div class="requirements-list">
+                    <div class="req-item">
+                        <span class="req-status done">✓</span>
+                        <div class="req-content">
+                            <div class="req-rule">Non-blocking I/O with poll()</div>
+                            <div class="req-detail">Server uses poll() for efficient I/O multiplexing</div>
+                        </div>
+                    </div>
+                    <div class="req-item">
+                        <span class="req-status done">✓</span>
+                        <div class="req-content">
+                            <div class="req-rule">Multiple server blocks on different ports</div>
+                            <div class="req-detail">Can create multiple listening sockets</div>
+                        </div>
+                    </div>
+                    <div class="req-item">
+                        <span class="req-status missing">✗</span>
+                        <div class="req-content">
+                            <div class="req-rule">Virtual host routing (select server by Host header)</div>
+                            <div class="req-detail">Not implemented - always uses first server config</div>
+                        </div>
+                    </div>
+                    <div class="req-item">
+                        <span class="req-status done">✓</span>
+                        <div class="req-content">
+                            <div class="req-rule">Graceful handling of client disconnections</div>
+                            <div class="req-detail">Proper cleanup of file descriptors and client state</div>
+                        </div>
+                    </div>
+                    <div class="req-item">
+                        <span class="req-status partial">!</span>
+                        <div class="req-content">
+                            <div class="req-rule">Keep-alive connections</div>
+                            <div class="req-detail">Hardcoded "Connection: close" - keep-alive not supported</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="requirement-category">
+            <h3 class="category-header collapsible">🛠️ CGI Support</h3>
+            <div class="content">
+                <div class="requirements-list">
+                    <div class="req-item">
+                        <span class="req-status done">✓</span>
+                        <div class="req-content">
+                            <div class="req-rule">Execute CGI scripts (PHP, Python)</div>
+                            <div class="req-detail">Cgi class handles fork, pipes, environment, execution</div>
+                        </div>
+                    </div>
+                    <div class="req-item">
+                        <span class="req-status done">✓</span>
+                        <div class="req-content">
+                            <div class="req-rule">Set CGI environment variables</div>
+                            <div class="req-detail">REQUEST_METHOD, CONTENT_TYPE, QUERY_STRING, etc.</div>
+                        </div>
+                    </div>
+                    <div class="req-item">
+                        <span class="req-status partial">!</span>
+                        <div class="req-content">
+                            <div class="req-rule">CGI timeout handling</div>
+                            <div class="req-detail">checkTimeout() exists but not called in main loop</div>
+                        </div>
+                    </div>
+                    <div class="req-item">
+                        <span class="req-status missing">✗</span>
+                        <div class="req-content">
+                            <div class="req-rule">CGI integration with POST body</div>
+                            <div class="req-detail">Cgi class exists but not called from request handler</div>
+                        </div>
+                    </div>
+                    <div class="req-item">
+                        <span class="req-status done">✓</span>
+                        <div class="req-content">
+                            <div class="req-rule">CGI extension configuration</div>
+                            <div class="req-detail">cgi_extension directive in location block works</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="requirement-category">
+            <h3 class="category-header collapsible">📄 Directory Features</h3>
+            <div class="content">
+                <div class="requirements-list">
+                    <div class="req-item">
+                        <span class="req-status done">✓</span>
+                        <div class="req-content">
+                            <div class="req-rule">Autoindex for directories</div>
+                            <div class="req-detail">Generates HTML listing with proper formatting</div>
+                        </div>
+                    </div>
+                    <div class="req-item">
+                        <span class="req-status done">✓</span>
+                        <div class="req-content">
+                            <div class="req-rule">Custom index files</div>
+                            <div class="req-detail">Supports configurable index files per location</div>
+                        </div>
+                    </div>
+                    <div class="req-item">
+                        <span class="req-status done">✓</span>
+                        <div class="req-content">
+                            <div class="req-rule">Redirects (return directive)</div>
+                            <div class="req-detail">Supports 301, 302, and other redirect codes</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="requirement-category">
+            <h3 class="category-header collapsible">⚠️ Error Handling</h3>
+            <div class="content">
+                <div class="requirements-list">
+                    <div class="req-item">
+                        <span class="req-status done">✓</span>
+                        <div class="req-content">
+                            <div class="req-rule">404 Not Found responses</div>
+                            <div class="req-detail">Proper 404 handling with custom pages</div>
+                        </div>
+                    </div>
+                    <div class="req-item">
+                        <span class="req-status done">✓</span>
+                        <div class="req-content">
+                            <div class="req-rule">403 Forbidden responses</div>
+                            <div class="req-detail">Proper 403 handling for permission issues</div>
+                        </div>
+                    </div>
+                    <div class="req-item">
+                        <span class="req-status done">✓</span>
+                        <div class="req-content">
+                            <div class="req-rule">405 Method Not Allowed responses</div>
+                            <div class="req-detail">Returns when method not allowed for location</div>
+                        </div>
+                    </div>
+                    <div class="req-item">
+                        <span class="req-status done">✓</span>
+                        <div class="req-content">
+                            <div class="req-rule">413 Payload Too Large responses</div>
+                            <div class="req-detail">Enforced based on client_max_body_size</div>
+                        </div>
+                    </div>
+                    <div class="req-item">
+                        <span class="req-status done">✓</span>
+                        <div class="req-content">
+                            <div class="req-rule">500 Internal Server Error responses</div>
+                            <div class="req-detail">CGI errors and other failures return 500</div>
+                        </div>
+                    </div>
+                    <div class="req-item">
+                        <span class="req-status missing">✗</span>
+                        <div class="req-content">
+                            <div class="req-rule">400 Bad Request for malformed HTTP</div>
+                            <div class="req-detail">Not implemented - parse function returns empty object</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="requirement-category">
+            <h3 class="category-header collapsible">📝 HTTP Protocol Compliance</h3>
+            <div class="content">
+                <div class="requirements-list">
+                    <div class="req-item">
+                        <span class="req-status partial">!</span>
+                        <div class="req-content">
+                            <div class="req-rule">HTTP/1.1 compliance</div>
+                            <div class="req-detail">Uses HTTP/1.0 in responses instead of HTTP/1.1</div>
+                        </div>
+                    </div>
+                    <div class="req-item">
+                        <span class="req-status partial">!</span>
+                        <div class="req-content">
+                            <div class="req-rule">Proper Content-Length header</div>
+                            <div class="req-detail">Set for file responses but not always for dynamic content</div>
+                        </div>
+                    </div>
+                    <div class="req-item">
+                        <span class="req-status partial">!</span>
+                        <div class="req-content">
+                            <div class="req-rule">Content-Type header (MIME types)</div>
+                            <div class="req-detail">Basic MIME type support for common extensions</div>
+                        </div>
+                    </div>
+                    <div class="req-item">
+                        <span class="req-status missing">✗</span>
+                        <div class="req-content">
+                            <div class="req-rule">Chunked transfer encoding</div>
+                            <div class="req-detail">Not implemented for large responses</div>
+                        </div>
+                    </div>
+                    <div class="req-item">
+                        <span class="req-status partial">!</span>
+                        <div class="req-content">
+                            <div class="req-rule">Request header parsing</div>
+                            <div class="req-detail">Headers stored in HttpRequest but parsing is a stub</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Section 5: Issues & Warnings -->
+    <section>
+        <div class="section-header">
+            <span class="icon">⚠️</span>
+            <h2>Issues & Warnings</h2>
+        </div>
+        
+        <div class="issues-list">
+            <div class="issue-item critical">
+                <div class="issue-severity">
+                    <span class="badge badge-danger">🔴 Critical</span>
+                </div>
+                <div class="issue-content">
+                    <div class="issue-title">Request Parsing Not Implemented</div>
+                    <div class="issue-desc">HttpRequest::parse() is a stub that returns an empty HttpRequest object. The entire request parsing logic is missing - headers, body, query strings are not extracted.</div>
+                    <span class="issue-location">src/request/HttpRequest.cpp:5-9</span>
+                </div>
+            </div>
+            
+            <div class="issue-item critical">
+                <div class="issue-severity">
+                    <span class="badge badge-danger">🔴 Critical</span>
+                </div>
+                <div class="issue-content">
+                    <div class="issue-title">Request Handler Not Integrated</div>
+                    <div class="issue-desc">Server::readFromClient() and Server::writeToClient() completely bypass RequestHandler. The server reads requests but never processes them - it hardcodes returning index.html.</div>
+                    <span class="issue-location">src/server/server_client_connection.cpp:77-110</span>
+                </div>
+            </div>
+            
+            <div class="issue-item critical">
+                <div class="issue-severity">
+                    <span class="badge badge-danger">🔴 Critical</span>
+                </div>
+                <div class="issue-content">
+                    <div class="issue-title">HTTP Version Mismatch</div>
+                    <div class="issue-desc">Responses use "HTTP/1.0" instead of "HTTP/1.1" as specified in the requirements. This affects protocol compliance.</div>
+                    <span class="issue-location">src/response/HttpResponse.cpp:88</span>
+                </div>
+            </div>
+            
+            <div class="issue-item critical">
+                <div class="issue-severity">
+                    <span class="badge badge-danger">🔴 Critical</span>
+                </div>
+                <div class="issue-content">
+                    <div class="issue-title">Server Selection Not Implemented</div>
+                    <div class="issue-desc">When multiple servers are configured, the server doesn't select the correct one based on Host header. Always uses the first server config.</div>
+                    <span class="issue-location">src/server/server.cpp (missing logic)</span>
+                </div>
+            </div>
+            
+            <div class="issue-item major">
+                <div class="issue-severity">
+                    <span class="badge badge-warning">🟠 Major</span>
+                </div>
+                <div class="issue-content">
+                    <div class="issue-title">Keep-Alive Not Supported</div>
+                    <div class="issue-desc">Hardcoded "Connection: close" header. The server closes connections after every response instead of supporting keep-alive for HTTP/1.1.</div>
+                    <span class="issue-location">src/server/server_client_connection.cpp:99</span>
+                </div>
+            </div>
+            
+            <div class="issue-item major">
+                <div class="issue-severity">
+                    <span class="badge badge-warning">🟠 Major</span>
+                </div>
+                <div class="issue-content">
+                    <div class="issue-title">CGI Not Integrated with Routing</div>
+                    <div class="issue-desc">Cgi class exists with full implementation, but RequestHandler never calls it. CGI scripts are never executed.</div>
+                    <span class="issue-location">src/request/RequestHandler.cpp</span>
+                </div>
+            </div>
+            
+            <div class="issue-item major">
+                <div class="issue-severity">
+                    <span class="badge badge-warning">🟠 Major</span>
+                </div>
+                <div class="issue-content">
+                    <div class="issue-title">No Client Timeout Handling</div>
+                    <div class="issue-desc">While Cgi::checkTimeout() exists, it's never called. Clients could hang indefinitely. poll() timeout is set to -1 (infinite).</div>
+                    <span class="issue-location">src/server/server.cpp:82</span>
+                </div>
+            </div>
+            
+            <div class="issue-item major">
+                <div class="issue-severity">
+                    <span class="badge badge-warning">🟠 Major</span>
+                </div>
+                <div class="issue-content">
+                    <div class="issue-title">POST Upload Path Traversal Risk</div>
+                    <div class="issue-desc">In handlePost(), the filename is constructed as "upload_" + uri without sanitization. Malicious URIs could write outside upload directory.</div>
+                    <span class="issue-location">src/request/RequestHandler.cpp:107</span>
+                </div>
+            </div>
+            
+            <div class="issue-item minor">
+                <div class="issue-severity">
+                    <span class="badge badge-info">🟡 Minor</span>
+                </div>
+                <div class="issue-content">
+                    <div class="issue-title">Limited MIME Types</div>
+                    <div class="issue-desc">getFileType() only supports: html, css, js, png, jpg, ico, txt. Missing common types like: svg, json, xml, pdf, gif, webp, etc.</div>
+                    <span class="issue-location">src/response/HttpResponse.cpp:44-59</span>
+                </div>
+            </div>
+            
+            <div class="issue-item minor">
+                <div class="issue-severity">
+                    <span class="badge badge-info">🟡 Minor</span>
+                </div>
+                <div class="issue-content">
+                    <div class="issue-title">No Chunked Encoding Support</div>
+                    <div class="issue-desc">Server cannot handle chunked request bodies or send chunked responses. This limits compatibility with some HTTP clients.</div>
+                    <span class="issue-location">Missing implementation</span>
+                </div>
+            </div>
+            
+            <div class="issue-item minor">
+                <div class="issue-severity">
+                    <span class="badge badge-info">🟡 Minor</span>
+                </div>
+                <div class="issue-content">
+                    <div class="issue-title">Error Page Files Missing</div>
+                    <div class="issue-desc">Configuration references 404.html and 500.html but these files don't exist in the project. Default error pages will be used.</div>
+                    <span class="issue-location">test.conf:11-12</span>
+                </div>
+            </div>
+            
+            <div class="issue-item minor">
+                <div class="issue-severity">
+                    <span class="badge badge-info">🟡 Minor</span>
+                </div>
+                <div class="issue-content">
+                    <div class="issue-title">Comment Debug Output</div>
+                    <div class="issue-desc">Server prints "Client port:" to stdout in acceptClient(). Should be removed or converted to proper logging.</div>
+                    <span class="issue-location">src/server/server_client_connection.cpp:39</span>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Section 6: Final Verdict -->
+    <section>
+        <div class="section-header">
+            <span class="icon">🏆</span>
+            <h2>Final Verdict</h2>
+        </div>
+        
+        <div class="verdict-card">
+            <h3 style="font-family: var(--font-mono); color: var(--text-secondary);">Overall Compliance Score</h3>
+            <div class="verdict-score">
+                <span style="color: var(--accent-yellow);">42</span><span class="total">/100</span>
+            </div>
+            
+            <div class="verdict-badge fail">❌ FAIL</div>
+            
+            <p class="verdict-summary">
+                The WebServ project demonstrates solid foundational architecture with proper socket handling, 
+                configuration parsing, and response building. However, <strong style="color: var(--accent-red);">the core HTTP request handling pipeline is fundamentally broken</strong>. 
+                The server cannot properly parse incoming requests, route them, or return dynamic responses. 
+                The RequestHandler and CGI systems exist but are completely disconnected from the main flow. 
+                This is a <strong style="color: var(--accent-yellow);">significant amount of integration work</strong> away from a functional HTTP server.
+            </p>
+            
+            <div style="display: flex; justify-content: center; gap: 30px; margin: 30px 0; flex-wrap: wrap;">
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem; color: var(--accent-green);">6</div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted);">Requirements Met</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem; color: var(--accent-yellow);">8</div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted);">Partially Done</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem; color: var(--accent-red);">7</div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted);">Missing/Not Integrated</div>
+                </div>
+            </div>
+            
+            <div class="verdict-fixes">
+                <h3>🔧 Top 3 Things to Fix Before Submission</h3>
+                <ol>
+                    <li>
+                        <strong>Implement HTTP Request Parsing</strong> - Complete HttpRequest::parse() to extract method, URI, headers, and body from raw request string. 
+                        This is blocking all request handling.
+                    </li>
+                    <li>
+                        <strong>Integrate Request Handler into Server Flow</strong> - Modify writeToClient() to call RequestHandler::handleRequest() with parsed HttpRequest data 
+                        instead of hardcoding index.html responses.
+                    </li>
+                    <li>
+                        <strong>Fix HTTP Protocol Compliance</strong> - Change response version from HTTP/1.0 to HTTP/1.1, implement proper keep-alive handling, 
+                        and add virtual host selection based on Host header.
+                    </li>
+                </ol>
+            </div>
+        </div>
+    </section>
+</div>
+<footer>
+    <p>Generated by <span>Code Review System</span> | WebServ Project Evaluation</p>
+    <p style="margin-top: 5px; font-size: 0.75rem;">Report generated for educational purposes | 42 Network Project</p>
+</footer>
+<script>
+document.querySelectorAll('.collapsible').forEach(header => {
+    header.addEventListener('click', () => {
+        header.classList.toggle('active');
+        const content = header.nextElementSibling;
+        content.classList.toggle('show');
+    });
+});
+document.querySelectorAll('.category-header').forEach((header, index) => {
+    if (index < 3) {
+        header.classList.add('active');
+        header.nextElementSibling.classList.add('show');
+    }
+});
+</script>
+</body>
+</html>

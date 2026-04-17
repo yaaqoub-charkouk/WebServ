@@ -7,6 +7,7 @@
 #include "config/ServerConfig.hpp"
 #include "config/LocationConfig.hpp"
 #include "response/HttpResponse.hpp"
+#include "request/HttpRequest.hpp"
 
 class RequestHandler
 {
@@ -23,8 +24,11 @@ private:
     static HttpResponse handleGet(const std::string& uri,const ServerConfig& server,const LocationConfig* location);
     static HttpResponse handlePost(const std::string& uri,const std::string& body,const ServerConfig& server,const LocationConfig* location);
     static HttpResponse handleDelete(const std::string& uri,const ServerConfig& server,const LocationConfig* location);
+    static HttpResponse handleCgi(const std::string& method,const std::string& uri,const std::string& body,const ServerConfig& server,const LocationConfig* location);
 
     static std::string buildFilePath(const std::string& uri,const ServerConfig& server,const LocationConfig* location);
+    static std::string stripQueryString(const std::string& uri);
+    static bool isCgiRequest(const std::string& uri,const LocationConfig* location);
 
     static HttpResponse makeErrorResponse(int code,const ServerConfig& server);
 
