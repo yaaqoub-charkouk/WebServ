@@ -33,8 +33,10 @@ public:
     size_t      header_end_pos;
     std::string header_str;
 
+    // response
     std::string         response_str;
     HttpResponse        response;
+    size_t              bytes_sent;
     // needs response buffering , send()
     
     Client(const ServerConfig& serverConfig, int clientPort, std::string clientAddress);

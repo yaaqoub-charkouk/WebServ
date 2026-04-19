@@ -4,7 +4,7 @@
 
 Client::Client(const ServerConfig& serverConfig, int clientPort, std::string clientAddress)
                  : serverConfig(serverConfig), clientPort(clientPort), clientAddress(clientAddress),
-                  state(READING_HEADERS) {
+                  state(READING_HEADERS), bytes_sent(0) {
     request.contentLength = 0;
 }
 

@@ -1,6 +1,4 @@
 # include "../../include/server/server.hpp"
-#include <sys/poll.h>
-
 
 
 void    Server::acceptClient(int serverFd)
@@ -75,22 +73,24 @@ void    Server::readFromClient(struct pollfd& pfd)
                                             client.serverConfig,
                                             client.request.contentLength);
                 
+                client.response_str = client.response.getResponse();
+
                 pfd.events = POLLOUT;
                 pfd.revents = 0;
                 std::cout << "completed request and pollout ready" << std::endl;
             }
+            else if (client.state == ERROR) {
+                // send erorr page 
 
 
 
-            // calling Request.parse() instead of server api ;
-            // HttpRequest req = HttpRequest::parse(clients[pfd.fd].request_str);
 
-            // need to check for end of request "\r\n\r\n" : Moved to Httprequest.parse()
-            // if (client.request_str.find("\r\n\r\n", 0) != std::string::npos) // TAHALLA
-            // {
-            //     // pfd.events = POLLOUT; // !!! set it only when done with response . how? i don't know .
-            //     // pfd.revents = 0;
-            // } // keep it until http handler start getting requests
+
+
+
+                // handle the error case
+            }
+
         }
         else if (n == 0) // client closed connection
         {
@@ -110,10 +110,48 @@ void    Server::readFromClient(struct pollfd& pfd)
 void Server::writeToClient(struct pollfd& pfd)
 {
     Client& client = clients.at(pfd.fd);
-    client.response_str = client.response.getResponse();
+    
+    if (client.bytes_sent >= client.response_str.size()) {
+        closeClient(pfd.fd);
+        return ;
+    }
+
+    ssize_t bytes_sent = send(pfd.fd, 
+                            client.response_str.c_str() + client.bytes_sent,
+                            client.response_str.size() - client.bytes_sent,
+                            0);
+
+    if (bytes_sent > 0)
+    {
+        client.bytes_sent += bytes_sent;
+
+        if (client.bytes_sent == client.response_str.size())
+            closeClient(pfd.fd);
+    }
+    else if (bytes_sent == 0) // connection closed
+        closeClient(pfd.fd);
+    else if (bytes_sent < 0) // error case 
+    {
+        if (errno == EAGAIN || errno == EWOULDBLOCK)
+            return ;
+        closeClient(pfd.fd);
+    }
+
+
+
+
+
+
+
 
     // fine for now . but i still need to implement partial send logic !!!
-    send(pfd.fd, client.response_str.c_str(), client.response_str.size(), 0);
+
+    
+
+
+
+
+
 
     // hardcoded write to client for now . wait until adnane build response 
 
@@ -144,7 +182,8 @@ void Server::writeToClient(struct pollfd& pfd)
     // send(pfd.fd, response_str.c_str(), response_str.size(), 0);
 
     // maybe i'll keep the client alive since the browser can use only one tcp three way handshake 
-    closeClient(pfd.fd);
+
+    // closeClient(pfd.fd);
 }
 
 void Server::closeClient(int clientFd)
