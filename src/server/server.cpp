@@ -89,8 +89,8 @@ void    Server::run()
         
         for (size_t i = 0; i < pollFds.size();)
         {
-            std::cout << "  poll size :" << pollFds.size() << std::endl
-                    << "    i : " << i << std::endl;
+            // std::cout << "  poll size :" << pollFds.size() << std::endl
+            //         << "    i : " << i << std::endl;
             // struct pollfd pfd = pollFds[i];
 
             if (pollFds[i].revents == 0) {
@@ -114,12 +114,12 @@ void    Server::run()
                     // call the http handler TAHALLA
                 }
             }
-            std::cout << "client Removed " << clientRemoved << std::endl;
-            std::cout << "write condition : " << (!clientRemoved && pollFds[i].revents & POLLOUT) << std::endl;
+            // std::cout << "client Removed " << clientRemoved << std::endl;
+            // std::cout << "write condition : " << (!clientRemoved && pollFds[i].revents & POLLOUT) << std::endl;
             if (!clientRemoved && (pollFds[i].revents & POLLOUT))
             {
-                 std::cout << "write to client  poll size :" << pollFds.size() << std::endl
-                    << "    i : " << i << std::endl;
+                //  std::cout << "write to client  poll size :" << pollFds.size() << std::endl
+                //     << "    i : " << i << std::endl;
                 writeToClient(pollFds[i]);
             }
 
