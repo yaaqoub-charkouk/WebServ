@@ -1,5 +1,5 @@
 #include "../../include/cgi/Cgi.hpp"
-
+# include "../../include/server/server.hpp"
 
 Cgi::Cgi() : pid(-1), status(0), envp(NULL), start_time(0), timeout(0), cgi_status(CGI_SUCCESS)
 {
@@ -177,6 +177,9 @@ std::string Cgi::execute(const std::string&, const std::string& input)
         close(script_in[1]);
         return "";
     }
+    
+    Server::make_cgi_pipes_nonblocking(script_in, script_out);
+
     pid = fork();
     if (pid == -1)
     {
@@ -197,7 +200,7 @@ std::string Cgi::execute(const std::string&, const std::string& input)
         execve(script_interpreter.c_str(), argv, envp);
         free_envp();
         cgi_status = CGI_EXEC_ERROR;
-        _exit(1);
+        _exit(1); // is exit safe ? can we use throw an exception instead ? just to free up memory & close Fds .
     }
     close(script_in[0]);
     close(script_out[1]);
@@ -214,14 +217,14 @@ std::string Cgi::execute(const std::string&, const std::string& input)
         }
         total_written += written;
     }
-    close(script_in[1]);
+    // close(script_in[1]);
     script_in[1] = -1;
     std::string output;
     char buff[1024];
     ssize_t read_bytes;
     while ((read_bytes = read(script_out[0], buff, sizeof(buff))) > 0)
         output.append(buff, read_bytes);
-    close(script_out[0]);
+    // close(script_out[0]);
     script_out[0] = -1;
     return output;
 }

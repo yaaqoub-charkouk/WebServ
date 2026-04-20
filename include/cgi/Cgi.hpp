@@ -30,8 +30,10 @@ private:
     int status;
     std::vector<std::string> env_vect;
     char **envp;
-    int script_in[2];
-    int script_out[2];
+
+    int     script_in[2];
+    int     script_out[2];
+
     time_t start_time;
     time_t timeout;
     std::string request_uri;

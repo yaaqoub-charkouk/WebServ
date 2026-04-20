@@ -171,6 +171,27 @@ void    Server::closeSocket(int fd)
 
 }
 
+
+void    Server::make_cgi_pipes_nonblocking(int script_in[2], int script_out[2])
+{
+    if (fcntl(script_in[0], F_SETFL, O_NONBLOCK) == -1) {
+        close(script_in[0]);
+        throw std::runtime_error("Failed to make the client cgi pipes nonblocking");
+    }
+    if (fcntl(script_in[1], F_SETFL, O_NONBLOCK) == -1) {
+        close(script_in[1]);
+        throw std::runtime_error("Failed to make the client cgi pipes nonblocking");
+    }
+    if (fcntl(script_out[0], F_SETFL, O_NONBLOCK) == -1) {
+        close(script_out[0]);
+        throw std::runtime_error("Failed to make the client cgi pipes nonblocking");
+    }
+    if (fcntl(script_out[1], F_SETFL, O_NONBLOCK) == -1) {
+        close(script_out[1]);
+        throw std::runtime_error("Failed to make the client cgi pipes nonblocking");
+    }
+}
+
 // int main(void)
 // {
 //     Server server;
