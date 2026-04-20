@@ -114,6 +114,7 @@ void Server::writeToClient(struct pollfd& pfd)
     }
 
     std::cout << "====> WRITING TO CLIENT : " << client.clientPort << std::endl;
+    // std::cout << "====> RESPONSE: " << client.response_str << std::endl;
 
     size_t remaining = client.response_str.size() - client.bytes_sent;
 

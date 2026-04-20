@@ -52,6 +52,7 @@ public:
     std::string getRequest(int clientFd);
     void        sendResponse(int clientFd, const std::string& data);
 
+    static void make_cgi_pipes_nonblocking(int script_int[2], int script_out[2]);
 
 public:
     Server(const std::vector<ServerConfig>& servers);
