@@ -67,11 +67,7 @@ void    Server::readFromClient(struct pollfd& pfd)
 
             // check client.state
             if (client.state == COMPLETE) { // call request handler
-                client.response  = RequestHandler::handleRequest(client.request.method,
-                                            client.request.uri,
-                                            client.request.body,
-                                            client.serverConfig,
-                                            client.request.contentLength);
+                client.response  = RequestHandler::handleRequest(client);
                 
                 client.response_str = client.response.getResponse();
 

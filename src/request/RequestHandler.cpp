@@ -3,30 +3,29 @@
 #include <fstream>
 #include <sstream>
 #include "cgi/Cgi.hpp"
+#include "client/Client.hpp"
 
-HttpResponse RequestHandler::handleRequest(
-    const std::string& method,
-    const std::string& uri,
-    const std::string& body,
-    const ServerConfig& server,
-    size_t contentLength)
+HttpResponse RequestHandler::handleRequest(const Client& client)
 {
-    if (contentLength > server.getClientMaxBodySize())
+    const HttpRequest& request = client.request;
+    const ServerConfig& server = client.serverConfig;
+
+    if (request.contentLength > server.getClientMaxBodySize())
     {
         return makeErrorResponse(413, server);
     }
 
-    const LocationConfig* location = findLocation(uri, server);
+    const LocationConfig* location = findLocation(request.uri, server);
 
-    if ((method == "GET" || method == "POST") && isCgiRequest(uri, location))
-        return handleCgi(method, uri, body, server, location);
+    if ((request.method == "GET" || request.method == "POST") && isCgiRequest(request.uri, location))
+        return handleCgi(request.method, request.uri, request.body, server, location);
 
-    if (method == "GET")
-        return handleGet(uri, server, location);
-    else if (method == "POST")
-        return handlePost(uri, body, server, location);
-    else if (method == "DELETE")
-        return handleDelete(uri, server, location);
+    if (request.method == "GET")
+        return handleGet(request.uri, server, location);
+    else if (request.method == "POST")
+        return handlePost(request.uri, request.body, server, location);
+    else if (request.method == "DELETE")
+        return handleDelete(request.uri, server, location);
 
     return makeErrorResponse(405, server);
 }

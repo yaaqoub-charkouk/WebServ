@@ -7,15 +7,12 @@
 #include "config/LocationConfig.hpp"
 #include "response/HttpResponse.hpp"
 
+class Client;
+
 class RequestHandler
 {
 public:
-    static HttpResponse handleRequest(
-        const std::string& method,
-        const std::string& uri,
-        const std::string& body,
-        const ServerConfig& server,
-        size_t contentLength);
+    static HttpResponse handleRequest(const Client& client);
 
 private:
     static const LocationConfig* findLocation(const std::string& uri,const ServerConfig& server);
