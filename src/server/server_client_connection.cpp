@@ -33,16 +33,16 @@ void    Server::acceptClient(int serverFd)
         pollFds.push_back(pfd);
 
         // clients[client_fd] = Client(configs[serverFd]);
-        clients.insert(std::make_pair(client_fd, Client(configs[serverFd],
+        clients.insert(std::make_pair(client_fd, Client(configs[serverFd], pfd,
                      ntohs(client.sin_port), inet_ntoa(client.sin_addr))));
 
 
-        // just for debugging : 
+        // just for debugging :
         // printf("Client IP: %s\n", inet_ntoa(client.sin_addr));
         std::cout << "============ NEW CLIENT ACCEPTED : CLIENT LOGS ============" << std::endl;
         printf("Client port: %d\n", ntohs(client.sin_port));
 
-    }     
+    }
 }
 
 // if (pollFds[i].revents & (POLLERR | POLLHUP | POLLNVAL))
@@ -55,83 +55,68 @@ void    Server::readFromClient(struct pollfd& pfd)
     char buffer[4096];
 
     Client& client = clients.at(pfd.fd); // !!!! there is no client when POLLIN on CGI pipe
-
+    if (client.isCgi)
+    {
+        std::cout << "client reading request and he is already cgi " << client.clientPort << std::endl;
+        // set pfd.event to not checked event;
+        return ;
+    }
     while (true)
     {
         int n = recv(pfd.fd, buffer, sizeof(buffer), 0);
-        // does need to check for cgi early ?? yeess !!
-        if (client.isCgi)
+        // is cgi done reading
+        // go to client waiting for cgi response
+        if (n > 0)
         {
-            // read the output from the cgi child
-            // 
-
-
-
-        }
-        // is cgi done reading 
-        // go to client waiting for cgi response 
-        else if (n > 0)
-        {
-            
-            /*
-            CGI CASE:
-             client must contain a Cgi& ;
-             so that i am reading output written by Cgi child:
-             pfd.fd == script_out[0]    !!!!!!
-            {
-                
-            }
-            */
-
-            // the code run only if http request:
-            //{
                 client.request_str.append(buffer, n);
                 // std::cout << client.request_str << std::endl;
                 client.parseRequest();
 
                 // check client.state
                 if (client.state == COMPLETE) { // call request handler
-                    
+
                     const LocationConfig* location = RequestHandler::findLocation(client.request.uri, client.serverConfig);
 
                     if ((client.request.method == "GET" || client.request.method == "POST") &&
                                     RequestHandler::isCgiRequest(client.request.uri, location))
                     {
                         client.isCgi = true;
-                        
+                        std::cout << "===== CGI request ====" << std::endl;
                         // call the handleCgi method ;
                         RequestHandler::handleCgi(client, location);
-                        // client.isCgi.execute();
+                        client.cgi->execute();
+                        if (client.request.method == "POST")
+                            client.cgi->cgi_status = CGI_WRITING;
+                        else //if (client.request.method == "GET")
+                            client.cgi->cgi_status = CGI_READING;
 
                         // if cgi_response_error { }
-                        if (!client.isCgiResponseError) // cgi code started correctly , there is a child process running there 
+                        if (!client.isCgiResponseError) // cgi code started correctly , there is a child process running there
                         {
                             // make cgi pipes non blocking
-                            // add cgi pipes to pollFds 
-                            make_cgi_pipes_nonblocking(client.cgi.script_in[1], client.cgi.script_out[0]);
-                            add_cgi_pipes_to_pollFds(client.cgi.script_in[1], client.cgi.script_out[0]);
+                            // add cgi pipes to pollFds
+                            make_cgi_pipes_nonblocking(client.cgi->script_in[1], client.cgi->script_out[0]);
+                            add_cgi_pipes_to_pollFds(client.cgi->script_in[1], client.cgi->script_out[0]);
 
                             // associate cgi pipes to client & .
-                            
-
+                            // cgi_clients[client.cgi->script_out[0]] = CgiClient(pfd, client.cgi, client.response_str); // pfd is for the client who received the request
+                            cgi_clients.insert(std::make_pair(client.cgi->script_out[0], CgiClient(pfd, client.cgi, client.response_str)));
+                            return ;
                         }
-
                     }
                             // return handleCgi(client.request.method, client.request.uri, client.request.body, server, location);
-                    else
-                    {
-                        client.response  = RequestHandler::handleRequest(client);
-                        
-                        client.response_str = client.response.getResponse();
 
-                    }
+
+                    client.response  = RequestHandler::handleRequest(client);
+
+                    client.response_str = client.response.getResponse();
 
                     pfd.events = POLLOUT;
                     pfd.revents = 0;
                     std::cout << "completed request and pollout ready" << std::endl;
                 }
                 else if (client.state == ERROR) {
-                    // send erorr page 
+                    // send erorr page
                     std::cerr << "request parse error " << std::endl;
 
 
@@ -161,7 +146,7 @@ void    Server::readFromClient(struct pollfd& pfd)
 void Server::writeToClient(struct pollfd& pfd)
 {
     Client& client = clients.at(pfd.fd);
-    
+
     if (client.bytes_sent >= client.response_str.size()) {
         closeClient(pfd.fd);
         return ;
@@ -175,26 +160,26 @@ void Server::writeToClient(struct pollfd& pfd)
     // FORCE partial send (for testing)
     // size_t chunk_size = std::min(remaining, (size_t)10); // send only 10 bytes max
 
-    ssize_t bytes_sent = send(pfd.fd, 
+    ssize_t bytes_sent = send(pfd.fd,
                             client.response_str.c_str() + client.bytes_sent,
                             remaining,
                             0);
-                  
+
     if (bytes_sent > 0)
     {
         std::cout << "server sent " << bytes_sent << " bytes to client : " << client.clientPort << std::endl;
-        
+
         client.bytes_sent += bytes_sent;
 
         std::cout << "still " << client.response_str.size() - client.bytes_sent << " bytes to send" << std::endl;
         std::cout << std::endl;
-        
+
         if (client.bytes_sent == client.response_str.size())
             closeClient(pfd.fd);
     }
     else if (bytes_sent == 0) // connection closed
         closeClient(pfd.fd);
-    else if (bytes_sent < 0) // error case 
+    else if (bytes_sent < 0) // error case
     {
         if (errno == EAGAIN || errno == EWOULDBLOCK)
             return ;

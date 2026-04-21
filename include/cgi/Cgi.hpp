@@ -72,6 +72,6 @@ public:
     void    write_body();
     void makeResponse();
     void    build_response();
-    HttpResponse getResponse() const;
+    std::string getResponse() const;
 
 };

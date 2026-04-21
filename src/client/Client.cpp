@@ -2,9 +2,9 @@
 
 
 
-Client::Client(const ServerConfig& serverConfig, int clientPort, std::string clientAddress)
-                 : serverConfig(serverConfig), clientPort(clientPort), clientAddress(clientAddress),
-                  state(READING_HEADERS), bytes_sent(0), isCgi(true), isCgiResponseError(false), cgi(cgi) {
+Client::Client(const ServerConfig& serverConfig, struct pollfd& pfd, int clientPort, std::string clientAddress)
+                 :pfd(pfd), serverConfig(serverConfig), clientPort(clientPort), clientAddress(clientAddress),
+                  state(READING_HEADERS), isCgi(false), isCgiResponseError(false), cgi(NULL), bytes_sent(0) {
     request.contentLength = 0;
 }
 

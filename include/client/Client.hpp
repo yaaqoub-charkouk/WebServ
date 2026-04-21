@@ -7,7 +7,7 @@
 # include "../request/HttpRequest.hpp"
 # include "../response/HttpResponse.hpp"
 # include "../cgi/Cgi.hpp"
-
+# include <poll.h>
 
 #include <algorithm>
 
@@ -24,7 +24,7 @@ class Client // needs config file .
 {
 public:
     // server config
-    struct pollfd&      pfd;
+    struct pollfd&      pfd; // client now has pfd.
     const ServerConfig& serverConfig;
     int                 clientPort;
     std::string         clientAddress;
@@ -39,8 +39,7 @@ public:
     // cgi 
     bool                isCgi;
     bool                isCgiResponseError;
-    Cgi&                cgi;
-    std::string         cgi_output;
+    Cgi*                cgi;
 
     
     // response
@@ -49,7 +48,7 @@ public:
     size_t              bytes_sent;
     // needs response buffering , send()
     
-    Client(const ServerConfig& serverConfig, int clientPort, std::string clientAddress);
+    Client(const ServerConfig& serverConfig, struct pollfd& pfd, int clientPort, std::string clientAddress);
     // Client& operator=(const Client& newClient);
     void    parseRequest();
     void    parseRequestHeaders();

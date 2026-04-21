@@ -69,10 +69,10 @@ int    Server::addListeningSocket(int port)
     pfd.fd = newServSocket;
     pfd.events = POLLIN; // what are all possible events
     pfd.revents = 0;
-    
+
     listenSockets.push_back(newServSocket);
     pollFds.push_back(pfd);
-    // now i have all servers sockets & poll in 
+    // now i have all servers sockets & poll in
 
     return (newServSocket);
 }
@@ -83,43 +83,34 @@ void    Server::run()
     while (1337)
     {
         int ret = poll(pollFds.data(), pollFds.size(), -1);
-    
+
         if (ret < 0)
             throw std::runtime_error("poll failed can't listen on servers sockets");
-        
+        std::cout << "new poll cycle " << std::endl;
         for (size_t i = 0; i < pollFds.size();)
         {
-            // std::cout << "  poll size :" << pollFds.size() << std::endl
-            //         << "    i : " << i << std::endl;
-            // struct pollfd pfd = pollFds[i];
-
+            
             if (pollFds[i].revents == 0) {
                 ++i;
-                continue ; // just to optimise ignore sockets with no events . 
+                continue ; // just to optimise ignore sockets with no events .
             }
             clientRemoved = false;
-            if (pollFds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
-                closeSocket(pollFds[i].fd); // exclude cgi pipe 
-                continue ;
-            }
 
+            // if (pollFds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
+            //     closeSocket(pollFds[i].fd); // exclude cgi pipe
+            //     continue ;
+            // }
             if (pollFds[i].revents & POLLIN)
             {
                 if (isListeningSocket(pollFds[i].fd))
                     acceptClient(pollFds[i].fd);
-                /* if(isCgiPipe()) { client.at(fd); client.cgi.read_output();
-                //  if (cgi_done_reading);
-                        build response(); 
-                        make client event = POLLOUT;
-
-                        i need access from client to pollFd .
-                        remove cgipipe from client maps && pollFds . 
-
-                }*/ 
-                else // add cgi check .
+                else if (isCgiPipe(pollFds[i].fd))
+                {
+                    processCgiReadEvent(pollFds[i]);
+                }
+                else
                 {
                     readFromClient(pollFds[i]);
-                    
                 }
             }
             // std::cout << "client Removed " << clientRemoved << std::endl;
@@ -148,7 +139,7 @@ bool Server::isListeningSocket(int fd)
 
 void    Server::closeSocket(int fd)
 {
-    std::cout << "closeSocket called" << std::endl;
+    std::cout << "closeSocket called on " << fd << std::endl;
     if (isListeningSocket(fd)) // if serverSocket remove it from listenSocket && configs.
     {
         configs.erase(fd);
@@ -162,10 +153,12 @@ void    Server::closeSocket(int fd)
             }
         }
     }
-    else
+    else if (isCgiPipe(fd))
+        cgi_clients.erase(fd);
+    else // add if for cgi.
         clients.erase(fd);
-    
-    close(fd);
+
+    close(fd); // cgi pipe may be closed at cgi.
 
     // remove from pollFds
     for (size_t i = 0; i < pollFds.size(); ++i)
@@ -183,6 +176,7 @@ void    Server::closeSocket(int fd)
 
 void    Server::make_cgi_pipes_nonblocking(int script_in, int script_out)
 {
+    std::cout << "making cgi pipe nonblcoking " << script_out << std::endl;
     if (fcntl(script_out, F_SETFL, O_NONBLOCK) == -1) {
         close(script_out);
         throw std::runtime_error("Failed to make the client cgi script_out nonblocking");
@@ -209,6 +203,36 @@ void    Server::add_cgi_pipes_to_pollFds(int script_in, int script_out)
 
     (void)script_in;
 }
+
+void    Server::processCgiReadEvent(struct pollfd& pfd)
+{
+    std::cout << "processCgiReadEvent" << std::endl;
+
+    CgiClient& cgi_client = cgi_clients.at(pfd.fd);
+    cgi_client.cgi->read_output(); // !!
+    if (cgi_client.cgi->cgi_status == CGI_DONE_READING)
+    {
+        cgi_client.cgi->build_response();
+        cgi_client.response = cgi_client.cgi->getResponse();
+
+        cgi_client.pfd.events = POLLOUT; // client
+        cgi_client.pfd.revents = 0;
+        std::cout << "file descriptor : " << cgi_client.pfd.fd << "setten to POLLOUT" << std::endl;
+
+
+        // remove cgi pipe from poll;
+        for (size_t i = 0; i < pollFds.size(); ++i)
+        {
+            if (pollFds[i].fd == pfd.fd)
+            {
+                pollFds.erase(pollFds.begin() + i);
+                break ;
+            }
+        }
+        cgi_clients.erase(pfd.fd);
+    }
+}
+
 // int main(void)
 // {
 //     Server server;
@@ -217,3 +241,8 @@ void    Server::add_cgi_pipes_to_pollFds(int script_in, int script_out)
 //     // server.addListeningSocket(1337);
 //     server.run();
 // }
+
+bool    Server::isCgiPipe(int fd)
+{
+    return (cgi_clients.find(fd) != cgi_clients.end());
+}

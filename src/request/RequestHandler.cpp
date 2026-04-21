@@ -182,7 +182,7 @@ void RequestHandler::handleCgi(Client& client, const LocationConfig* location)
     contentLength << cgiRequest.contentLength;
     cgiRequest.headers["Content-Length"] = contentLength.str();
 
-    Cgi cgi_init(cgiRequest, scriptPath);
+    Cgi* cgi_init = new Cgi(cgiRequest, scriptPath); // allocate;
     // assign cgi to client 
     client.cgi = cgi_init;
 

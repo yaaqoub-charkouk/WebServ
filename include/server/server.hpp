@@ -24,6 +24,15 @@
 # include "../request/RequestHandler.hpp"
 # include "../client/Client.hpp"
 
+class CgiClient
+{
+public:
+    struct pollfd&  pfd;
+    Cgi*            cgi;
+    std::string&    response;
+
+    CgiClient(struct pollfd& pfd, Cgi* cgi, std::string& response) : pfd(pfd), cgi(cgi), response(response) {}
+};
 
 class Server
 {
@@ -31,6 +40,7 @@ private:
     std::vector<int>                    listenSockets;
     std::map<int, const ServerConfig>   configs;
     std::map<int, Client>               clients;
+    std::map<int, CgiClient>            cgi_clients;
     std::vector<struct pollfd>          pollFds;
 
     bool    clientRemoved;
@@ -44,10 +54,11 @@ private:
     void    closeSocket(int fd);
 
     int     addListeningSocket(int port); // setup
-    
+
     void    make_cgi_pipes_nonblocking(int script_in, int script_out);
     void    add_cgi_pipes_to_pollFds(int script_in, int script_out);
-    
+    bool    isCgiPipe(int fd);
+    void    processCgiReadEvent(struct pollfd& pfd);
 public:
     void    run();
 
@@ -55,7 +66,7 @@ public:
     std::string getRequest(int clientFd);
     void        sendResponse(int clientFd, const std::string& data);
 
-    
+
 
 public:
     Server(const std::vector<ServerConfig>& servers);
@@ -66,5 +77,5 @@ public:
 };
 
 
-// this class is the server machine 
-// the server socket is the NIC 
+// this class is the server machine
+// the server socket is the NIC

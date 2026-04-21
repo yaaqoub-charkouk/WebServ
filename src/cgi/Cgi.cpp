@@ -263,24 +263,27 @@ void Cgi::execute()
 
 void    Cgi::read_output()
 {
+    std::cout << "read output from cgi child" << std::endl;
     if (cgi_status == CGI_READING)
     {
         char buff[4096];
-        while (true)
-        {
+        // while (true)
+        // {
+            std::cout << "read 10 bytes " << std::endl;
             read_bytes = read(script_out[0], buff, sizeof(buff));
             if (read_bytes > 0)
                 output.append(buff, read_bytes);
             else if (read_bytes == 0) // is it enough
             {
+                std::cout << "cgi done " << std::endl;
                 cgi_status = CGI_DONE_READING;
-                close(script_out[0]);
-                script_out[0] = -1;
-                break;
+                // close(script_out[0]);
+                // script_out[0] = -1;
+                return ;
             }
-            else if (read_bytes == -1 && (errno == EAGAIN || errno == EWOULDBLOCK))
-                break;
-        }
+            else if (read_bytes == -1 && (errno == EAGAIN || errno == EWOULDBLOCK)) // need to check for real error
+                return ;
+        // }
     }
 }
 
@@ -374,7 +377,7 @@ bool Cgi::checkTimeout()
 }
 
 
-HttpResponse Cgi::getResponse() const
+std::string Cgi::getResponse() const
 {
-    return res;
+    return res.getResponse();
 }
