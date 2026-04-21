@@ -44,7 +44,10 @@ private:
     void    closeSocket(int fd);
 
     int     addListeningSocket(int port); // setup
-
+    
+    void    make_cgi_pipes_nonblocking(int script_in, int script_out);
+    void    add_cgi_pipes_to_pollFds(int script_in, int script_out);
+    
 public:
     void    run();
 
@@ -52,7 +55,7 @@ public:
     std::string getRequest(int clientFd);
     void        sendResponse(int clientFd, const std::string& data);
 
-    static void make_cgi_pipes_nonblocking(int script_int[2], int script_out[2]);
+    
 
 public:
     Server(const std::vector<ServerConfig>& servers);

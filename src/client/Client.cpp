@@ -4,7 +4,7 @@
 
 Client::Client(const ServerConfig& serverConfig, int clientPort, std::string clientAddress)
                  : serverConfig(serverConfig), clientPort(clientPort), clientAddress(clientAddress),
-                  state(READING_HEADERS), bytes_sent(0) {
+                  state(READING_HEADERS), bytes_sent(0), isCgi(true), isCgiResponseError(false), cgi(cgi) {
     request.contentLength = 0;
 }
 

@@ -1,9 +1,9 @@
-#include "request/RequestHandler.hpp"
+#include "../../include/request/RequestHandler.hpp"
 #include <unistd.h>
 #include <fstream>
 #include <sstream>
-#include "cgi/Cgi.hpp"
-#include "client/Client.hpp"
+#include "../../include/cgi/Cgi.hpp"
+#include "../../include/client/Client.hpp"
 
 HttpResponse RequestHandler::handleRequest(const Client& client)
 {
@@ -16,9 +16,10 @@ HttpResponse RequestHandler::handleRequest(const Client& client)
     }
 
     const LocationConfig* location = findLocation(request.uri, server);
-
-    if ((request.method == "GET" || request.method == "POST") && isCgiRequest(request.uri, location))
-        return handleCgi(request.method, request.uri, request.body, server, location);
+    
+    // you don't need this anymore TAHALLA :
+    // if ((request.method == "GET" || request.method == "POST") && isCgiRequest(request.uri, location))
+    //     return handleCgi(request.method, request.uri, request.body, server, location);
 
     if (request.method == "GET")
         return handleGet(request.uri, server, location);
@@ -144,36 +145,47 @@ HttpResponse RequestHandler::handleDelete(
     return response;
 }
 
-HttpResponse RequestHandler::handleCgi(
-    const std::string& method,
-    const std::string& uri,
-    const std::string& body,
-    const ServerConfig& server,
-    const LocationConfig* location)
+// changed
+void RequestHandler::handleCgi(Client& client, const LocationConfig* location)
 {
-    if (!location)
-        return makeErrorResponse(404, server);
+    if (!location) {
+        client.response = makeErrorResponse(404, client.serverConfig);
+        client.isCgiResponseError = true;
+        return ;
+    }
 
-    if (!location->hasMethod(method))
-        return makeErrorResponse(405, server);
-
-    std::string scriptPath = buildFilePath(uri, server, location);
-    if (!fileExists(scriptPath))
-        return makeErrorResponse(404, server);
-    if (directoryExists(scriptPath))
-        return makeErrorResponse(403, server);
+    if (!location->hasMethod(client.request.method)) {
+        client.response = makeErrorResponse(405, client.serverConfig);
+        client.isCgiResponseError = true;
+        return ;
+    }
+    std::string scriptPath = buildFilePath(client.request.uri, client.serverConfig, location);
+    if (!fileExists(scriptPath)) {
+        client.response = makeErrorResponse(404, client.serverConfig);
+        client.isCgiResponseError = true;
+        return ;
+    }
+    if (directoryExists(scriptPath)) {
+        client.response = makeErrorResponse(403, client.serverConfig);
+        client.isCgiResponseError = true;
+        return ;
+    }
 
     HttpRequest cgiRequest;
-    cgiRequest.method = method;
-    cgiRequest.uri = uri;
-    cgiRequest.body = body;
-    cgiRequest.contentLength = body.size();
-    cgiRequest.serverName = server.getServerName();
-    cgiRequest.serverPort = server.getPort();
+    cgiRequest.method = client.request.method;
+    cgiRequest.uri = client.request.uri;
+    cgiRequest.body = client.request.body;
+    cgiRequest.contentLength = client.request.body.size();
+    cgiRequest.serverName = client.serverConfig.getServerName();
+    cgiRequest.serverPort = client.serverConfig.getPort();
     std::ostringstream contentLength;
     contentLength << cgiRequest.contentLength;
     cgiRequest.headers["Content-Length"] = contentLength.str();
 
-    Cgi cgi(cgiRequest, scriptPath);
-    return cgi.getResponse();
+    Cgi cgi_init(cgiRequest, scriptPath);
+    // assign cgi to client 
+    client.cgi = cgi_init;
+
+    
+    // return cgi_init.getResponse(); // need to be deleted !!!
 }

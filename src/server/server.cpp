@@ -99,7 +99,7 @@ void    Server::run()
             }
             clientRemoved = false;
             if (pollFds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
-                closeSocket(pollFds[i].fd);
+                closeSocket(pollFds[i].fd); // exclude cgi pipe 
                 continue ;
             }
 
@@ -107,11 +107,19 @@ void    Server::run()
             {
                 if (isListeningSocket(pollFds[i].fd))
                     acceptClient(pollFds[i].fd);
-                else
+                /* if(isCgiPipe()) { client.at(fd); client.cgi.read_output();
+                //  if (cgi_done_reading);
+                        build response(); 
+                        make client event = POLLOUT;
+
+                        i need access from client to pollFd .
+                        remove cgipipe from client maps && pollFds . 
+
+                }*/ 
+                else // add cgi check .
                 {
                     readFromClient(pollFds[i]);
                     
-                    // call the http handler TAHALLA
                 }
             }
             // std::cout << "client Removed " << clientRemoved << std::endl;
@@ -171,27 +179,36 @@ void    Server::closeSocket(int fd)
 
 }
 
+// ====== cgi ========
 
-void    Server::make_cgi_pipes_nonblocking(int script_in[2], int script_out[2])
+void    Server::make_cgi_pipes_nonblocking(int script_in, int script_out)
 {
-    if (fcntl(script_in[0], F_SETFL, O_NONBLOCK) == -1) {
-        close(script_in[0]);
-        throw std::runtime_error("Failed to make the client cgi pipes nonblocking");
+    if (fcntl(script_out, F_SETFL, O_NONBLOCK) == -1) {
+        close(script_out);
+        throw std::runtime_error("Failed to make the client cgi script_out nonblocking");
     }
-    if (fcntl(script_in[1], F_SETFL, O_NONBLOCK) == -1) {
-        close(script_in[1]);
-        throw std::runtime_error("Failed to make the client cgi pipes nonblocking");
-    }
-    if (fcntl(script_out[0], F_SETFL, O_NONBLOCK) == -1) {
-        close(script_out[0]);
-        throw std::runtime_error("Failed to make the client cgi pipes nonblocking");
-    }
-    if (fcntl(script_out[1], F_SETFL, O_NONBLOCK) == -1) {
-        close(script_out[1]);
-        throw std::runtime_error("Failed to make the client cgi pipes nonblocking");
-    }
+
+
+
+
+    (void)script_in;
+    // if (script_in != -1 && fcntl(script_in, F_SETFL, O_NONBLOCK) == -1) {
+    //     close(script_in);
+    //     throw std::runtime_error("Failed to make the client cgi script_in nonblocking");
+    // }
 }
 
+void    Server::add_cgi_pipes_to_pollFds(int script_in, int script_out)
+{
+    // add cgi pipe to pollFds;
+    struct pollfd pfd;
+    pfd.fd = script_out;
+    pfd.events = POLLIN;
+    pfd.revents = 0;
+    pollFds.push_back(pfd);
+
+    (void)script_in;
+}
 // int main(void)
 // {
 //     Server server;

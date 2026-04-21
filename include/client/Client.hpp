@@ -6,6 +6,8 @@
 # include "../config/Parser.hpp"
 # include "../request/HttpRequest.hpp"
 # include "../response/HttpResponse.hpp"
+# include "../cgi/Cgi.hpp"
+
 
 #include <algorithm>
 
@@ -22,6 +24,7 @@ class Client // needs config file .
 {
 public:
     // server config
+    struct pollfd&      pfd;
     const ServerConfig& serverConfig;
     int                 clientPort;
     std::string         clientAddress;
@@ -32,7 +35,14 @@ public:
     ParseState  state;
     size_t      header_end_pos;
     std::string header_str;
+    
+    // cgi 
+    bool                isCgi;
+    bool                isCgiResponseError;
+    Cgi&                cgi;
+    std::string         cgi_output;
 
+    
     // response
     std::string         response_str;
     HttpResponse        response;

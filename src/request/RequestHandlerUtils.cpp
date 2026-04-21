@@ -1,4 +1,4 @@
-#include "request/RequestHandler.hpp"
+#include "../../include/request/RequestHandler.hpp"
 #include <sys/stat.h>
 
 std::string RequestHandler::buildFilePath(
