@@ -247,13 +247,13 @@ void Cgi::execute()
     //     }
     //     total_written += written;
     // }
-    if (method == "POST" && req_body.size() != 0)
-    {
-        cgi_status = CGI_WRITING;
-        write_body();// should be called from server
-    }
-    cgi_status = CGI_READING;
-    read_output();// should be called from server
+    // if (method == "POST" && req_body.size() != 0)
+    // {
+    //     cgi_status = CGI_WRITING;
+    //     write_body();// should be called from server
+    // }
+    // cgi_status = CGI_READING;
+    // read_output();// should be called from server
     // close(script_in[1]);
     // script_in[1] = -1;
     // close(script_out[0]);
