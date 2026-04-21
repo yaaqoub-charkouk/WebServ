@@ -2,5 +2,5 @@
 
 print("Content-Type: text/plain")
 print()
-while(1)
+# while(1)
 print("Hello from CGI")

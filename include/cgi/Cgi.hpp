@@ -17,6 +17,10 @@ enum CgiStatus
 {
     CGI_IDLE,
     CGI_ENV_ERROR,
+    CGI_WRITING,
+    CGI_READING,
+    CGI_DONE_READING,
+    CGI_DONE_WRITING,
     CGI_SUCCESS,
     CGI_EXEC_ERROR,
     CGI_PIPE_ERROR,
@@ -30,22 +34,27 @@ private:
     int status;
     std::vector<std::string> env_vect;
     char **envp;
-
+public:
     int     script_in[2];
     int     script_out[2];
-
+    CgiStatus cgi_status;
+private:
     time_t start_time;
+    std::string method;
     time_t timeout;
     std::string request_uri;
     std::string query_string;
     std::string script_path;
     std::string script_name;
     std::string script_interpreter;
-    CgiStatus cgi_status;
     std::map<std::string, std::string> headers;
     std::string body;
     HttpResponse res;
-    
+
+    int  read_bytes;
+    size_t  written;
+    std::string output;
+    std::string req_body;
     void closePipes();
     std::string ultostr(size_t num);
     void free_envp();
@@ -56,10 +65,13 @@ public:
     Cgi();
     Cgi(const HttpRequest &req, const std::string &scriptPath, time_t timeout = 5);
     ~Cgi();
-    std::string execute(const std::string&, const std::string& input);
+    void execute();
     void parseOutput(const std::string &output);
     bool checkTimeout();
+    void    read_output();
+    void    write_body();
     void makeResponse();
+    void    build_response();
     HttpResponse getResponse() const;
 
 };
