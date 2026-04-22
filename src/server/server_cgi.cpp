@@ -6,7 +6,7 @@
 
 void    Server::make_cgi_pipes_nonblocking(int script_in, int script_out)
 {
-    std::cout << "making cgi pipe nonblcoking " << script_out << std::endl;
+    std::cout << " making cgi pipe nonblcoking " << script_out << std::endl;
     if (fcntl(script_out, F_SETFL, O_NONBLOCK) == -1) {
         close(script_out);
         throw std::runtime_error("Failed to make the client cgi script_out nonblocking");
@@ -36,7 +36,7 @@ void    Server::add_cgi_pipes_to_pollFds(int script_in, int script_out)
 
 void    Server::processCgiReadEvent(struct pollfd& pfd) // cgi pipe 
 {
-    std::cout << "processCgiReadEvent" << std::endl;
+    std::cout << "  processCgiReadEvent" << std::endl;
 
     CgiClient& cgi_client = cgi_clients.at(pfd.fd);
 
@@ -49,7 +49,8 @@ void    Server::processCgiReadEvent(struct pollfd& pfd) // cgi pipe
         
         cgi_client.pfd.events = POLLOUT; // client
         cgi_client.pfd.revents = 0;
-        std::cout << "file descriptor : " << cgi_client.pfd.fd << "setten to POLLOUT" << std::endl;
+        
+        std::cout << "CGI done , ready to write response to cgi_client.pfd.fd " << cgi_client.pfd.fd << std::endl;
         
         
         // remove cgi pipe from poll;
@@ -65,6 +66,7 @@ void    Server::processCgiReadEvent(struct pollfd& pfd) // cgi pipe
         clientRemoved = true;
         // close(pfd.fd);
         // exit(0);
+        std::cout << "cgi pipe got removed from pollFds : " << pfd.fd << std::endl;
     }
 }
 

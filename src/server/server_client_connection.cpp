@@ -39,7 +39,7 @@ void    Server::acceptClient(int serverFd)
 
         // just for debugging :
         // printf("Client IP: %s\n", inet_ntoa(client.sin_addr));
-        std::cout << "============ NEW CLIENT ACCEPTED : CLIENT LOGS ============" << std::endl;
+        std::cout << "============ NEW CLIENT ACCEPTED : CLIENT LOGS (fd = " << pfd.fd <<  ")============" << std::endl;
         printf("Client port: %d\n", ntohs(client.sin_port));
 
     }
@@ -56,13 +56,18 @@ void    Server::readFromClient(struct pollfd& pfd)
 
     char buffer[4096];
 
+    if (clients.find(pfd.fd) == clients.end()) {
+        std::cout << "LAHWAAA !!!!! reading from client ,, fd : " << pfd.fd << " does not exist" << std::endl;
+        return ;
+    }
+
     Client& client = clients.at(pfd.fd); // !!!! there is no client when POLLIN on CGI pipe
     if (client.isCgi)
     {
-        std::cout << "client reading request and he is already cgi " << client.clientPort << std::endl;
+        std::cout << "client reading request and he is already cgi " << pfd.fd << std::endl;
         // set pfd.event to not checked event;
         // exit(1);
-        return ;
+        // return ;
     }
     while (true)
     {
@@ -71,68 +76,78 @@ void    Server::readFromClient(struct pollfd& pfd)
         // go to client waiting for cgi response
         if (n > 0)
         {
-                client.request_str.append(buffer, n);
-                // std::cout << client.request_str << std::endl;
-                client.parseRequest();
+            client.request_str.append(buffer, n);
+            // std::cout << client.request_str << std::endl;
+            client.parseRequest();
 
-                // check client.state
-                if (client.state == COMPLETE) { // call request handler
+            // check client.state
+            if (client.state == COMPLETE) { // call request handler
 
-                    const LocationConfig* location = RequestHandler::findLocation(client.request.uri, client.serverConfig);
+                const LocationConfig* location = RequestHandler::findLocation(client.request.uri, client.serverConfig);
 
-                    if ((client.request.method == "GET" || client.request.method == "POST") &&
-                                    RequestHandler::isCgiRequest(client.request.uri, location))
+                if ((client.request.method == "GET" || client.request.method == "POST") &&
+                                RequestHandler::isCgiRequest(client.request.uri, location))
+                {
+                    client.isCgi = true;
+                    std::cout << "  ===== CGI request ====" << std::endl;
+                    // call the handleCgi method ;
+                    RequestHandler::handleCgi(client, location);
+                    
+                    // if cgi_response_error { }
+                    if (!client.isCgiResponseError) // cgi code started correctly , there is a child process running there
                     {
-                        client.isCgi = true;
-                        std::cout << "===== CGI request ====" << std::endl;
-                        // call the handleCgi method ;
-                        RequestHandler::handleCgi(client, location);
+                        // make cgi pipes non blocking
+                        // add cgi pipes to pollFds
+                        make_cgi_pipes_nonblocking(client.cgi->script_in[1], client.cgi->script_out[0]);
+                        add_cgi_pipes_to_pollFds(client.cgi->script_in[1], client.cgi->script_out[0]);
+                        
+                        // associate cgi pipes to client & .
+                        // cgi_clients[client.cgi->script_out[0]] = CgiClient(pfd, client.cgi, client.response_str); // pfd is for the client who received the request
+                        std::cout << "new cgi client fd : " << pfd.fd << std::endl;
+                        cgi_clients.insert(std::make_pair(client.cgi->script_out[0], CgiClient(pfd, client.cgi, client.response_str)));
+                        // return ;
+
                         client.cgi->execute();
                         if (client.request.method == "POST")
                             client.cgi->cgi_status = CGI_WRITING;
                         else //if (client.request.method == "GET")
                             client.cgi->cgi_status = CGI_READING;
-
-                        // if cgi_response_error { }
-                        if (!client.isCgiResponseError) // cgi code started correctly , there is a child process running there
-                        {
-                            // make cgi pipes non blocking
-                            // add cgi pipes to pollFds
-                            make_cgi_pipes_nonblocking(client.cgi->script_in[1], client.cgi->script_out[0]);
-                            add_cgi_pipes_to_pollFds(client.cgi->script_in[1], client.cgi->script_out[0]);
-
-                            // associate cgi pipes to client & .
-                            // cgi_clients[client.cgi->script_out[0]] = CgiClient(pfd, client.cgi, client.response_str); // pfd is for the client who received the request
-                            cgi_clients.insert(std::make_pair(client.cgi->script_out[0], CgiClient(pfd, client.cgi, client.response_str)));
-                            return ;
-                        }
                     }
-                            // return handleCgi(client.request.method, client.request.uri, client.request.body, server, location);
-
-
-                    client.response  = RequestHandler::handleRequest(client);
-
-                    client.response_str = client.response.getResponse();
-
-                    pfd.events = POLLOUT;
-                    pfd.revents = 0;
-                    std::cout << "completed request and pollout ready" << std::endl;
                 }
-                else if (client.state == ERROR) {
-                    // send erorr page
-                    std::cerr << "request parse error " << std::endl;
+                        // return handleCgi(client.request.method, client.request.uri, client.request.body, server, location);
+
+
+                client.response  = RequestHandler::handleRequest(client);
+
+                client.response_str = client.response.getResponse();
+
+                pfd.events = POLLOUT;
+                pfd.revents = 0;
+                std::cout << "completed request and pollout ready" << std::endl;
+            }
+            else if (client.state == ERROR) {
+                // send erorr page
+                std::cerr << "request parse error " << std::endl;
+                
 
 
 
 
 
-
-                    // handle the error case
+                // handle the error case
                 }
             //}
         }
         else if (n == 0) // client closed connection
         {
+            if (client.isCgi) {
+                std::cout << "-- closing a cgi client -- " << std::endl;
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+
+                std::cout << "-- should stop cgi execution " << std::endl;
+            }
             closeClient(pfd.fd);
             return ;
         }
@@ -155,7 +170,7 @@ void Server::writeToClient(struct pollfd& pfd)
         return ;
     }
 
-    std::cout << "====> WRITING TO CLIENT : " << client.clientPort << std::endl;
+    std::cout << "====> WRITING TO CLIENT : " << pfd.fd << std::endl;
     // std::cout << "====> RESPONSE: " << client.response_str << std::endl;
 
     size_t remaining = client.response_str.size() - client.bytes_sent;
