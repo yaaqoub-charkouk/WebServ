@@ -52,6 +52,8 @@ void    Server::acceptClient(int serverFd)
 // }
 void    Server::readFromClient(struct pollfd& pfd)
 {
+    std::cout << "read From client fd : " << pfd.fd << std::endl;
+
     char buffer[4096];
 
     Client& client = clients.at(pfd.fd); // !!!! there is no client when POLLIN on CGI pipe
@@ -59,6 +61,7 @@ void    Server::readFromClient(struct pollfd& pfd)
     {
         std::cout << "client reading request and he is already cgi " << client.clientPort << std::endl;
         // set pfd.event to not checked event;
+        // exit(1);
         return ;
     }
     while (true)

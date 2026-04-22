@@ -26,6 +26,7 @@ SRCS = main.cpp \
 	$(CONFIG_SRC)/ServerConfig.cpp \
 	$(SERVER_SRC)/server.cpp \
 	$(SERVER_SRC)/server_client_connection.cpp \
+	$(SERVER_SRC)/server_cgi.cpp \
 	$(SERVER_SRC)/server_api.cpp \
 	$(CLIENT_SRC)/Client.cpp \
 	$(RESPONSE_SRC)/HttpResponse.cpp \

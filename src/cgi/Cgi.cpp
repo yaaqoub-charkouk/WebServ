@@ -225,7 +225,7 @@ void Cgi::execute()
     //     throw std::runtime_error("Failed to make the client cgi pipes nonblocking");
     // }
     // else
-    if (method == "GET" && req_body.empty())
+    if (method == "GET")
     {
         close(script_in[1]);// we dont need to write to child
         script_in[1] = -1;
@@ -269,7 +269,7 @@ void    Cgi::read_output()
         char buff[4096];
         // while (true)
         // {
-            std::cout << "read 10 bytes " << std::endl;
+            // std::cout << "read 10 bytes " << std::endl;
             read_bytes = read(script_out[0], buff, sizeof(buff));
             if (read_bytes > 0)
                 output.append(buff, read_bytes);

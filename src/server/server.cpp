@@ -87,6 +87,7 @@ void    Server::run()
         if (ret < 0)
             throw std::runtime_error("poll failed can't listen on servers sockets");
         std::cout << "new poll cycle " << std::endl;
+        std::cout << "pollFds size : " << pollFds.size() << std::endl;
         for (size_t i = 0; i < pollFds.size();)
         {
             
@@ -96,11 +97,20 @@ void    Server::run()
             }
             clientRemoved = false;
 
-            // if (pollFds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
-            //     closeSocket(pollFds[i].fd); // exclude cgi pipe
-            //     continue ;
-            // }
-            if (pollFds[i].revents & POLLIN)
+            if (pollFds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
+                if (isCgiPipe(pollFds[i].fd)) {
+                    pollFds[i].events = POLLIN;
+                    pollFds[i].revents = 0;
+                    std::cout << "cgi pipe got POLLHUP" << std::endl;
+                    processCgiReadEvent(pollFds[i]);
+                    // continue;
+                }
+                else {
+                    closeSocket(pollFds[i].fd); // exclude cgi pipe
+                    continue ;
+                }
+            }
+            if (!clientRemoved && pollFds[i].revents & POLLIN)
             {
                 if (isListeningSocket(pollFds[i].fd))
                     acceptClient(pollFds[i].fd);
@@ -153,8 +163,10 @@ void    Server::closeSocket(int fd)
             }
         }
     }
-    else if (isCgiPipe(fd))
+    else if (isCgiPipe(fd)) {
         cgi_clients.erase(fd);
+        
+    }
     else // add if for cgi.
         clients.erase(fd);
 
@@ -172,80 +184,3 @@ void    Server::closeSocket(int fd)
 
 }
 
-// ====== cgi ========
-
-void    Server::make_cgi_pipes_nonblocking(int script_in, int script_out)
-{
-    std::cout << "making cgi pipe nonblcoking " << script_out << std::endl;
-    if (fcntl(script_out, F_SETFL, O_NONBLOCK) == -1) {
-        close(script_out);
-        throw std::runtime_error("Failed to make the client cgi script_out nonblocking");
-    }
-
-
-
-
-    (void)script_in;
-    // if (script_in != -1 && fcntl(script_in, F_SETFL, O_NONBLOCK) == -1) {
-    //     close(script_in);
-    //     throw std::runtime_error("Failed to make the client cgi script_in nonblocking");
-    // }
-}
-
-void    Server::add_cgi_pipes_to_pollFds(int script_in, int script_out)
-{
-    // add cgi pipe to pollFds;
-    struct pollfd pfd;
-    pfd.fd = script_out;
-    pfd.events = POLLIN;
-    pfd.revents = 0;
-    pollFds.push_back(pfd);
-
-    (void)script_in;
-}
-
-void    Server::processCgiReadEvent(struct pollfd& pfd)
-{
-    std::cout << "processCgiReadEvent" << std::endl;
-
-    CgiClient& cgi_client = cgi_clients.at(pfd.fd);
-
-    cgi_client.cgi->read_output(); // !!
-
-    if (cgi_client.cgi->cgi_status == CGI_DONE_READING)
-    {
-        cgi_client.cgi->build_response();
-        cgi_client.response = cgi_client.cgi->getResponse();
-
-        cgi_client.pfd.events = POLLOUT; // client
-        cgi_client.pfd.revents = 0;
-        std::cout << "file descriptor : " << cgi_client.pfd.fd << "setten to POLLOUT" << std::endl;
-
-
-        // remove cgi pipe from poll;
-        for (size_t i = 0; i < pollFds.size(); ++i)
-        {
-            if (pollFds[i].fd == pfd.fd)
-            {
-                pollFds.erase(pollFds.begin() + i);
-                break ;
-            }
-        }
-        cgi_clients.erase(pfd.fd);
-        // close(pfd.fd);
-    }
-}
-
-// int main(void)
-// {
-//     Server server;
-
-//     server.addListeningSocket(8080);
-//     // server.addListeningSocket(1337);
-//     server.run();
-// }
-
-bool    Server::isCgiPipe(int fd)
-{
-    return (cgi_clients.find(fd) != cgi_clients.end());
-}

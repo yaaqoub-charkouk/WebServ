@@ -1,8 +1,18 @@
+import time
+import sys
+
 #!/usr/bin/env python3
 
-print("Content-Type: text/plain")
-print()
-# while(1):
-#     continue
-print("Hello from CGI")
 
+print("HELLO from CGI")
+print()
+sys.stdout.flush()
+
+# Non-blocking check - simulate some work
+print("Starting CGI process...")
+sys.stdout.flush()
+
+time.sleep(4)  # Sleep before final write
+
+print("By from CGI")
+sys.stdout.flush()
