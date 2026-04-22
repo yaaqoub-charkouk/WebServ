@@ -55,10 +55,12 @@ private:
 
     int     addListeningSocket(int port); // setup
 
+    // CGI:
     void    make_cgi_pipes_nonblocking(int script_in, int script_out);
     void    add_cgi_pipes_to_pollFds(int script_in, int script_out);
     bool    isCgiPipe(int fd);
     void    processCgiReadEvent(struct pollfd& pfd);
+    void    close_cgi_client(int fd);
 public:
     void    run();
 

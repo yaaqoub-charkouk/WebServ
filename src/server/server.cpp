@@ -86,7 +86,7 @@ void    Server::run()
 
         if (ret < 0)
             throw std::runtime_error("poll failed can't listen on servers sockets");
-        std::cout << "new poll cycle " << std::endl;
+        std::cout << "------------new poll cycle -----------------" << std::endl;
         std::cout << "pollFds size : " << pollFds.size() << std::endl;
         for (size_t i = 0; i < pollFds.size();)
         {
