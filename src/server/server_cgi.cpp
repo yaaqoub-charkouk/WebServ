@@ -54,20 +54,34 @@ void    Server::processCgiReadEvent(struct pollfd& pfd) // cgi pipe
         
         
         // remove cgi pipe from poll;
-        for (size_t i = 0; i < pollFds.size(); ++i)
-        {
-            if (pollFds[i].fd == pfd.fd)
-            {
-                pollFds.erase(pollFds.begin() + i);
-                break ;
-            }
-        }
-        cgi_clients.erase(pfd.fd);
-        clientRemoved = true;
-        // close(pfd.fd);
-        // exit(0);
+        close_cgi_client(pfd.fd); // code another one that takes cgi_client;
         std::cout << "cgi pipe got removed from pollFds : " << pfd.fd << std::endl;
     }
+}
+
+void    Server::close_cgi_client(int fd)
+{
+    CgiClient& cgi_client = cgi_clients.at(fd);
+    delete cgi_client.cgi;
+
+    std::cout << "closing cgi_client ---> " << fd << std::endl;
+
+    close(fd);
+
+    // remove from poll
+    for (size_t i = 0; i < pollFds.size(); ++i)
+    {
+        if (pollFds[i].fd == fd)
+        {
+            pollFds.erase(pollFds.begin() + i);
+            break ;
+        }
+    }
+
+    // remove from cgi_clients map
+    cgi_clients.erase(fd);
+    
+    clientRemoved = true;
 }
 
 // int main(void)

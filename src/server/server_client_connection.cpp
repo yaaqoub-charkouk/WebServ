@@ -69,6 +69,7 @@ void    Server::readFromClient(struct pollfd& pfd)
         // exit(1);
         // return ;
     }
+    std::cout << "++++++++++++++++++++++++++++" << std::endl;
     while (true)
     {
         int n = recv(pfd.fd, buffer, sizeof(buffer), 0);
@@ -96,6 +97,14 @@ void    Server::readFromClient(struct pollfd& pfd)
                     // if cgi_response_error { }
                     if (!client.isCgiResponseError) // cgi code started correctly , there is a child process running there
                     {
+                        // init cgi 
+                        client.cgi->execute();
+                        if (client.request.method == "POST")
+                            client.cgi->cgi_status = CGI_WRITING;
+                        else //if (client.request.method == "GET")
+                            client.cgi->cgi_status = CGI_READING;
+
+
                         // make cgi pipes non blocking
                         // add cgi pipes to pollFds
                         make_cgi_pipes_nonblocking(client.cgi->script_in[1], client.cgi->script_out[0]);
@@ -105,13 +114,22 @@ void    Server::readFromClient(struct pollfd& pfd)
                         // cgi_clients[client.cgi->script_out[0]] = CgiClient(pfd, client.cgi, client.response_str); // pfd is for the client who received the request
                         std::cout << "new cgi client fd : " << pfd.fd << std::endl;
                         cgi_clients.insert(std::make_pair(client.cgi->script_out[0], CgiClient(pfd, client.cgi, client.response_str)));
-                        // return ;
+//                         The Invisible Copies (Before the Semicolon)
+// CgiClient(...)
+// You explicitly create the first object.
+// (Prints Constructor: 0x...0060)
+// std::make_pair(...)
+// make_pair takes your object and copies it into a temporary std::pair<int, CgiClient>.
+// (Silent copy construction: 0x...00a8)
+// The sneaky const conversion
+// std::map::insert strictly requires a std::pair<const int, CgiClient>. Notice the const! Because make_pair didn't have const int, C++ is forced to create a third temporary pair to convert it. It copies the object again!
+// (Silent copy construction: 0x...00e8)
+// Inserting into the Map
+// The map takes that converted pair and copies it one final time into the permanent map node.
+// (Silent copy construction: 0x...0888)
+                        std::cout << "+++++++++++++++++++++++++++++++++" << std::endl;
+                        return ;
 
-                        client.cgi->execute();
-                        if (client.request.method == "POST")
-                            client.cgi->cgi_status = CGI_WRITING;
-                        else //if (client.request.method == "GET")
-                            client.cgi->cgi_status = CGI_READING;
                     }
                 }
                         // return handleCgi(client.request.method, client.request.uri, client.request.body, server, location);
@@ -140,13 +158,14 @@ void    Server::readFromClient(struct pollfd& pfd)
         }
         else if (n == 0) // client closed connection
         {
-            if (client.isCgi) {
+            if (client.isCgi)
+            {
+                std::cout << "-- should stop cgi execution " << std::endl;
                 std::cout << "-- closing a cgi client -- " << std::endl;
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                close_cgi_client(client.cgi->script_out[0]);
 
 
-
-                std::cout << "-- should stop cgi execution " << std::endl;
             }
             closeClient(pfd.fd);
             return ;

@@ -31,7 +31,14 @@ public:
     Cgi*            cgi;
     std::string&    response;
 
-    CgiClient(struct pollfd& pfd, Cgi* cgi, std::string& response) : pfd(pfd), cgi(cgi), response(response) {}
+    CgiClient(struct pollfd& pfd, Cgi* cgi, std::string& response) : pfd(pfd), cgi(cgi), response(response) {
+        std::cout << "CgiClient constructor called for  : " << this << " " <<  pfd.fd << " on cgi pipe : " << cgi->script_out[0] << std::endl;
+    }
+
+    ~CgiClient() {
+        std::cout << "CgiClient destructor called for client : " << this << std::endl;
+        // delete cgi;
+    }
 };
 
 class Server

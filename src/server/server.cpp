@@ -121,6 +121,7 @@ void    Server::run()
                 else
                 {
                     readFromClient(pollFds[i]);
+                    std::cout << "------ after reading request from a new client ---- " << std::endl;
                 }
             }
             // std::cout << "client Removed " << clientRemoved << std::endl;
