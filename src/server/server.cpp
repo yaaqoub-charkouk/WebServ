@@ -209,7 +209,9 @@ void    Server::processCgiReadEvent(struct pollfd& pfd)
     std::cout << "processCgiReadEvent" << std::endl;
 
     CgiClient& cgi_client = cgi_clients.at(pfd.fd);
+
     cgi_client.cgi->read_output(); // !!
+
     if (cgi_client.cgi->cgi_status == CGI_DONE_READING)
     {
         cgi_client.cgi->build_response();
@@ -230,6 +232,7 @@ void    Server::processCgiReadEvent(struct pollfd& pfd)
             }
         }
         cgi_clients.erase(pfd.fd);
+        // close(pfd.fd);
     }
 }
 
