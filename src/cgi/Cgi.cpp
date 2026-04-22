@@ -267,8 +267,8 @@ void    Cgi::read_output()
     if (cgi_status == CGI_READING)
     {
         char buff[4096];
-        // while (true)
-        // {
+        while (true)
+        {
             // std::cout << "read 10 bytes " << std::endl;
             read_bytes = read(script_out[0], buff, sizeof(buff));
             if (read_bytes > 0)
@@ -283,7 +283,7 @@ void    Cgi::read_output()
             }
             else if (read_bytes == -1 && (errno == EAGAIN || errno == EWOULDBLOCK)) // need to check for real error
                 return ;
-        // }
+        }
     }
 }
 

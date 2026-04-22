@@ -62,7 +62,7 @@ void    Server::readFromClient(struct pollfd& pfd)
         std::cout << "client reading request and he is already cgi " << client.clientPort << std::endl;
         // set pfd.event to not checked event;
         // exit(1);
-        return ;
+        // return ;
     }
     while (true)
     {
@@ -103,6 +103,7 @@ void    Server::readFromClient(struct pollfd& pfd)
 
                             // associate cgi pipes to client & .
                             // cgi_clients[client.cgi->script_out[0]] = CgiClient(pfd, client.cgi, client.response_str); // pfd is for the client who received the request
+                            std::cout << "new cgi client fd : " << pfd.fd << std::endl;
                             cgi_clients.insert(std::make_pair(client.cgi->script_out[0], CgiClient(pfd, client.cgi, client.response_str)));
                             return ;
                         }
