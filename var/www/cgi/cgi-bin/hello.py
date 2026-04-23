@@ -12,7 +12,7 @@ sys.stdout.flush()
 print("Starting CGI process...")
 sys.stdout.flush()
 
-# time.sleep(0)  # Sleep before final write
+time.sleep(4)  # Sleep before final write
 
 print("By from CGI")
 sys.stdout.flush()

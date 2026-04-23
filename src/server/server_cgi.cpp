@@ -34,28 +34,37 @@ void    Server::add_cgi_pipes_to_pollFds(int script_in, int script_out)
     (void)script_in;
 }
 
-void    Server::processCgiReadEvent(struct pollfd& pfd) // cgi pipe 
+void    Server::processCgiReadEvent(int cgi_pipe) // DANGER : reference may be invalid after vector reallocate !!!
 {
     std::cout << "  processCgiReadEvent" << std::endl;
 
-    CgiClient& cgi_client = cgi_clients.at(pfd.fd);
+    CgiClient& cgi_client = cgi_clients.at(cgi_pipe);
+    if (clients.find(cgi_client.http_client_fd) == clients.end())
+    {
+        std::cout << "http client closed :" << cgi_client.http_client_fd << " for cgi : " << cgi_pipe << std::endl;
+        close_cgi_client(cgi_pipe);
+        return ;
+    }
 
     cgi_client.cgi->read_output(); // !!
 
     if (cgi_client.cgi->cgi_status == CGI_DONE_READING)
     {
         cgi_client.cgi->build_response();
-        cgi_client.response = cgi_client.cgi->getResponse();
+        // cgi_client.response = cgi_client.cgi->getResponse();
+        setHttpClientResponse(*cgi_client.cgi, cgi_client.http_client_fd);
         
-        cgi_client.pfd.events = POLLOUT; // client
-        cgi_client.pfd.revents = 0;
+        // http_client.pfd.events = POLLOUT
+        changePollEvent(cgi_client.http_client_fd, POLLOUT);
+        // cgi_client.pfd.events = POLLOUT; // client
+        // cgi_client.pfd.revents = 0;
         
-        std::cout << "CGI done , ready to write response to cgi_client.pfd.fd " << cgi_client.pfd.fd << std::endl;
+        std::cout << "CGI done , ready to write response to cgi_client.cgi_pipe " << cgi_pipe << std::endl;
         
         
         // remove cgi pipe from poll;
-        close_cgi_client(pfd.fd); // code another one that takes cgi_client;
-        std::cout << "cgi pipe got removed from pollFds : " << pfd.fd << std::endl;
+        close_cgi_client(cgi_pipe); // code another one that takes cgi_client;
+        std::cout << "cgi pipe got removed from pollFds : " << cgi_pipe << std::endl;
     }
 }
 

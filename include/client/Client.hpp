@@ -24,7 +24,10 @@ class Client // needs config file .
 {
 public:
     // server config
-    struct pollfd&      pfd; // client now has pfd.
+    int                 http_fd; // UPDATE
+
+    struct pollfd&      pfd; // client now has pfd. // DANGER 
+    
     const ServerConfig& serverConfig;
     int                 clientPort;
     std::string         clientAddress;
@@ -39,7 +42,7 @@ public:
     // cgi 
     bool                isCgi;
     bool                isCgiResponseError;
-    Cgi*                cgi;
+    Cgi*                cgi; // cgi_client who own this pointer.
 
     
     // response

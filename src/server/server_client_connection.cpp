@@ -50,21 +50,21 @@ void    Server::acceptClient(int serverFd)
 //     closeClient(pollFds[i].fd);
 //     continue;
 // }
-void    Server::readFromClient(struct pollfd& pfd)
+void    Server::readFromClient(int  client_fd)
 {
-    std::cout << "read From client fd : " << pfd.fd << std::endl;
+    std::cout << "read From client fd : " << client_fd << std::endl;
 
     char buffer[4096];
 
-    if (clients.find(pfd.fd) == clients.end()) {
-        std::cout << "LAHWAAA !!!!! reading from client ,, fd : " << pfd.fd << " does not exist" << std::endl;
+    if (clients.find(client_fd) == clients.end()) {
+        std::cout << "LAHWAAA !!!!! reading from client ,, fd : " << client_fd << " does not exist" << std::endl;
         return ;
     }
 
-    Client& client = clients.at(pfd.fd); // !!!! there is no client when POLLIN on CGI pipe
+    Client&  client = clients.at(client_fd); // !!!! there is no client when POLLIN on CGI pipe
     if (client.isCgi)
     {
-        std::cout << "client reading request and he is already cgi " << pfd.fd << std::endl;
+        std::cout << "client reading request and he is already cgi " << client_fd << std::endl;
         // set pfd.event to not checked event;
         // exit(1);
         // return ;
@@ -72,7 +72,7 @@ void    Server::readFromClient(struct pollfd& pfd)
     std::cout << "++++++++++++++++++++++++++++" << std::endl;
     while (true)
     {
-        int n = recv(pfd.fd, buffer, sizeof(buffer), 0);
+        int n = recv(client_fd, buffer, sizeof(buffer), 0);
         // is cgi done reading
         // go to client waiting for cgi response
         if (n > 0)
@@ -112,21 +112,8 @@ void    Server::readFromClient(struct pollfd& pfd)
                         
                         // associate cgi pipes to client & .
                         // cgi_clients[client.cgi->script_out[0]] = CgiClient(pfd, client.cgi, client.response_str); // pfd is for the client who received the request
-                        std::cout << "new cgi client fd : " << pfd.fd << std::endl;
-                        cgi_clients.insert(std::make_pair(client.cgi->script_out[0], CgiClient(pfd, client.cgi, client.response_str)));
-//                         The Invisible Copies (Before the Semicolon)
-// CgiClient(...)
-// You explicitly create the first object.
-// (Prints Constructor: 0x...0060)
-// std::make_pair(...)
-// make_pair takes your object and copies it into a temporary std::pair<int, CgiClient>.
-// (Silent copy construction: 0x...00a8)
-// The sneaky const conversion
-// std::map::insert strictly requires a std::pair<const int, CgiClient>. Notice the const! Because make_pair didn't have const int, C++ is forced to create a third temporary pair to convert it. It copies the object again!
-// (Silent copy construction: 0x...00e8)
-// Inserting into the Map
-// The map takes that converted pair and copies it one final time into the permanent map node.
-// (Silent copy construction: 0x...0888)
+                        std::cout << "new cgi client fd : " << client_fd << std::endl;
+                        cgi_clients.insert(std::make_pair(client.cgi->script_out[0], CgiClient(client_fd, client.cgi)));
                         std::cout << "+++++++++++++++++++++++++++++++++" << std::endl;
                         return ;
 
@@ -139,8 +126,11 @@ void    Server::readFromClient(struct pollfd& pfd)
 
                 client.response_str = client.response.getResponse();
 
-                pfd.events = POLLOUT;
-                pfd.revents = 0;
+                // call changePollEvent instead ;
+                changePollEvent(client_fd, POLLOUT);
+
+                // pfd.events = POLLOUT; // DANGER ! invalid reference
+                // pfd.revents = 0;
                 std::cout << "completed request and pollout ready" << std::endl;
             }
             else if (client.state == ERROR) {
@@ -167,29 +157,29 @@ void    Server::readFromClient(struct pollfd& pfd)
 
 
             }
-            closeClient(pfd.fd);
+            closeClient(client_fd);
             return ;
         }
         else
         {
             if (errno == EAGAIN || errno == EWOULDBLOCK)
                 break ;
-            closeClient(pfd.fd);
+            closeClient(client_fd);
             return ;
         }
     }
 }
 
-void Server::writeToClient(struct pollfd& pfd)
+void Server::writeToClient(int  client_fd) // DANGER : best practice to take 
 {
-    Client& client = clients.at(pfd.fd);
+    std::cout << "====> WRITING TO CLIENT : " << client_fd << std::endl;
+    Client& client = clients.at(client_fd);
 
     if (client.bytes_sent >= client.response_str.size()) {
-        closeClient(pfd.fd);
+        closeClient(client_fd);
         return ;
     }
 
-    std::cout << "====> WRITING TO CLIENT : " << pfd.fd << std::endl;
     // std::cout << "====> RESPONSE: " << client.response_str << std::endl;
 
     size_t remaining = client.response_str.size() - client.bytes_sent;
@@ -197,7 +187,7 @@ void Server::writeToClient(struct pollfd& pfd)
     // FORCE partial send (for testing)
     // size_t chunk_size = std::min(remaining, (size_t)10); // send only 10 bytes max
 
-    ssize_t bytes_sent = send(pfd.fd,
+    ssize_t bytes_sent = send(client_fd,
                             client.response_str.c_str() + client.bytes_sent,
                             remaining,
                             0);
@@ -212,15 +202,15 @@ void Server::writeToClient(struct pollfd& pfd)
         std::cout << std::endl;
 
         if (client.bytes_sent == client.response_str.size())
-            closeClient(pfd.fd);
+            closeClient(client_fd);
     }
     else if (bytes_sent == 0) // connection closed
-        closeClient(pfd.fd);
+        closeClient(client_fd);
     else if (bytes_sent < 0) // error case
     {
         if (errno == EAGAIN || errno == EWOULDBLOCK)
             return ;
-        closeClient(pfd.fd);
+        closeClient(client_fd);
     }
 
 
@@ -292,3 +282,17 @@ void Server::closeClient(int clientFd)
 
     clientRemoved = true;
 }
+
+//                         The Invisible Copies (Before the Semicolon)
+// CgiClient(...)
+// You explicitly create the first object.
+// (Prints Constructor: 0x...0060)
+// std::make_pair(...)
+// make_pair takes your object and copies it into a temporary std::pair<int, CgiClient>.
+// (Silent copy construction: 0x...00a8)
+// The sneaky const conversion
+// std::map::insert strictly requires a std::pair<const int, CgiClient>. Notice the const! Because make_pair didn't have const int, C++ is forced to create a third temporary pair to convert it. It copies the object again!
+// (Silent copy construction: 0x...00e8)
+// Inserting into the Map
+// The map takes that converted pair and copies it one final time into the permanent map node.
+// (Silent copy construction: 0x...0888)
