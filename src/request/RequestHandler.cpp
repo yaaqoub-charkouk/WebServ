@@ -68,19 +68,19 @@ HttpResponse RequestHandler::handleGet(
 
     std::string filePath = buildFilePath(uri, server, location);
 
-    if (!fileExists(filePath))
-        return makeErrorResponse(404, server);
-
-    if (directoryExists(filePath))
+    if (directoryExists(filePath))// This condition needs to be checked first for the autoindex else it will always return 404
     {
         if (location && location->getAutoindex())
         {
             if (location->getIndex().empty())
-                return HttpResponse::makeAutoindexRes(uri);
+                return HttpResponse::makeAutoindexRes(filePath);//I changed this because I need the file path not the uri
             return HttpResponse::makeFileRes(filePath + "/" + location->getIndex());
         }
         return makeErrorResponse(403, server);
     }
+    
+    if (!fileExists(filePath))
+        return makeErrorResponse(404, server);
 
     return HttpResponse::makeFileRes(filePath);
 }

@@ -163,7 +163,7 @@ HttpResponse HttpResponse::makeErrorRes(int code, const std::string &path)
     }
     else
     {
-        def << "<html><body><h1>" << code << " " 
+        def << "<html><body><style>body{display:flex;justify-content:center;height:100vh;}</style><h1>" << code << " " 
         << getStatusMsg(code) <<"</h1></body></html>";
         content = def.str();
         size << content.size();

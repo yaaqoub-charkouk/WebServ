@@ -191,8 +191,6 @@ void Cgi::execute()
         return;
     }
 
-    // Server::make_cgi_pipes_nonblocking(script_in, script_out);
-
     pid = fork();
     if (pid == -1)
     {
@@ -225,11 +223,11 @@ void Cgi::execute()
     //     throw std::runtime_error("Failed to make the client cgi pipes nonblocking");
     // }
     // else
-    if (method == "GET")
-    {
-        close(script_in[1]);// we dont need to write to child
-        script_in[1] = -1;
-    }
+    // if (method == "GET")
+    // {
+    //     close(script_in[1]);// we dont need to write to child
+    //     script_in[1] = -1;
+    // }
 
     // if (fcntl(script_out[0], F_SETFL, O_NONBLOCK) == -1) {
     //     close(script_out[0]);
@@ -267,23 +265,20 @@ void    Cgi::read_output()
     if (cgi_status == CGI_READING)
     {
         char buff[4096];
-        while (true)
+        // std::cout << "read 10 bytes " << std::endl;
+        read_bytes = read(script_out[0], buff, sizeof(buff));
+        if (read_bytes > 0)
+            output.append(buff, read_bytes);
+        else if (read_bytes == 0) // is it enough
         {
-            // std::cout << "read 10 bytes " << std::endl;
-            read_bytes = read(script_out[0], buff, sizeof(buff));
-            if (read_bytes > 0)
-                output.append(buff, read_bytes);
-            else if (read_bytes == 0) // is it enough
-            {
-                std::cout << "cgi done " << std::endl;
-                cgi_status = CGI_DONE_READING;
-                // close(script_out[0]);
-                // script_out[0] = -1;
-                return ;
-            }
-            else if (read_bytes == -1 && (errno == EAGAIN || errno == EWOULDBLOCK)) // need to check for real error
-                return ;
+            std::cout << "cgi done " << std::endl;
+            cgi_status = CGI_DONE_READING;
+            // close(script_out[0]);
+            // script_out[0] = -1;
+            return ;
         }
+        else if (read_bytes == -1 && (errno == EAGAIN || errno == EWOULDBLOCK)) // need to check for real error
+            return ;
     }
 }
 
@@ -291,22 +286,19 @@ void    Cgi::write_body()
 {
     if (cgi_status == CGI_WRITING)
     {
-        while (true)
+        int write_bytes;
+        write_bytes = write(script_in[1], req_body.c_str() + written, req_body.size() - written);
+        if (write_bytes > 0)
+            written += write_bytes;
+        else if (written == req_body.size())
         {
-            int write_bytes;
-            write_bytes = write(script_in[1], req_body.c_str() + written, req_body.size() - written);
-            if (write_bytes > 0)
-                written += write_bytes;
-            else if (written == req_body.size())
-            {
-                cgi_status = CGI_DONE_WRITING;
-                close(script_in[1]);
-                script_in[1] = -1;
-                break;
-            }
-            else if (write_bytes == -1 && (errno == EAGAIN || errno == EWOULDBLOCK))
-                break;
+            cgi_status = CGI_DONE_WRITING;
+            close(script_in[1]);
+            script_in[1] = -1;
+            return ;
         }
+        else if (write_bytes == -1 && (errno == EAGAIN || errno == EWOULDBLOCK))
+            return ;
     }
 }
 

@@ -98,6 +98,7 @@ void    Server::readFromClient(struct pollfd& pfd)
                     {
                         // make cgi pipes non blocking
                         // add cgi pipes to pollFds
+                        client.cgi->execute(); //should be called here since the pipes need to be created before making them non blocking
                         make_cgi_pipes_nonblocking(client.cgi->script_in[1], client.cgi->script_out[0]);
                         add_cgi_pipes_to_pollFds(client.cgi->script_in[1], client.cgi->script_out[0]);
                         
@@ -107,7 +108,6 @@ void    Server::readFromClient(struct pollfd& pfd)
                         cgi_clients.insert(std::make_pair(client.cgi->script_out[0], CgiClient(pfd, client.cgi, client.response_str)));
                         // return ;
 
-                        client.cgi->execute();
                         if (client.request.method == "POST")
                             client.cgi->cgi_status = CGI_WRITING;
                         else //if (client.request.method == "GET")
