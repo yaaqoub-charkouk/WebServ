@@ -8,6 +8,14 @@ Client::Client(const ServerConfig& serverConfig, struct pollfd& pfd, int clientP
     request.contentLength = 0;
 }
 
+Client::~Client()
+{
+    if (cgi != NULL)
+    {
+        delete cgi;
+        cgi = NULL;
+    }
+}
 // Client& Client::operator=(const Client& newClient) {
 //     if (this != &newClient)
 //     {

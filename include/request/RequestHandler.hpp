@@ -17,6 +17,7 @@ public:
     static const LocationConfig*    findLocation(const std::string& uri,const ServerConfig& server); // i changed this method encapsulation to public
     static bool                     isCgiRequest(const std::string& uri,const LocationConfig* location); // this also 
     static void                     handleCgi(Client& client, const LocationConfig* location); // changed return type
+    static HttpResponse             makeErrorResponse(int code,const ServerConfig& server);
 
 
 private:
@@ -27,7 +28,6 @@ private:
     static std::string buildFilePath(const std::string& uri,const ServerConfig& server,const LocationConfig* location);
     static std::string stripQueryString(const std::string& uri);
 
-    static HttpResponse makeErrorResponse(int code,const ServerConfig& server);
 
     static bool fileExists(const std::string& path);
     static bool directoryExists(const std::string& path);

@@ -31,7 +31,7 @@ class CgiClient
 public:
     int             http_client_fd;
     Cgi*            cgi;
-
+    bool            processed;
 
     // http_client lookup ;
     // pollFds lookup
@@ -41,7 +41,7 @@ public:
 
     // std::string&    response; // DANGER : client response , Clients map may reallocate for new Clients .
 
-    CgiClient(int client_fd, Cgi* cgi) : http_client_fd(client_fd), cgi(cgi) {
+    CgiClient(int client_fd, Cgi* cgi) : http_client_fd(client_fd), cgi(cgi), processed(false) {
         std::cout << "CgiClient constructor called for  : " << this << " " <<  client_fd << " on cgi pipe : " << cgi->script_out[0] << std::endl;
     }
 

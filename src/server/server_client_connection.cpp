@@ -19,6 +19,22 @@ void    Server::acceptClient(int serverFd)
             throw std::runtime_error("Failed to add new client accept failed");
         }
 
+        // checking if client now allowed to request
+        std::cout << "++++server host: " << configs[serverFd].getHost() << std::endl;
+        std::cout << "++++new client address : " << inet_ntoa(client.sin_addr) << std::endl;
+
+        if (configs[serverFd].getHost() == std::string("0.0.0.0"))
+        {
+            std::cout << "++++++ACCEPTING ALL CLIENTS " << std::endl;
+
+        }
+        else if (inet_ntoa(client.sin_addr) != configs[serverFd].getHost())
+        {
+            std::cout << "client is not allowed to connect " << inet_ntoa(client.sin_addr) << std::endl;
+            std::cout << "Failed to Accept client " << std::endl;
+            return ;
+        }
+
         // we're adding a new client . so make it non blocking & add it to pollFds;
         if (fcntl(client_fd, F_SETFL, O_NONBLOCK) == -1)
         {
@@ -32,9 +48,14 @@ void    Server::acceptClient(int serverFd)
         pfd.revents = 0;
         pollFds.push_back(pfd);
 
+
+
         // clients[client_fd] = Client(configs[serverFd]);
-        clients.insert(std::make_pair(client_fd, Client(configs[serverFd], pfd,
-                     ntohs(client.sin_port), inet_ntoa(client.sin_addr))));
+
+
+        clients.insert(std::make_pair(client_fd, 
+                        Client(configs[serverFd], pfd, ntohs(client.sin_port),
+                        inet_ntoa(client.sin_addr))));
 
 
         // just for debugging :
@@ -92,13 +113,29 @@ void    Server::readFromClient(int  client_fd)
                     client.isCgi = true;
                     std::cout << "  ===== CGI request ====" << std::endl;
                     // call the handleCgi method ;
-                    RequestHandler::handleCgi(client, location);
+                    RequestHandler::handleCgi(client, location); // allocate for cgi.
                     
                     // if cgi_response_error { }
                     if (!client.isCgiResponseError) // cgi code started correctly , there is a child process running there
                     {
                         // init cgi 
                         client.cgi->execute();
+                        
+                        if (client.cgi->cgi_status == CGI_PIPE_ERROR || client.cgi->cgi_status == CGI_EXEC_ERROR || client.cgi->cgi_status == CGI_ENV_ERROR)
+                        {
+                            // response error;
+                            client.response = RequestHandler::makeErrorResponse(500, client.serverConfig);
+                            client.response_str = client.response.getResponse();
+                            // destruct cgi* ;
+
+                            // delete      client.cgi;
+                            // client.cgi = NULL;
+
+                            changePollEvent(client_fd, POLLOUT);
+
+                            return ;
+                        }
+
                         if (client.request.method == "POST")
                             client.cgi->cgi_status = CGI_WRITING;
                         else //if (client.request.method == "GET")
@@ -126,8 +163,8 @@ void    Server::readFromClient(int  client_fd)
 
                 client.response_str = client.response.getResponse();
 
-                // call changePollEvent instead ;
                 changePollEvent(client_fd, POLLOUT);
+                // call changePollEvent instead ;
 
                 // pfd.events = POLLOUT; // DANGER ! invalid reference
                 // pfd.revents = 0;
@@ -136,7 +173,11 @@ void    Server::readFromClient(int  client_fd)
             else if (client.state == ERROR) {
                 // send erorr page
                 std::cerr << "request parse error " << std::endl;
-                
+
+                client.response = RequestHandler::makeErrorResponse(403, client.serverConfig);
+                client.response_str = client.response.getResponse();
+                // destruct cgi* ;
+                changePollEvent(client_fd, POLLOUT);
 
 
 
@@ -148,15 +189,15 @@ void    Server::readFromClient(int  client_fd)
         }
         else if (n == 0) // client closed connection
         {
-            if (client.isCgi)
-            {
-                std::cout << "-- should stop cgi execution " << std::endl;
-                std::cout << "-- closing a cgi client -- " << std::endl;
-// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                close_cgi_client(client.cgi->script_out[0]);
+//             if (client.isCgi)
+//             {
+//                 std::cout << "-- should stop cgi execution " << std::endl;
+//                 std::cout << "-- closing a cgi client -- " << std::endl;
+// // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//                 close_cgi_client(client.cgi->script_out[0]);
 
 
-            }
+//             }
             closeClient(client_fd);
             return ;
         }
@@ -213,58 +254,21 @@ void Server::writeToClient(int  client_fd) // DANGER : best practice to take
         closeClient(client_fd);
     }
 
-
-
-
-
-
-
-
-    // fine for now . but i still need to implement partial send logic !!!
-
-    
-
-
-
-
-
-
-    // hardcoded write to client for now . wait until adnane build response 
-
-    // std::ifstream file("index.html");
-
-    // if (!file.is_open())
-    // {
-    //     std::cerr << "Failed to open file\n";
-    //     throw std::runtime_error("Failed to open index.html");
-    // }
-    // std::stringstream buffer_stream;
-    // buffer_stream << file.rdbuf();
-    // std::string body = buffer_stream.str();
-
-    
-    
-    // std::stringstream response;
-    // response << "HTTP/1.1 200 OK\r\n";
-    // response << "Content-Type: text/html\r\n";
-    // response << "Content-Length: " << body.size() << "\r\n";
-    // response << "Connection: close\r\n";
-    // response << "\r\n";
-    // response << body;
-
-
-    // std::string response_str = response.str();
-    
-    // send(pfd.fd, response_str.c_str(), response_str.size(), 0);
-
-    // maybe i'll keep the client alive since the browser can use only one tcp three way handshake 
-
-    // closeClient(pfd.fd);
 }
 
-void Server::closeClient(int clientFd)
+void Server::closeClient(int clientFd) // client who calls it = 100% sure that client exist.
 {
     std::cout << "closeClient called" << std::endl;
+
+
+    Client& client = clients.at(clientFd);
+    if (client.isCgi /*&& client.cgi != NULL*/)
+    {
+        
+        close_cgi_client(client.cgi->script_out[0]);
+        // close the other pipe .
+    }
+
     close(clientFd);
 
     // remove from pollFds
@@ -276,6 +280,7 @@ void Server::closeClient(int clientFd)
             break;
         }
     }
+
 
     // remove client session
     clients.erase(clientFd);

@@ -42,7 +42,7 @@ public:
     // cgi 
     bool                isCgi;
     bool                isCgiResponseError;
-    Cgi*                cgi; // cgi_client who own this pointer.
+    Cgi*                cgi;
 
     
     // response
@@ -52,6 +52,7 @@ public:
     // needs response buffering , send()
     
     Client(const ServerConfig& serverConfig, struct pollfd& pfd, int clientPort, std::string clientAddress);
+    ~Client();
     // Client& operator=(const Client& newClient);
     void    parseRequest();
     void    parseRequestHeaders();

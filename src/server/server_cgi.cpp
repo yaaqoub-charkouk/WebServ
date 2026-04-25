@@ -39,10 +39,22 @@ void    Server::processCgiReadEvent(int cgi_pipe) // DANGER : reference may be i
     std::cout << "  processCgiReadEvent" << std::endl;
 
     CgiClient& cgi_client = cgi_clients.at(cgi_pipe);
+
+    if (cgi_client.processed)
+    {
+        std::cout << "CGI ALREADY PROCESSED FOR CGI PIPE : " << cgi_pipe << std::endl;
+
+        changePollEvent(cgi_pipe, POLLIN);
+        return ; // set another poll event to cgi_pipe;
+    }
+    // if (cgi_client.cgi == NULL)
+    //     return ;
+
     if (clients.find(cgi_client.http_client_fd) == clients.end())
     {
         std::cout << "http client closed :" << cgi_client.http_client_fd << " for cgi : " << cgi_pipe << std::endl;
-        close_cgi_client(cgi_pipe);
+
+        // close_cgi_client(cgi_pipe);
         return ;
     }
 
@@ -53,27 +65,47 @@ void    Server::processCgiReadEvent(int cgi_pipe) // DANGER : reference may be i
         cgi_client.cgi->build_response();
         // cgi_client.response = cgi_client.cgi->getResponse();
         setHttpClientResponse(*cgi_client.cgi, cgi_client.http_client_fd);
-        
+
         // http_client.pfd.events = POLLOUT
         changePollEvent(cgi_client.http_client_fd, POLLOUT);
+
         // cgi_client.pfd.events = POLLOUT; // client
         // cgi_client.pfd.revents = 0;
-        
+
+        // changePollEvent(cgi_pipe, POLLIN);
         std::cout << "CGI done , ready to write response to cgi_client.cgi_pipe " << cgi_pipe << std::endl;
-        
-        
-        // remove cgi pipe from poll;
-        close_cgi_client(cgi_pipe); // code another one that takes cgi_client;
-        std::cout << "cgi pipe got removed from pollFds : " << cgi_pipe << std::endl;
+
+
+        // close_cgi_client(cgi_pipe); // no need because client will close it ;
+        // remove from poll
+            for (size_t i = 0; i < pollFds.size(); ++i)
+            {
+                if (pollFds[i].fd == cgi_pipe)
+                {
+                    pollFds.erase(pollFds.begin() + i);
+                    clientRemoved = true;
+                    break ;
+                }
+            }
+
+        // std::cout << "cgi pipe got removed from pollFds : " << cgi_pipe << std::endl;
+    cgi_client.processed = true;
+    
     }
 }
 
 void    Server::close_cgi_client(int fd)
 {
-    CgiClient& cgi_client = cgi_clients.at(fd);
-    delete cgi_client.cgi;
+    // CgiClient& cgi_client = cgi_clients.at(fd);
+
+    // kill(cgi_client.cgi->pid, SIGKILL);
+    // waitpid(cgi_client.cgi->pid, NULL, WNOHANG);
+    
+    // delete cgi_client.cgi; // delete once at client . 
+    // cgi_client.cgi = NULL;
 
     std::cout << "closing cgi_client ---> " << fd << std::endl;
+
 
     close(fd);
 

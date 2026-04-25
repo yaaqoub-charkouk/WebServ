@@ -164,12 +164,20 @@ void    Server::closeSocket(int fd)
             }
         }
     }
-    else if (isCgiPipe(fd)) {
-        cgi_clients.erase(fd);
+    // else if (isCgiPipe(fd)) {
+    //     cgi_clients.erase(fd);
         
-    }
+    // }
     else // add if for cgi.
+    {
+        Client& client = clients.at(fd);
+        if (client.isCgi)
+        {
+            close_cgi_client(client.cgi->script_out[0]); // DANGER : the method closes cgi fd
+            // close the other cgi pipe . script_in[1]
+        }
         clients.erase(fd);
+    }
 
     close(fd); // cgi pipe may be closed at cgi.
 
