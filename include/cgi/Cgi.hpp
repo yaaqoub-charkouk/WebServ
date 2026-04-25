@@ -30,11 +30,11 @@ enum CgiStatus
 class Cgi
 {
 private:
+    std::vector<std::string> env_vect;
+public:
     pid_t pid;
     int status;
-    std::vector<std::string> env_vect;
     char **envp;
-public:
     int     script_in[2];
     int     script_out[2];
     CgiStatus cgi_status;
@@ -55,6 +55,7 @@ private:
     size_t  written;
     std::string output;
     std::string req_body;
+
     void closePipes();
     std::string ultostr(size_t num);
     void free_envp();

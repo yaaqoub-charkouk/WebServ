@@ -99,10 +99,10 @@ void    Server::run()
 
             if (pollFds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
                 if (isCgiPipe(pollFds[i].fd)) {
+                    pollFds[i].revents = 0; // why 
                     pollFds[i].events = POLLIN;
-                    pollFds[i].revents = 0;
                     std::cout << "cgi pipe got POLLHUP" << std::endl;
-                    processCgiReadEvent(pollFds[i]);
+                    processCgiReadEvent(pollFds[i].fd); // DANGER : invalid reference , allocating new client while processing another cgi_client
                     // continue;
                 }
                 else {
@@ -116,11 +116,12 @@ void    Server::run()
                     acceptClient(pollFds[i].fd);
                 else if (isCgiPipe(pollFds[i].fd))
                 {
-                    processCgiReadEvent(pollFds[i]);
+                    processCgiReadEvent(pollFds[i].fd); // DANGER : invalid reference , allocate new client while processing another cgi_client
                 }
                 else
                 {
-                    readFromClient(pollFds[i]);
+                    readFromClient(pollFds[i].fd); // DANGER : invalid reference , new cgi pipes may be added to pollFds , vector may reallocate !
+                    std::cout << "------ after reading request from a new client ---- " << std::endl;
                 }
             }
             // std::cout << "client Removed " << clientRemoved << std::endl;
@@ -129,7 +130,7 @@ void    Server::run()
             {
                 //  std::cout << "write to client  poll size :" << pollFds.size() << std::endl
                 //     << "    i : " << i << std::endl;
-                writeToClient(pollFds[i]);
+                writeToClient(pollFds[i].fd);
             }
 
 
@@ -163,12 +164,20 @@ void    Server::closeSocket(int fd)
             }
         }
     }
-    else if (isCgiPipe(fd)) {
-        cgi_clients.erase(fd);
+    // else if (isCgiPipe(fd)) {
+    //     cgi_clients.erase(fd);
         
-    }
+    // }
     else // add if for cgi.
+    {
+        Client& client = clients.at(fd);
+        if (client.isCgi)
+        {
+            close_cgi_client(client.cgi->script_out[0]); // DANGER : the method closes cgi fd
+            // close the other cgi pipe . script_in[1]
+        }
         clients.erase(fd);
+    }
 
     close(fd); // cgi pipe may be closed at cgi.
 
@@ -184,3 +193,23 @@ void    Server::closeSocket(int fd)
 
 }
 
+
+// pollFds lookup to change event.
+void    Server::changePollEvent(int fd, int event)
+{
+    for (size_t i = 0; i < pollFds.size(); ++i)
+    {
+        if (pollFds[i].fd == fd)
+        {
+            pollFds[i].revents = 0;
+            pollFds[i].events = event;
+            break ;
+        }
+    }
+}
+
+void    Server::setHttpClientResponse(Cgi& cgi, int http_client_fd)
+{
+    std::cout << "setting response to : " << http_client_fd << std::endl; 
+    clients.at(http_client_fd).response_str = cgi.getResponse();
+}
