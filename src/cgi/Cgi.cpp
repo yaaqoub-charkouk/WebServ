@@ -1,5 +1,4 @@
 #include "../../include/cgi/Cgi.hpp"
-# include "../../include/server/server.hpp"
 
 Cgi::Cgi() : pid(-1), status(0), envp(NULL), cgi_status(CGI_IDLE), start_time(0), timeout(0), written(0)
 {
@@ -110,7 +109,6 @@ void    Cgi::buildHeaders(const HttpRequest &req)
 {
     std::map<std::string , std::string>::const_iterator it = req.headers.begin();
     const std::string http_prefix = "HTTP_";
-
     while (it != req.headers.end())
     {
         std::string key = it->first;

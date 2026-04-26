@@ -38,6 +38,7 @@ public:
     int     script_in[2];
     int     script_out[2];
     CgiStatus cgi_status;
+    HttpResponse res;
 private:
     time_t start_time;
     std::string method;
@@ -49,7 +50,6 @@ private:
     std::string script_interpreter;
     std::map<std::string, std::string> headers;
     std::string body;
-    HttpResponse res;
 
     int  read_bytes;
     size_t  written;

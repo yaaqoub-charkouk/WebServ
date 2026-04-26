@@ -23,7 +23,7 @@
 # include "../request/HttpRequest.hpp"
 # include "../request/RequestHandler.hpp"
 # include "../client/Client.hpp"
-
+# include "../cookie/Cookie.hpp"
 
 // new CgiClient update : client fd lookup each time instead of references to it's attributes .
 class CgiClient
@@ -66,6 +66,8 @@ private:
     std::vector<struct pollfd>          pollFds;
 
     bool    clientRemoved;
+
+    Cookie  cookies;
 
 private:
     void    acceptClient(int serverFd); // session creation

@@ -11,6 +11,7 @@ CLIENT_SRC = src/client
 RESPONSE_SRC = src/response
 CGI_SRC = src/cgi
 REQUEST_SRC = src/request
+COOKIE_SRC = src/cookie
 
 NAME = webserv
 
@@ -32,6 +33,7 @@ SRCS = main.cpp \
 	$(RESPONSE_SRC)/HttpResponse.cpp \
 	$(RESPONSE_SRC)/FileUtils.cpp \
 	$(CGI_SRC)/Cgi.cpp \
+	$(COOKIE_SRC)/Cookie.cpp \
 	$(REQUEST_SRC)/HttpRequest.cpp \
 	$(REQUEST_SRC)/RequestHandler.cpp \
 	$(REQUEST_SRC)/RequestHandlerUtils.cpp
@@ -50,6 +52,7 @@ HEADERS = include/config/ConfigException.hpp \
           include/response/HttpResponse.hpp \
           include/response/FileUtils.hpp \
           include/cgi/Cgi.hpp \
+          include/cookie/Cookie.hpp \
           include/request/HttpRequest.hpp \
           include/request/RequestHandler.hpp
 

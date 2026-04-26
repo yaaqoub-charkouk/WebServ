@@ -160,8 +160,13 @@ void    Server::readFromClient(int  client_fd)
 
 
                 client.response  = RequestHandler::handleRequest(client);
+                // Cookies checking
+                cookies.checkRequest(client.request);
+                if (cookies.shouldSetCookie)
+                    client.response.setHeaders(cookies.key, cookies.value);
 
                 client.response_str = client.response.getResponse();
+                std::cout << client.response_str << std::endl;
 
                 changePollEvent(client_fd, POLLOUT);
                 // call changePollEvent instead ;

@@ -172,6 +172,7 @@ void RequestHandler::handleCgi(Client& client, const LocationConfig* location)
     }
 
     HttpRequest cgiRequest;
+    cgiRequest.headers = client.request.headers;//For cookies
     cgiRequest.method = client.request.method;
     cgiRequest.uri = client.request.uri;
     cgiRequest.body = client.request.body;

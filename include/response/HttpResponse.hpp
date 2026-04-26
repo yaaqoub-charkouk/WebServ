@@ -23,7 +23,7 @@ public:
     void    setHeaders(const std::string &key, const std::string &val);
     void    setBody(const std::string &body);
     static std::string getStatusMsg(int code);
-    
+
     std::string getResponse() const;
 
     //Responses type
