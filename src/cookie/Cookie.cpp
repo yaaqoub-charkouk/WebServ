@@ -17,9 +17,15 @@ void    Cookie::checkRequest(const HttpRequest &req)
         if (it != req.headers.end())
         {
             extractToken(it->second);
-            if (tokens.find(token) != tokens.end() && time(NULL) - tokens.at(token) < HALF_HOUR)
+            if (tokens.find(token) != tokens.end())
             {
-                shouldSetCookie = false;
+                if (time(NULL) - tokens.at(token) > HALF_HOUR)
+                {
+                    tokens.erase(token);
+                    generateToken();
+                }
+                else
+                    shouldSetCookie = false;
             //     std::cout << "++++------------+++++++++++ COOKIE IS ALREADY SET\n" ;
             }
             else
