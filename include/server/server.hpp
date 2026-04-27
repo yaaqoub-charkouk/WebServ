@@ -82,10 +82,11 @@ private:
     int     addListeningSocket(int port); // setup
 
     // CGI:
-    void    make_cgi_pipes_nonblocking(int script_in, int script_out);
+    void    make_cgi_pipes_nonblocking(int& script_in, int& script_out);
     void    add_cgi_pipes_to_pollFds(int script_in, int script_out);
     bool    isCgiPipe(int fd);
     void    processCgiReadEvent(int   cgi_pipe);
+    void    processCgiWriteEvent(int cgi_pipe);
     void    close_cgi_client(int cgi_pipe_fd);
     void    setHttpClientResponse(Cgi& cgi, int http_client_fd);
 

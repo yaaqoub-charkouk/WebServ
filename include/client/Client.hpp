@@ -26,7 +26,7 @@ public:
     // server config
     int                 http_fd; // UPDATE
 
-    struct pollfd&      pfd; // client now has pfd. // DANGER 
+    // struct pollfd&      pfd; // client now has pfd. // DANGER 
     
     const ServerConfig& serverConfig;
     int                 clientPort;
@@ -51,7 +51,7 @@ public:
     size_t              bytes_sent;
     // needs response buffering , send()
     
-    Client(const ServerConfig& serverConfig, struct pollfd& pfd, int clientPort, std::string clientAddress);
+    Client(const ServerConfig& serverConfig, int clientPort, std::string clientAddress);
     ~Client();
     // Client& operator=(const Client& newClient);
     void    parseRequest();

@@ -56,7 +56,6 @@ private:
     std::string output;
     std::string req_body;
 
-    void closePipes();
     std::string ultostr(size_t num);
     void free_envp();
     void buildEnvp(const HttpRequest &req);
@@ -66,12 +65,13 @@ public:
     Cgi();
     Cgi(const HttpRequest &req, const std::string &scriptPath, time_t timeout = 5);
     ~Cgi();
-    void execute();
-    void parseOutput(const std::string &output);
-    bool checkTimeout();
+    void    closePipes();
+    void    execute();
+    void    parseOutput(const std::string &output);
+    bool    checkTimeout();
     void    read_output();
     void    write_body();
-    void makeResponse();
+    void    makeResponse();
     void    build_response();
     std::string getResponse() const;
 

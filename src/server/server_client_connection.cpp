@@ -38,8 +38,20 @@ void    Server::acceptClient(int serverFd)
         // we're adding a new client . so make it non blocking & add it to pollFds;
         if (fcntl(client_fd, F_SETFL, O_NONBLOCK) == -1)
         {
-            close(client_fd);
-            throw std::runtime_error("Failed to make client_fd non block");
+            clients.insert(std::make_pair(client_fd, 
+                        Client(configs[serverFd], ntohs(client.sin_port),
+                        inet_ntoa(client.sin_addr))));
+            
+            Client  http = clients.at(client_fd);
+
+            http.response = RequestHandler::makeErrorResponse(500, http.serverConfig);
+            http.response_str = http.response.getResponse();
+
+            writeToClient(client_fd);
+            // close(client_fd); // close at closeClient() . writeToClient().
+
+            // throw std::runtime_error("Failed to make client_fd non block");
+            return ;
         }
 
         struct pollfd pfd;
@@ -54,7 +66,7 @@ void    Server::acceptClient(int serverFd)
 
 
         clients.insert(std::make_pair(client_fd, 
-                        Client(configs[serverFd], pfd, ntohs(client.sin_port),
+                        Client(configs[serverFd], ntohs(client.sin_port),
                         inet_ntoa(client.sin_addr))));
 
 
@@ -105,12 +117,16 @@ void    Server::readFromClient(int  client_fd)
             // check client.state
             if (client.state == COMPLETE) { // call request handler
 
+                cookies.checkRequest(client.request);
+                if (cookies.shouldSetCookie)
+                    client.response.setHeaders(cookies.key, cookies.value);
+
                 const LocationConfig* location = RequestHandler::findLocation(client.request.uri, client.serverConfig);
 
                 if ((client.request.method == "GET" || client.request.method == "POST") &&
                                 RequestHandler::isCgiRequest(client.request.uri, location))
                 {
-                    client.isCgi = true;
+                    // client.isCgi = true;    // setting true only if we inserted a new cgiclient.
                     std::cout << "  ===== CGI request ====" << std::endl;
                     // call the handleCgi method ;
                     RequestHandler::handleCgi(client, location); // allocate for cgi.
@@ -126,12 +142,12 @@ void    Server::readFromClient(int  client_fd)
                             // response error;
                             client.response = RequestHandler::makeErrorResponse(500, client.serverConfig);
                             client.response_str = client.response.getResponse();
+                            changePollEvent(client_fd, POLLOUT);
                             // destruct cgi* ;
 
                             // delete      client.cgi;
                             // client.cgi = NULL;
 
-                            changePollEvent(client_fd, POLLOUT);
 
                             return ;
                         }
@@ -144,29 +160,51 @@ void    Server::readFromClient(int  client_fd)
 
                         // make cgi pipes non blocking
                         // add cgi pipes to pollFds
-                        make_cgi_pipes_nonblocking(client.cgi->script_in[1], client.cgi->script_out[0]);
-                        add_cgi_pipes_to_pollFds(client.cgi->script_in[1], client.cgi->script_out[0]);
+                        try{
+                            make_cgi_pipes_nonblocking(client.cgi->script_in[1], client.cgi->script_out[0]);
+                        }
+                        catch (...) {
+
+                            client.cgi->closePipes();
+                            // kill the child process.
+                            client.response = RequestHandler::makeErrorResponse(500, client.serverConfig);
+                            client.response_str = client.response.getResponse();
+                            changePollEvent(client_fd, POLLOUT);
+                            return ;
+                        }
                         
+                        add_cgi_pipes_to_pollFds(client.cgi->script_in[1], client.cgi->script_out[0]);
+
                         // associate cgi pipes to client & .
                         // cgi_clients[client.cgi->script_out[0]] = CgiClient(pfd, client.cgi, client.response_str); // pfd is for the client who received the request
                         std::cout << "new cgi client fd : " << client_fd << std::endl;
                         cgi_clients.insert(std::make_pair(client.cgi->script_out[0], CgiClient(client_fd, client.cgi)));
+
+                        client.isCgi = true;
+                        
                         std::cout << "+++++++++++++++++++++++++++++++++" << std::endl;
                         return ;
 
                     }
+
+                    else
+                    {
+                        client.response_str = client.response.getResponse();
+                        changePollEvent(client_fd, POLLOUT);
+                        return ;
+                    }
                 }
                         // return handleCgi(client.request.method, client.request.uri, client.request.body, server, location);
 
-
+                std::cout << "http client+++++++++" << std::endl;
                 client.response  = RequestHandler::handleRequest(client);
                 // Cookies checking
-                cookies.checkRequest(client.request);
-                if (cookies.shouldSetCookie)
-                    client.response.setHeaders(cookies.key, cookies.value);
+                // cookies.checkRequest(client.request);
+                // if (cookies.shouldSetCookie)
+                //     client.response.setHeaders(cookies.key, cookies.value);
 
                 client.response_str = client.response.getResponse();
-                std::cout << client.response_str << std::endl;
+                // std::cout << client.response_str << std::endl;
 
                 changePollEvent(client_fd, POLLOUT);
                 // call changePollEvent instead ;
@@ -226,7 +264,7 @@ void Server::writeToClient(int  client_fd) // DANGER : best practice to take
         return ;
     }
 
-    // std::cout << "====> RESPONSE: " << client.response_str << std::endl;
+    std::cout << "====> RESPONSE: " << client.response_str << std::endl;
 
     size_t remaining = client.response_str.size() - client.bytes_sent;
 

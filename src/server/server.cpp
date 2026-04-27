@@ -99,10 +99,15 @@ void    Server::run()
 
             if (pollFds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
                 if (isCgiPipe(pollFds[i].fd)) {
-                    pollFds[i].revents = 0; // why 
-                    pollFds[i].events = POLLIN;
+
+                    // pollFds[i].revents = 0; // why 
+                    // pollFds[i].events = POLLIN; DANGER
+                    if (pollFds[i].revents & POLLIN)
+                        processCgiReadEvent(pollFds[i].fd); // DANGER : invalid reference , allocating new client while processing another cgi_client
+                    else if (pollFds[i].revents & POLLOUT)
+                        processCgiWriteEvent(pollFds[i].fd);
+
                     std::cout << "cgi pipe got POLLHUP" << std::endl;
-                    processCgiReadEvent(pollFds[i].fd); // DANGER : invalid reference , allocating new client while processing another cgi_client
                     // continue;
                 }
                 else {
@@ -128,9 +133,13 @@ void    Server::run()
             // std::cout << "write condition : " << (!clientRemoved && pollFds[i].revents & POLLOUT) << std::endl;
             if (!clientRemoved && (pollFds[i].revents & POLLOUT))
             {
+                if (isCgiPipe(pollFds[i].fd))
+                    processCgiWriteEvent(pollFds[i].fd);
+                else
+                    writeToClient(pollFds[i].fd);
+
                 //  std::cout << "write to client  poll size :" << pollFds.size() << std::endl
                 //     << "    i : " << i << std::endl;
-                writeToClient(pollFds[i].fd);
             }
 
 
@@ -212,9 +221,9 @@ void    Server::setHttpClientResponse(Cgi& cgi, int http_client_fd)
 {
     std::cout << "setting response to : " << http_client_fd << std::endl;
     // Cookies checking
-    cookies.checkRequest(clients.at(http_client_fd).request);
-    if (cookies.shouldSetCookie)
-        cgi.res.setHeaders(cookies.key, cookies.value);
+    // cookies.checkRequest(clients.at(http_client_fd).request);
+    // if (cookies.shouldSetCookie)
+    //     cgi.res.setHeaders(cookies.key, cookies.value);
 
     clients.at(http_client_fd).response_str = cgi.getResponse();
 }

@@ -221,11 +221,11 @@ void Cgi::execute()
     //     throw std::runtime_error("Failed to make the client cgi pipes nonblocking");
     // }
     // else
-    // if (method == "GET")
-    // {
-    //     close(script_in[1]);// we dont need to write to child
-    //     script_in[1] = -1;
-    // }
+    if (method == "GET")
+    {
+        close(script_in[1]);// we dont need to write to child
+        script_in[1] = -1;
+    }
 
     // if (fcntl(script_out[0], F_SETFL, O_NONBLOCK) == -1) {
     //     close(script_out[0]);
