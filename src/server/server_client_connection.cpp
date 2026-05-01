@@ -116,6 +116,9 @@ void    Server::readFromClient(int  client_fd)
 
             // check client.state
             if (client.state == COMPLETE) { // call request handler
+                
+                std::cout << "REQUEST IS =======> :  " << client.request_str << std::endl;
+                std::cout << "BODY IS ==========> :  " << client.request.body << std::endl;
 
                 cookies.checkRequest(client.request);
                 if (cookies.shouldSetCookie)
@@ -215,7 +218,7 @@ void    Server::readFromClient(int  client_fd)
             }
             else if (client.state == ERROR) {
                 // send erorr page
-                std::cerr << "request parse error " << std::endl;
+                std::cerr << "========================= request parse error " << std::endl;
 
                 client.response = RequestHandler::makeErrorResponse(403, client.serverConfig);
                 client.response_str = client.response.getResponse();
@@ -264,7 +267,7 @@ void Server::writeToClient(int  client_fd) // DANGER : best practice to take
         return ;
     }
 
-    std::cout << "====> RESPONSE: " << client.response_str << std::endl;
+    // std::cout << "====> RESPONSE: " << client.response_str << std::endl;
 
     size_t remaining = client.response_str.size() - client.bytes_sent;
 
