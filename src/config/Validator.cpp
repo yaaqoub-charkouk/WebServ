@@ -1,5 +1,7 @@
 #include "config/Validator.hpp"
 #include <sstream>
+#include <sys/stat.h>
+#include <unistd.h>
 
 Validator::Validator(const std::vector<ServerConfig>& servers)
 	: servers(servers)
@@ -111,7 +113,7 @@ void Validator::validateLocation(const LocationConfig& location)
 				ss << "CGI extension must start with dot: " << it->first;
 				throw ValidatorException(ss.str());
 			}
-			if (it->second.empty()) // Maybe check the path is valid
+			if (!isValidCgiInterpreterPath(it->second)) // Maybe check the path is valid
 			{
 				std::stringstream ss;
 				ss << "Invalid CGI interpreter path: " << it->second;
@@ -166,4 +168,13 @@ bool Validator::isValidMethod(const std::string& method) const
 bool Validator::isValidCgiExtension(const std::string& ext) const
 {
 	return !ext.empty() && ext[0] == '.';
+}
+
+bool Validator::isValidCgiInterpreterPath(const std::string& path) const
+{
+	struct stat st;
+	if (!path.empty() && stat(path.c_str(), &st) == 0 
+		&& S_ISREG(st.st_mode) && access(path.c_str(), X_OK) == 0)
+		return true;
+	return false;
 }

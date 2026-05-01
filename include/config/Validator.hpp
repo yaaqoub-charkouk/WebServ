@@ -22,6 +22,7 @@ private:
 	bool isValidRedirectCode(int code) const;
 	bool isValidMethod(const std::string& method) const;
 	bool isValidCgiExtension(const std::string& ext) const;
+	bool isValidCgiInterpreterPath(const std::string& path) const;
 	
 public:
 	explicit Validator(const std::vector<ServerConfig>& servers);
