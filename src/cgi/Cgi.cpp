@@ -8,9 +8,10 @@ Cgi::Cgi() : pid(-1), status(0), envp(NULL), cgi_status(CGI_IDLE), start_time(0)
     script_out[1] = -1;
 };
 
-Cgi::Cgi(const HttpRequest &req, const std::string &scriptPath, time_t timeout)
-    : pid(-1), status(0), envp(NULL), cgi_status(CGI_IDLE), start_time(0), method(req.method), timeout(timeout), script_path(scriptPath)
-     , written(0), req_body(req.body)
+Cgi::Cgi(const HttpRequest &req, const std::string &scriptPath, const std::map<std::string, std::string> &cgiExtension, time_t timeout)
+    : pid(-1), status(0), envp(NULL), cgi_status(CGI_IDLE), start_time(0)
+    , method(req.method), timeout(timeout), script_path(scriptPath), cgi_extensions(cgiExtension)
+    , written(0), req_body(req.body)
 {
     script_in[0] = -1;
     script_in[1] = -1;
@@ -208,7 +209,6 @@ void Cgi::execute()
         };
         execve(script_interpreter.c_str(), argv, envp);
         free_envp();
-        cgi_status = CGI_EXEC_ERROR;
         _exit(1);
     }
     close(script_in[0]);
@@ -326,13 +326,14 @@ void    Cgi::buildEnvp(const HttpRequest &req)
 
     buildHeaders(req);
 
-    // for the bonus part php and python
     pos = script_name.find_last_of('.');
     std::string ext = (pos != std::string::npos) ? script_name.substr(pos) : "";
-    if (ext == ".py")
-        script_interpreter = "/usr/bin/python3";
-    else if (ext == ".php")
-        script_interpreter = "/usr/bin/php";
+    if (cgi_extensions.count(ext))
+        script_interpreter = cgi_extensions.at(ext);
+    // if (ext == ".py")
+    //     script_interpreter = "/usr/bin/python3";
+    // else if (ext == ".php")
+    //     script_interpreter = "/usr/bin/php";
     else
     {
         cgi_status = CGI_ENV_ERROR;

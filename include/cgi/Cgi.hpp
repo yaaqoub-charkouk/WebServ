@@ -46,6 +46,7 @@ private:
     std::string request_uri;
     std::string query_string;
     std::string script_path;
+    std::map<std::string, std::string> cgi_extensions;
     std::string script_name;
     std::string script_interpreter;
     std::map<std::string, std::string> headers;
@@ -63,7 +64,7 @@ private:
     void parseOutputHeaders(const std::string &output);
 public:
     Cgi();
-    Cgi(const HttpRequest &req, const std::string &scriptPath, time_t timeout = 5);
+    Cgi(const HttpRequest &req, const std::string &scriptPath, const std::map<std::string, std::string> &cgiExtension, time_t timeout = 5);
     ~Cgi();
     void    closePipes();
     void    execute();

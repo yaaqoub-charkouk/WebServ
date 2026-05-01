@@ -172,7 +172,8 @@ void RequestHandler::handleCgi(Client& client, const LocationConfig* location)
     }
 
     HttpRequest cgiRequest;
-    cgiRequest.headers = client.request.headers;//For cookies
+    if (client.request.headers.find("cookie") != client.request.headers.end())//For cookies
+        cgiRequest.headers["cookie"] = client.request.headers.at("cookie");
     cgiRequest.method = client.request.method;
     cgiRequest.uri = client.request.uri;
     cgiRequest.body = client.request.body;
@@ -183,7 +184,7 @@ void RequestHandler::handleCgi(Client& client, const LocationConfig* location)
     contentLength << cgiRequest.contentLength;
     cgiRequest.headers["Content-Length"] = contentLength.str();
 
-    Cgi* cgi_init = new Cgi(cgiRequest, scriptPath); // allocate;
+    Cgi* cgi_init = new Cgi(cgiRequest, scriptPath, location->getCgiExtensions()); // allocate;
     // assign cgi to client 
     client.cgi = cgi_init;
 

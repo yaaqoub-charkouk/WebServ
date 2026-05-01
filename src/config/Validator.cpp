@@ -100,13 +100,23 @@ void Validator::validateLocation(const LocationConfig& location)
 			throw ValidatorException("Redirect URL cannot be empty");
 	}
 
-	if (!location.getCgiExtension().empty())
+	if (!location.getCgiExtensions().empty())
 	{
-		if (!isValidCgiExtension(location.getCgiExtension()))
+		std::map<std::string, std::string>::const_iterator it;
+		for (it = location.getCgiExtensions().begin(); it != location.getCgiExtensions().end(); ++it)
 		{
-			std::stringstream ss;
-			ss << "CGI extension must start with dot: " << location.getCgiExtension();
-			throw ValidatorException(ss.str());
+			if (!isValidCgiExtension(it->first))
+			{
+				std::stringstream ss;
+				ss << "CGI extension must start with dot: " << it->first;
+				throw ValidatorException(ss.str());
+			}
+			if (it->second.empty()) // Maybe check the path is valid
+			{
+				std::stringstream ss;
+				ss << "Invalid CGI interpreter path: " << it->second;
+				throw ValidatorException(ss.str());
+			}
 		}
 	}
 
