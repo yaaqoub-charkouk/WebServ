@@ -184,7 +184,7 @@ void    Server::readFromClient(int  client_fd)
                         // cgi_clients[client.cgi->script_out[0]] = CgiClient(pfd, client.cgi, client.response_str); // pfd is for the client who received the request
                         std::cout << "new cgi client fd : " << client_fd << std::endl;
                         cgi_clients.insert(std::make_pair(client.cgi->script_out[0], CgiClient(client_fd, client.cgi)));
-                        // if (client.cgi->script_in[1] != -1)
+                        if (client.cgi->script_in[1] != -1) // adding script_in[1] only in case of POST request
                             cgi_clients.insert(std::make_pair(client.cgi->script_in[1], CgiClient(client_fd, client.cgi)));
                         
                         client.isCgi = true;

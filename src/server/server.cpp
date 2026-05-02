@@ -102,7 +102,7 @@ void    Server::run()
 
                     // pollFds[i].revents = 0; // why 
                     // pollFds[i].events = POLLIN; DANGER
-                    if (pollFds[i].revents & (POLLIN | POLLHUP)) // Added the POLLHUP so we read even if the child closed the pipe
+                    if (pollFds[i].revents & POLLIN) // Added the POLLHUP so we read even if the child closed the pipe
                         processCgiReadEvent(pollFds[i].fd); // DANGER : invalid reference , allocating new client while processing another cgi_client
                     else if (pollFds[i].revents & POLLOUT)
                         processCgiWriteEvent(pollFds[i].fd);
@@ -184,6 +184,7 @@ void    Server::closeSocket(int fd)
         {
             close_cgi_client(client.cgi->script_out[0]); // DANGER : the method closes cgi fd
             // close the other cgi pipe . script_in[1]
+            close_cgi_client(client.cgi->script_in[1]);
         }
         clients.erase(fd);
     }

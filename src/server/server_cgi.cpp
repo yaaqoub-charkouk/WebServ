@@ -50,7 +50,7 @@ void    Server::add_cgi_pipes_to_pollFds(int script_in, int script_out)
 
 void    Server::processCgiReadEvent(int cgi_pipe) // DANGER : reference may be invalid after vector reallocate !!!
 {
-    std::cout << "  processCgiReadEvent" << std::endl;
+    std::cout << "  processCgiReadEvent :  " << cgi_pipe << std::endl;
 
     CgiClient& cgi_client = cgi_clients.at(cgi_pipe);
 
@@ -146,7 +146,7 @@ void    Server::processCgiWriteEvent(int cgi_pipe) // DANGER : reference may be 
                         {
                             pollFds.erase(pollFds.begin() + i);
                             clientRemoved = true;
-                            break ;
+                            // break ;
                         }
                     }
 
