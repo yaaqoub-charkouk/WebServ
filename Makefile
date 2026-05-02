@@ -49,6 +49,7 @@ HEADERS = include/config/ConfigException.hpp \
           include/config/Validator.hpp \
           include/server/server.hpp \
 		  include/client/Client.hpp \
+		  include/client/CgiClient.hpp \
           include/response/HttpResponse.hpp \
           include/response/FileUtils.hpp \
           include/cgi/Cgi.hpp \

@@ -1,13 +1,8 @@
 # pragma once
 
-# include <string>
-# include <sstream>
-# include <iostream>
-# include "../config/Parser.hpp"
-# include "../request/HttpRequest.hpp"
-# include "../response/HttpResponse.hpp"
-# include "../cgi/Cgi.hpp"
-# include <poll.h>
+
+
+# include "CgiClient.hpp"
 
 #include <algorithm>
 

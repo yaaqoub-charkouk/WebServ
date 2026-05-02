@@ -99,13 +99,15 @@ void    Server::run()
 
             if (pollFds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
                 if (isCgiPipe(pollFds[i].fd)) {
+                    std::cout << "=====----++++==== pollFds[i].fd : " << pollFds[i].fd  << std::endl;
+                    
+                    // if (pollFds[i].revents & POLLIN) // Added the POLLHUP so we read even if the child closed the pipe
+                    //     processCgiReadEvent(pollFds[i].fd); // DANGER : invalid reference , allocating new client while processing another cgi_client
+                    // else if (pollFds[i].revents & POLLOUT)
+                    //     processCgiWriteEvent(pollFds[i].fd);
 
-                    // pollFds[i].revents = 0; // why 
-                    // pollFds[i].events = POLLIN; DANGER
-                    if (pollFds[i].revents & POLLIN) // Added the POLLHUP so we read even if the child closed the pipe
-                        processCgiReadEvent(pollFds[i].fd); // DANGER : invalid reference , allocating new client while processing another cgi_client
-                    else if (pollFds[i].revents & POLLOUT)
-                        processCgiWriteEvent(pollFds[i].fd);
+                    if (pollFds[i].revents & POLLHUP)
+                        processCgiEvent(pollFds[i].fd);
 
                     std::cout << "cgi pipe got POLLHUP" << std::endl;
                     // continue;

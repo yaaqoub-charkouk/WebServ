@@ -2,6 +2,18 @@
 
 
 
+void    Server::processCgiEvent(int cgi_pipe)
+{
+    CgiClient& cgi_client = cgi_clients.at(cgi_pipe);
+    std::cout << "process cgi event : is write " << cgi_client.is_write_end << std::endl;
+
+    if (cgi_client.is_write_end)
+        processCgiWriteEvent(cgi_pipe);
+    else
+        processCgiReadEvent(cgi_pipe);
+}
+
+
 // ====== cgi ========
 
 void    Server::make_cgi_pipes_nonblocking(int& script_in, int& script_out)
@@ -149,7 +161,11 @@ void    Server::processCgiWriteEvent(int cgi_pipe) // DANGER : reference may be 
                             // break ;
                         }
                     }
-
+        
+        close(cgi_client.cgi->script_in[1]);
+        cgi_client.cgi->script_in[1] = -1;
+        std::cout << "cgi done writing : " << cgi_pipe << std::endl;
+        // exit(0);
         // std::cout << "cgi pipe got removed from pollFds : " << cgi_pipe << std::endl;
     cgi_client.processed = true;
     
