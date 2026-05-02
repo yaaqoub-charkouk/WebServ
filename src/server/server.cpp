@@ -144,7 +144,7 @@ void    Server::run()
                 //     << "    i : " << i << std::endl;
             }
 
-
+            
             if (!clientRemoved)
                 ++i;
         }
@@ -181,6 +181,11 @@ void    Server::closeSocket(int fd)
     // }
     else // add if for cgi.
     {
+        if (isCgiPipe(fd))
+        {
+            std::cout << "close socket called on " << fd << std::endl;
+            exit(0);
+        }
         Client& client = clients.at(fd);
         if (client.isCgi)
         {

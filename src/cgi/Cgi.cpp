@@ -291,8 +291,8 @@ void    Cgi::write_body()
         else if (written == req_body.size())
         {
             cgi_status = CGI_DONE_WRITING;
-            close(script_in[1]);
-            script_in[1] = -1;
+            // close(script_in[1]); // LEHWAAAA
+            // script_in[1] = -1;
             return ;
         }
         else if (write_bytes == -1 && (errno == EAGAIN || errno == EWOULDBLOCK))
