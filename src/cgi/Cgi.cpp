@@ -259,9 +259,9 @@ void Cgi::execute()
 
 void    Cgi::read_output()
 {
-    std::cout << "read output from cgi child" << std::endl;
     if (cgi_status == CGI_READING)
     {
+        std::cout << "read output from cgi child" << std::endl;
         char buff[4096];
         // std::cout << "read 10 bytes " << std::endl;
         read_bytes = read(script_out[0], buff, sizeof(buff));

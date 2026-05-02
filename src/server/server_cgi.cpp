@@ -164,6 +164,8 @@ void    Server::processCgiWriteEvent(int cgi_pipe) // DANGER : reference may be 
         
         close(cgi_client.cgi->script_in[1]);
         cgi_client.cgi->script_in[1] = -1;
+
+        cgi_client.cgi->cgi_status = CGI_READING;
         std::cout << "cgi done writing : " << cgi_pipe << std::endl;
         // exit(0);
         // std::cout << "cgi pipe got removed from pollFds : " << cgi_pipe << std::endl;
