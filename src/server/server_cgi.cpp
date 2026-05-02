@@ -66,7 +66,7 @@ void    Server::processCgiReadEvent(int cgi_pipe) // DANGER : reference may be i
 
     if (clients.find(cgi_client.http_client_fd) == clients.end())
     {
-        std::cout << "http client closed :" << cgi_client.http_client_fd << " for cgi : " << cgi_pipe << std::endl;
+        std::cout << "DANGER : http client closed :" << cgi_client.http_client_fd << " for cgi : " << cgi_pipe << std::endl;
 
         // close_cgi_client(cgi_pipe);
         return ;
@@ -92,15 +92,15 @@ void    Server::processCgiReadEvent(int cgi_pipe) // DANGER : reference may be i
 
         // close_cgi_client(cgi_pipe); // no need because client will close it ;
         // remove from poll
-            for (size_t i = 0; i < pollFds.size(); ++i)
-            {
-                if (pollFds[i].fd == cgi_pipe)
-                {
-                    pollFds.erase(pollFds.begin() + i);
-                    clientRemoved = true;
-                    break ;
-                }
-            }
+                    for (size_t i = 0; i < pollFds.size(); ++i)
+                    {
+                        if (pollFds[i].fd == cgi_pipe)
+                        {
+                            pollFds.erase(pollFds.begin() + i);
+                            clientRemoved = true;
+                            break ;
+                        }
+                    }
 
         // std::cout << "cgi pipe got removed from pollFds : " << cgi_pipe << std::endl;
     cgi_client.processed = true;
@@ -135,20 +135,20 @@ void    Server::processCgiWriteEvent(int cgi_pipe) // DANGER : reference may be 
         return ;
     }
 
-    cgi_client.cgi->write_body(); // !!
+    cgi_client.cgi->write_body(); // the method why i need to add this pipe to cgi_clients
 
     if (cgi_client.cgi->cgi_status == CGI_DONE_WRITING)
     {
         // remove from poll
-            for (size_t i = 0; i < pollFds.size(); ++i)
-            {
-                if (pollFds[i].fd == cgi_pipe)
-                {
-                    pollFds.erase(pollFds.begin() + i);
-                    clientRemoved = true;
-                    break ;
-                }
-            }
+                    for (size_t i = 0; i < pollFds.size(); ++i)
+                    {
+                        if (pollFds[i].fd == cgi_pipe)
+                        {
+                            pollFds.erase(pollFds.begin() + i);
+                            clientRemoved = true;
+                            break ;
+                        }
+                    }
 
         // std::cout << "cgi pipe got removed from pollFds : " << cgi_pipe << std::endl;
     cgi_client.processed = true;

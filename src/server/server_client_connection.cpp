@@ -184,7 +184,9 @@ void    Server::readFromClient(int  client_fd)
                         // cgi_clients[client.cgi->script_out[0]] = CgiClient(pfd, client.cgi, client.response_str); // pfd is for the client who received the request
                         std::cout << "new cgi client fd : " << client_fd << std::endl;
                         cgi_clients.insert(std::make_pair(client.cgi->script_out[0], CgiClient(client_fd, client.cgi)));
-
+                        // if (client.cgi->script_in[1] != -1)
+                            cgi_clients.insert(std::make_pair(client.cgi->script_in[1], CgiClient(client_fd, client.cgi)));
+                        
                         client.isCgi = true;
                         
                         std::cout << "+++++++++++++++++++++++++++++++++" << std::endl;
@@ -221,11 +223,8 @@ void    Server::readFromClient(int  client_fd)
             }
             else if (client.state == ERROR) {
                 // send erorr page
-<<<<<<< HEAD
+                
                 // std::cerr << "request parse error " << std::endl;
-=======
-                std::cerr << "========================= request parse error " << std::endl;
->>>>>>> 6b3d016b67092f62860220bee2bf094321fdf08a
 
                 client.response = RequestHandler::makeErrorResponse(403, client.serverConfig);
                 client.response_str = client.response.getResponse();
@@ -319,6 +318,8 @@ void Server::closeClient(int clientFd) // client who calls it = 100% sure that c
     {
         
         close_cgi_client(client.cgi->script_out[0]);
+
+        close_cgi_client(client.cgi->script_in[1]);
         // close the other pipe .
     }
 
