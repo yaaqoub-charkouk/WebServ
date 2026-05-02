@@ -3,7 +3,7 @@
 
 #include <string>
 #include <vector>
-
+#include <map>
 class LocationConfig
 {
 private:
@@ -13,7 +13,7 @@ private:
 	std::string index;
 	bool autoindex;
 	std::string uploadStore;
-	std::string cgiExtension;
+	std::map<std::string, std::string> cgiExtensions;
 	int redirectCode;
 	std::string redirectUrl;
 
@@ -30,7 +30,7 @@ public:
 	const std::string& getIndex() const;
 	bool getAutoindex() const;
 	const std::string& getUploadStore() const;
-	const std::string& getCgiExtension() const;
+	const std::map<std::string, std::string>& getCgiExtensions() const;
 	int getRedirectCode() const;
 	const std::string& getRedirectUrl() const;
 
@@ -40,7 +40,7 @@ public:
 	void setIndex(const std::string& index);
 	void setAutoindex(bool autoindex);
 	void setUploadStore(const std::string& uploadStore);
-	void setCgiExtension(const std::string& cgiExtension);
+	void addCgiExtension(const std::string& ext, const std::string& interpreter);
 	void setRedirect(int code, const std::string& url);
 
 	bool hasMethod(const std::string& method) const;
@@ -54,7 +54,7 @@ inline const std::string& LocationConfig::getRoot() const { return root; }
 inline const std::string& LocationConfig::getIndex() const { return index; }
 inline bool LocationConfig::getAutoindex() const { return autoindex; }
 inline const std::string& LocationConfig::getUploadStore() const { return uploadStore; }
-inline const std::string& LocationConfig::getCgiExtension() const { return cgiExtension; }
+inline const std::map<std::string, std::string>& LocationConfig::getCgiExtensions() const { return cgiExtensions; }
 inline int LocationConfig::getRedirectCode() const { return redirectCode; }
 inline const std::string& LocationConfig::getRedirectUrl() const { return redirectUrl; }
 
@@ -64,7 +64,7 @@ inline void LocationConfig::setRoot(const std::string& root) { this->root = root
 inline void LocationConfig::setIndex(const std::string& index) { this->index = index; }
 inline void LocationConfig::setAutoindex(bool autoindex) { this->autoindex = autoindex; }
 inline void LocationConfig::setUploadStore(const std::string& uploadStore) { this->uploadStore = uploadStore; }
-inline void LocationConfig::setCgiExtension(const std::string& cgiExtension) { this->cgiExtension = cgiExtension; }
+inline void LocationConfig::addCgiExtension(const std::string& ext, const std::string& interpreter) { cgiExtensions[ext] = interpreter; }
 inline bool LocationConfig::hasRedirect() const { return redirectCode != 0; }
 
 #endif

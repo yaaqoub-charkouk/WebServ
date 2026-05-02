@@ -37,11 +37,15 @@ void    Server::add_cgi_pipes_to_pollFds(int script_in, int script_out)
     pollFds.push_back(pfd);
 
     // (void)script_in;
-    struct pollfd pfd_write;
-    pfd_write.fd = script_in;
-    pfd_write.events = POLLOUT;
-    pfd_write.revents = 0;
-    pollFds.push_back(pfd_write);
+    // No need to add it to pollFds since it s a GET request
+    if (script_in != -1)
+    {
+        struct pollfd pfd_write;
+        pfd_write.fd = script_in;
+        pfd_write.events = POLLOUT;
+        pfd_write.revents = 0;
+        pollFds.push_back(pfd_write);
+    }
 }
 
 void    Server::processCgiReadEvent(int cgi_pipe) // DANGER : reference may be invalid after vector reallocate !!!

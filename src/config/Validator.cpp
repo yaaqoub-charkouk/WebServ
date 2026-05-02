@@ -1,5 +1,7 @@
 #include "config/Validator.hpp"
 #include <sstream>
+#include <sys/stat.h>
+#include <unistd.h>
 
 Validator::Validator(const std::vector<ServerConfig>& servers)
 	: servers(servers)
@@ -100,13 +102,23 @@ void Validator::validateLocation(const LocationConfig& location)
 			throw ValidatorException("Redirect URL cannot be empty");
 	}
 
-	if (!location.getCgiExtension().empty())
+	if (!location.getCgiExtensions().empty())
 	{
-		if (!isValidCgiExtension(location.getCgiExtension()))
+		std::map<std::string, std::string>::const_iterator it;
+		for (it = location.getCgiExtensions().begin(); it != location.getCgiExtensions().end(); ++it)
 		{
-			std::stringstream ss;
-			ss << "CGI extension must start with dot: " << location.getCgiExtension();
-			throw ValidatorException(ss.str());
+			if (!isValidCgiExtension(it->first))
+			{
+				std::stringstream ss;
+				ss << "CGI extension must start with dot: " << it->first;
+				throw ValidatorException(ss.str());
+			}
+			if (!isValidCgiInterpreterPath(it->second)) // Maybe check the path is valid
+			{
+				std::stringstream ss;
+				ss << "Invalid CGI interpreter path: " << it->second;
+				throw ValidatorException(ss.str());
+			}
 		}
 	}
 
@@ -156,4 +168,13 @@ bool Validator::isValidMethod(const std::string& method) const
 bool Validator::isValidCgiExtension(const std::string& ext) const
 {
 	return !ext.empty() && ext[0] == '.';
+}
+
+bool Validator::isValidCgiInterpreterPath(const std::string& path) const
+{
+	struct stat st;
+	if (!path.empty() && stat(path.c_str(), &st) == 0 
+		&& S_ISREG(st.st_mode) && access(path.c_str(), X_OK) == 0)
+		return true;
+	return false;
 }

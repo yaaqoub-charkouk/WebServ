@@ -57,15 +57,25 @@ bool RequestHandler::isCgiRequest(const std::string& uri, const LocationConfig* 
     if (!location)
         return false;
 
-    const std::string& cgiExt = location->getCgiExtension();
+    const std::map<std::string, std::string>& cgiExt = location->getCgiExtensions();
+    std::map<std::string, std::string>::const_iterator it;
+
     if (cgiExt.empty())
         return false;
 
     std::string uriPath = stripQueryString(uri);
-    if (uriPath.length() < cgiExt.length())
-        return false;
-
-    return uriPath.compare(uriPath.length() - cgiExt.length(), cgiExt.length(), cgiExt) == 0;
+    // Need to be removed now that we have multiple cgi extensions
+    // if (uriPath.length() < cgiExt.begin()->first.length())
+    //     return false;
+    std::string ext;
+    for (it = cgiExt.begin(); it != cgiExt.end(); it++)
+    {
+        ext = it->first;
+        if (uriPath.length() >= ext.length() &&
+            uriPath.compare(uriPath.length() - ext.length(), ext.length(), ext) == 0)
+            return true;
+    }
+    return false;
 }
 
 HttpResponse RequestHandler::makeErrorResponse(

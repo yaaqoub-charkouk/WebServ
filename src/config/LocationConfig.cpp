@@ -7,7 +7,7 @@ LocationConfig::LocationConfig()
 	  index(""),
 	  autoindex(false),
 	  uploadStore(""),
-	  cgiExtension(""),
+	  cgiExtensions(),
 	  redirectCode(0),
 	  redirectUrl("")
 {
@@ -20,7 +20,7 @@ LocationConfig::LocationConfig(const std::string& path)
 	  index(""),
 	  autoindex(false),
 	  uploadStore(""),
-	  cgiExtension(""),
+	  cgiExtensions(),
 	  redirectCode(0),
 	  redirectUrl("")
 {
@@ -33,7 +33,7 @@ LocationConfig::LocationConfig(const LocationConfig& other)
 	  index(other.index),
 	  autoindex(other.autoindex),
 	  uploadStore(other.uploadStore),
-	  cgiExtension(other.cgiExtension),
+	  cgiExtensions(other.cgiExtensions),
 	  redirectCode(other.redirectCode),
 	  redirectUrl(other.redirectUrl)
 {
@@ -49,7 +49,7 @@ LocationConfig& LocationConfig::operator=(const LocationConfig& other)
 		index = other.index;
 		autoindex = other.autoindex;
 		uploadStore = other.uploadStore;
-		cgiExtension = other.cgiExtension;
+		cgiExtensions = other.cgiExtensions;
 		redirectCode = other.redirectCode;
 		redirectUrl = other.redirectUrl;
 	}

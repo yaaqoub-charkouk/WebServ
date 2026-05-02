@@ -116,6 +116,9 @@ void    Server::readFromClient(int  client_fd)
 
             // check client.state
             if (client.state == COMPLETE) { // call request handler
+                
+                std::cout << "REQUEST IS =======> :  " << client.request_str << std::endl;
+                std::cout << "BODY IS ==========> :  " << client.request.body << std::endl;
 
 				std::cout << "========== headers =======> " << client.header_str << std::endl;
 
@@ -218,7 +221,11 @@ void    Server::readFromClient(int  client_fd)
             }
             else if (client.state == ERROR) {
                 // send erorr page
+<<<<<<< HEAD
                 // std::cerr << "request parse error " << std::endl;
+=======
+                std::cerr << "========================= request parse error " << std::endl;
+>>>>>>> 6b3d016b67092f62860220bee2bf094321fdf08a
 
                 client.response = RequestHandler::makeErrorResponse(403, client.serverConfig);
                 client.response_str = client.response.getResponse();

@@ -102,7 +102,7 @@ void    Server::run()
 
                     // pollFds[i].revents = 0; // why 
                     // pollFds[i].events = POLLIN; DANGER
-                    if (pollFds[i].revents & POLLIN)
+                    if (pollFds[i].revents & (POLLIN | POLLHUP)) // Added the POLLHUP so we read even if the child closed the pipe
                         processCgiReadEvent(pollFds[i].fd); // DANGER : invalid reference , allocating new client while processing another cgi_client
                     else if (pollFds[i].revents & POLLOUT)
                         processCgiWriteEvent(pollFds[i].fd);

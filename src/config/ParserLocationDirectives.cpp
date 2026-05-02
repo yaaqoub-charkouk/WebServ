@@ -71,11 +71,12 @@ void Parser::parseCgiExtension(LocationConfig& location)
 {
 	advance();
 	std::string ext = expectWord("cgi_extension directive");
+	std::string interpreter = expectWord("cgi_extension directive");
 
 	expect(TOKEN_SEMICOLON, "cgi_extension directive");
 	advance();
 
-	location.setCgiExtension(ext);
+	location.addCgiExtension(ext, interpreter);
 }
 
 void Parser::parseReturn(LocationConfig& location)

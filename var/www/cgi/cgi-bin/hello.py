@@ -4,6 +4,7 @@ import sys
 #!/usr/bin/env python3
 
 
+
 print("HELLO from CGI")
 print()
 sys.stdout.flush()
