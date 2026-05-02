@@ -117,6 +117,8 @@ void    Server::readFromClient(int  client_fd)
             // check client.state
             if (client.state == COMPLETE) { // call request handler
 
+				std::cout << "========== headers =======> " << client.header_str << std::endl;
+
                 cookies.checkRequest(client.request);
                 if (cookies.shouldSetCookie)
                     client.response.setHeaders(cookies.key, cookies.value);
@@ -196,7 +198,8 @@ void    Server::readFromClient(int  client_fd)
                 }
                         // return handleCgi(client.request.method, client.request.uri, client.request.body, server, location);
 
-                std::cout << "http client+++++++++" << std::endl;
+                // std::cout << "http client+++++++++" << std::endl;
+
                 client.response  = RequestHandler::handleRequest(client);
                 // Cookies checking
                 // cookies.checkRequest(client.request);
@@ -211,11 +214,11 @@ void    Server::readFromClient(int  client_fd)
 
                 // pfd.events = POLLOUT; // DANGER ! invalid reference
                 // pfd.revents = 0;
-                std::cout << "completed request and pollout ready" << std::endl;
+                // std::cout << "completed request and pollout ready" << std::endl;
             }
             else if (client.state == ERROR) {
                 // send erorr page
-                std::cerr << "request parse error " << std::endl;
+                // std::cerr << "request parse error " << std::endl;
 
                 client.response = RequestHandler::makeErrorResponse(403, client.serverConfig);
                 client.response_str = client.response.getResponse();
@@ -256,7 +259,7 @@ void    Server::readFromClient(int  client_fd)
 
 void Server::writeToClient(int  client_fd) // DANGER : best practice to take 
 {
-    std::cout << "====> WRITING TO CLIENT : " << client_fd << std::endl;
+    // std::cout << "====> WRITING TO CLIENT : " << client_fd << std::endl;
     Client& client = clients.at(client_fd);
 
     if (client.bytes_sent >= client.response_str.size()) {
@@ -264,7 +267,7 @@ void Server::writeToClient(int  client_fd) // DANGER : best practice to take
         return ;
     }
 
-    std::cout << "====> RESPONSE: " << client.response_str << std::endl;
+    // std::cout << "====> RESPONSE: " << client.response_str << std::endl;
 
     size_t remaining = client.response_str.size() - client.bytes_sent;
 
@@ -301,7 +304,7 @@ void Server::writeToClient(int  client_fd) // DANGER : best practice to take
 
 void Server::closeClient(int clientFd) // client who calls it = 100% sure that client exist.
 {
-    std::cout << "closeClient called" << std::endl;
+    // std::cout << "closeClient called" << std::endl;
 
 
     Client& client = clients.at(clientFd);

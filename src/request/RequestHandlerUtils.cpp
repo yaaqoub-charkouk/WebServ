@@ -1,5 +1,6 @@
 #include "../../include/request/RequestHandler.hpp"
 #include <sys/stat.h>
+#include <iostream>
 
 std::string RequestHandler::buildFilePath(
     const std::string& uri,
@@ -45,6 +46,7 @@ std::string RequestHandler::buildFilePath(
 std::string RequestHandler::stripQueryString(const std::string& uri)
 {
     size_t qPos = uri.find('?');
+    std::cout << "uri : " << uri << std::endl;
     if (qPos == std::string::npos)
         return uri;
     return uri.substr(0, qPos);

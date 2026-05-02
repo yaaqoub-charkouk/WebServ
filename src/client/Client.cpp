@@ -134,6 +134,7 @@ void    Client::parseRequestBody()
         }
         request.body.clear();
         request.body = request_str.substr(body_start, request.contentLength);
+		std::cout << "body: " << request.body << std::endl;
     }
     state = COMPLETE;
 }

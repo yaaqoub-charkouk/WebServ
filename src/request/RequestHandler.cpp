@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <fstream>
 #include <sstream>
+#include <ctime>
 #include "../../include/cgi/Cgi.hpp"
 #include "../../include/client/Client.hpp"
 
@@ -85,6 +86,63 @@ HttpResponse RequestHandler::handleGet(
     return HttpResponse::makeFileRes(filePath);
 }
 
+static std::string extractFilenameFromMultipart(const std::string& body)
+{
+    // Find Content-Disposition header in multipart body
+    std::string contentDisposition = "Content-Disposition: form-data";
+    size_t pos = body.find(contentDisposition);
+    
+    if (pos == std::string::npos)
+        return "";
+    
+    // Find filename="..." after Content-Disposition
+    std::string filenameMarker = "filename=\"";
+    size_t filePos = body.find(filenameMarker, pos);
+    
+    if (filePos == std::string::npos)
+        return "";
+    
+    filePos += filenameMarker.length();
+    size_t endPos = body.find("\"", filePos);
+    
+    if (endPos == std::string::npos)
+        return "";
+    
+    return body.substr(filePos, endPos - filePos);
+}
+
+static std::string extractFileContentFromMultipart(const std::string& body, const std::string& boundary)
+{
+    // Find the first boundary
+    std::string boundaryStr = "--" + boundary;
+    size_t firstBoundary = body.find(boundaryStr);
+    
+    if (firstBoundary == std::string::npos)
+        return body;
+    
+    // Find the end of headers (double CRLF)
+    size_t headerEnd = body.find("\r\n\r\n", firstBoundary);
+    if (headerEnd == std::string::npos)
+        headerEnd = body.find("\n\n", firstBoundary);
+    
+    if (headerEnd == std::string::npos)
+        return body;
+    
+    headerEnd += (body[headerEnd] == '\r') ? 4 : 2;
+    
+    // Find the next boundary (file content ends before it)
+    size_t nextBoundary = body.find(boundaryStr, headerEnd);
+    
+    if (nextBoundary == std::string::npos)
+        nextBoundary = body.length();
+    
+    // Remove trailing CRLF or LF before boundary
+    while (nextBoundary > headerEnd && (body[nextBoundary - 1] == '\n' || body[nextBoundary - 1] == '\r'))
+        nextBoundary--;
+    
+    return body.substr(headerEnd, nextBoundary - headerEnd);
+}
+
 HttpResponse RequestHandler::handlePost(
     const std::string& uri,
     const std::string& body,
@@ -105,14 +163,77 @@ HttpResponse RequestHandler::handlePost(
     if (uploadDir.empty())
         uploadDir = server.getRoot();
 
-    std::string filename = "upload_" + uri;
+    std::string filename = "";
+    std::string fileContent = body;
+
+    // Check if this is a multipart form data request
+    if (body.find("Content-Disposition") != std::string::npos && body.find("filename=") != std::string::npos)
+    {
+        // Extract boundary from Content-Type header
+        std::string boundary = "";
+        size_t boundaryPos = body.find("boundary=");
+        if (boundaryPos != std::string::npos)
+        {
+            boundaryPos += 9;
+            size_t boundaryEnd = body.find("\r\n", boundaryPos);
+            if (boundaryEnd == std::string::npos)
+                boundaryEnd = body.find("\n", boundaryPos);
+            if (boundaryEnd != std::string::npos)
+                boundary = body.substr(boundaryPos, boundaryEnd - boundaryPos);
+        }
+        
+        // Fallback: extract boundary from the body itself
+        if (boundary.empty()) // exist in headers if you want to support multipart form data, but just in case we will try to extract it from the body
+        {
+            size_t boundStart = body.find("--");
+            if (boundStart != std::string::npos)
+            {
+                size_t boundEnd = body.find("\r\n", boundStart);
+                if (boundEnd == std::string::npos)
+                    boundEnd = body.find("\n", boundStart);
+                if (boundEnd != std::string::npos)
+                    boundary = body.substr(boundStart + 2, boundEnd - boundStart - 2);
+            }
+        }
+        
+        // Extract filename from multipart data
+        filename = extractFilenameFromMultipart(body);
+        fileContent = extractFileContentFromMultipart(body, boundary);
+		// check if boundary still exist in the body
+    }
+    
+    // Fallback: extract from URL if no filename in multipart
+    if (filename.empty())
+    {
+        std::string uriPath = stripQueryString(uri);
+        const std::string& locationPath = location->getPath();
+        filename = uriPath;
+        
+        if (!locationPath.empty() && uriPath.find(locationPath) == 0)
+        {
+            filename = uriPath.substr(locationPath.length());
+        }
+        
+        // Remove leading slash if present
+        if (!filename.empty() && filename[0] == '/')
+            filename = filename.substr(1);
+    }
+    
+    // Use generated filename if still empty
+    if (filename.empty())
+    {
+        std::ostringstream oss;
+        oss << "upload_" << filename;
+        filename = oss.str();
+    }
+    
     std::string savePath = joinPath(uploadDir, filename);
 
     std::ofstream outfile(savePath.c_str(), std::ios::binary);
     if (!outfile.is_open())
         return makeErrorResponse(500, server);
 
-    outfile << body;
+    outfile << fileContent;
     outfile.close();
 
     HttpResponse response;
