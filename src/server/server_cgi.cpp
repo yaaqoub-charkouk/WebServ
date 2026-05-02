@@ -142,15 +142,18 @@ void    Server::processCgiWriteEvent(int cgi_pipe) // DANGER : reference may be 
     if (clients.find(cgi_client.http_client_fd) == clients.end())
     {
         std::cout << "http client closed :" << cgi_client.http_client_fd << " for cgi : " << cgi_pipe << std::endl;
+        std::cout << "~~~~~~ cgi pipe is write : " << cgi_client.is_write_end << std::endl;
 
         // close_cgi_client(cgi_pipe);
         return ;
     }
 
     cgi_client.cgi->write_body(); // the method why i need to add this pipe to cgi_clients
-
+    
     if (cgi_client.cgi->cgi_status == CGI_DONE_WRITING)
     {
+        cgi_client.cgi->cgi_status = CGI_READING;
+        cgi_client.processed = true;
         // remove from poll
                     for (size_t i = 0; i < pollFds.size(); ++i)
                     {
@@ -162,14 +165,13 @@ void    Server::processCgiWriteEvent(int cgi_pipe) // DANGER : reference may be 
                         }
                     }
         
-        close(cgi_client.cgi->script_in[1]);
-        // cgi_client.cgi->script_in[1] = -1;
+        close(cgi_client.cgi->script_in[1]); // closing the fd let pipe re use it again while we still have cgi_client entry with the same fd
+        cgi_client.cgi->script_in[1] = -1;
+        cgi_clients.erase(cgi_pipe);
 
-        cgi_client.cgi->cgi_status = CGI_READING;
         std::cout << "cgi done writing : " << cgi_pipe << std::endl;
         // exit(0);
         // std::cout << "cgi pipe got removed from pollFds : " << cgi_pipe << std::endl;
-    cgi_client.processed = true;
     
     }
 }

@@ -13,10 +13,19 @@ print("Content-Type: text/plain")
 print()
 print(f"HELLO {name} from {city} CGI")
 print("Starting CGI process...")
+# while(1)
+#     continue
 print(f"BYE {name} from {city} CGI")
-
 # Command to test
 #  curl -v -X POST \
 #   -H "Content-Type: application/x-www-form-urlencoded" \
 #   -d "name=alice&city=rabat" \
 #   http://localhost:4242/cgi/hello_post.py
+
+
+
+# ➜  WebServ git:(yaaqoub) ✗ curl -X POST \
+#   -H "Content-Type: application/x-www-form-urlencoded" \
+#   -d "name=alice&city=rabat" \
+#   http://localhost:4242/cgi/hello_post.py
+# curl: (1) Unsupported HTTP/1 subversion in response
