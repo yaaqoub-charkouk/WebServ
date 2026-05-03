@@ -22,6 +22,8 @@ HttpResponse RequestHandler::handleRequest(const Client& client)
     // if ((request.method == "GET" || request.method == "POST") && isCgiRequest(request.uri, location))
     //     return handleCgi(request.method, request.uri, request.body, server, location);
 
+    std::cout << "Root : .... " << request.uri << std::endl;
+
     if (request.method == "GET")
         return handleGet(request.uri, server, location);
     else if (request.method == "POST")
@@ -252,6 +254,7 @@ HttpResponse RequestHandler::handleDelete(
         return makeErrorResponse(405, server);
 
     std::string filePath = buildFilePath(uri, server, location);
+    std::cout << "PATH : " << filePath << std::endl ;
 
     if (!fileExists(filePath) || directoryExists(filePath))
         return makeErrorResponse(404, server);
