@@ -163,7 +163,21 @@ HttpResponse RequestHandler::handlePost(
 
     std::string uploadDir = location->getUploadStore();
     if (uploadDir.empty())
-        uploadDir = server.getRoot();
+        return makeErrorResponse(403, server);
+
+    std::string baseRoot = server.getRoot();
+    if (!location->getRoot().empty())
+        baseRoot = location->getRoot();
+
+    std::string locPath = location->getPath();
+    std::string storePath = uploadDir;
+    if (!locPath.empty() && locPath[0] == '/')
+        locPath = locPath.substr(1);
+    if (!storePath.empty() && storePath[0] == '/')
+        storePath = storePath.substr(1);
+
+    if (!locPath.empty() && !storePath.empty() && locPath == storePath)
+        uploadDir = joinPath(baseRoot, storePath);
 
     std::string filename = "";
     std::string fileContent = body;
