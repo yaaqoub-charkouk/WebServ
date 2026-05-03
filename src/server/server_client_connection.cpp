@@ -217,8 +217,6 @@ void    Server::readFromClient(int  client_fd)
                 changePollEvent(client_fd, POLLOUT);
                 // call changePollEvent instead ;
 
-                // pfd.events = POLLOUT; // DANGER ! invalid reference
-                // pfd.revents = 0;
                 // std::cout << "completed request and pollout ready" << std::endl;
             }
             else if (client.state == ERROR) {
@@ -226,7 +224,7 @@ void    Server::readFromClient(int  client_fd)
                 
                 // std::cerr << "request parse error " << std::endl;
 
-                client.response = RequestHandler::makeErrorResponse(403, client.serverConfig);
+                client.response = RequestHandler::makeErrorResponse(client.error_code, client.serverConfig);
                 client.response_str = client.response.getResponse();
                 // destruct cgi* ;
                 changePollEvent(client_fd, POLLOUT);

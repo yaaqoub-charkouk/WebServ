@@ -6,6 +6,7 @@ Client::Client(const ServerConfig& serverConfig,  int clientPort, std::string cl
                  : serverConfig(serverConfig), clientPort(clientPort), clientAddress(clientAddress),
                   state(READING_HEADERS), isCgi(false), isCgiResponseError(false), cgi(NULL), bytes_sent(0) {
     request.contentLength = 0;
+    error_code = 400;
 }
 
 Client::~Client()
@@ -65,15 +66,18 @@ void    Client::parseRequestHeaders()
         std::string extra;
         if (!(streamLine >> request.method >> request.uri >> request.version) || (streamLine >> extra)) {
             state = ERROR;
+            error_code = 400;
             return ;
         };
         if (!(request.method == "GET" || request.method == "POST" || request.method == "DELETE")) { // || PUT
             state = ERROR;
+            error_code = 501;
             return ;
         }
     }
     else {
         state = ERROR;
+        error_code = 400;
         return ;
     }
 
@@ -88,6 +92,7 @@ void    Client::parseRequestHeaders()
         size_t  p = line.find(":");
         if (p == std::string::npos) {
             state = ERROR;
+            error_code = 400;
             return ;
         }
         std::string key = line.substr(0, p);
@@ -118,11 +123,13 @@ void    Client::parseRequestBody()
         char extra;
         if (!(length_stream >> length) || (length_stream >> extra)) {
             state = ERROR;
+            error_code = 400;
             return ;
         }
         size_t client_max_body_size = serverConfig.getClientMaxBodySize(); // using serverConfig instead
         if (length > client_max_body_size) {
             state = ERROR;
+            error_code = 413;
             return ;
         }
 
