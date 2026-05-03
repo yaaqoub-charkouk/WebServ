@@ -28,12 +28,13 @@ public:
     std::string         clientAddress;
     
     // request parsing
-    std::string request_str;
-    HttpRequest request;
-    ParseState  state;
-    size_t      header_end_pos;
-    std::string header_str;
-    
+    std::string     request_str;
+    HttpRequest     request;
+    ParseState      state;
+    size_t          header_end_pos;
+    std::string     header_str;
+    unsigned int    error_code;
+
     // cgi 
     bool                isCgi;
     bool                isCgiResponseError;
