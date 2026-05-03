@@ -117,14 +117,14 @@ void    Server::readFromClient(int  client_fd)
             // check client.state
             if (client.state == COMPLETE) { // call request handler
                 
-                std::cout << "REQUEST IS =======> :  " << client.request_str << std::endl;
-                std::cout << "BODY IS ==========> :  " << client.request.body << std::endl;
+                // std::cout << "REQUEST IS =======> :  " << client.request_str << std::endl;
+                // std::cout << "BODY IS ==========> :  " << client.request.body << std::endl;
 
-				std::cout << "========== headers =======> " << client.header_str << std::endl;
+				// std::cout << "========== headers =======> " << client.header_str << std::endl;
 
-                cookies.checkRequest(client.request);
-                if (cookies.shouldSetCookie)
-                    client.response.setHeaders(cookies.key, cookies.value);
+                // cookies.checkRequest(client.request);
+                // if (cookies.shouldSetCookie)
+                //     client.response.setHeaders(cookies.key, cookies.value);
 
                 const LocationConfig* location = RequestHandler::findLocation(client.request.uri, client.serverConfig);
 
@@ -207,9 +207,9 @@ void    Server::readFromClient(int  client_fd)
 
                 client.response  = RequestHandler::handleRequest(client);
                 // Cookies checking
-                // cookies.checkRequest(client.request);
-                // if (cookies.shouldSetCookie)
-                //     client.response.setHeaders(cookies.key, cookies.value);
+                cookies.checkRequest(client.request);
+                if (cookies.shouldSetCookie)
+                    client.response.setHeaders(cookies.key, cookies.value);
 
                 client.response_str = client.response.getResponse();
                 // std::cout << client.response_str << std::endl;

@@ -229,9 +229,9 @@ void    Server::setHttpClientResponse(Cgi& cgi, int http_client_fd)
 {
     std::cout << "setting response to : " << http_client_fd << std::endl;
     // Cookies checking
-    // cookies.checkRequest(clients.at(http_client_fd).request);
-    // if (cookies.shouldSetCookie)
-    //     cgi.res.setHeaders(cookies.key, cookies.value);
+    cookies.checkRequest(clients.at(http_client_fd).request);
+    if (cookies.shouldSetCookie)
+        cgi.res.setHeaders(cookies.key, cookies.value);
 
     clients.at(http_client_fd).response_str = cgi.getResponse();
 }
