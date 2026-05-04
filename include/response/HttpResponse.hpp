@@ -27,7 +27,7 @@ public:
     std::string getResponse() const;
 
     //Responses type
-    static HttpResponse makeAutoindexRes(const std::string &path);
+    static HttpResponse makeAutoindexRes(const std::string &path, const std::string &uri);
     static HttpResponse makeFileRes(const std::string &path);
     static HttpResponse makeErrorRes(int code, const std::string &path);
     static HttpResponse makeRedireRes(int code, const std::string &location);

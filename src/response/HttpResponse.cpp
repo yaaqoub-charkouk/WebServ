@@ -115,7 +115,7 @@ std::string HttpResponse::getResponse() const
 //   <hr>
 // </body>
 // </html>
-HttpResponse HttpResponse::makeAutoindexRes(const std::string &path)
+HttpResponse HttpResponse::makeAutoindexRes(const std::string &path, const std::string &uri)
 {
     DIR *dir;
     struct dirent *entry;
@@ -127,8 +127,10 @@ HttpResponse HttpResponse::makeAutoindexRes(const std::string &path)
     if (!dir)
         return (makeErrorRes(403, "403.html"));
     
-    body << "<!DOCTYPE html>\n<html>\n<head><meta charset=\"utf-8\"><title>Index of " << path << "</title></head>"
-        << "<body><h1>Index of " << path << "</h1><hr><ul>\n";
+    std::string uriPath = (uri.empty() || uri[uri.size() - 1] != '/') ? uri + "/" : uri;
+    
+    body << "<!DOCTYPE html>\n<html>\n<head><meta charset=\"utf-8\"><title>Index of " << uriPath << "</title></head>"
+        << "<body><h1>Index of " << uriPath << "</h1><hr><ul>\n";
         while ((entry = readdir(dir)) != NULL)
         {
             std::string name = entry->d_name;
@@ -136,7 +138,7 @@ HttpResponse HttpResponse::makeAutoindexRes(const std::string &path)
                 continue;
             if ( entry->d_type == DT_DIR)
                 name += "/";
-            body << "<li><a href=\"/uploads/" << name << "\">" << name << "</a></li>\n";
+            body << "<li><a href=\"" << uriPath + name << "\">" << name << "</a></li>\n";
 
         }
     body << "</ul><hr></body>\n</html>";
