@@ -1,12 +1,26 @@
 import time
 import sys
-
-#!/usr/bin/env python3
-
+import os
 
 
+server_port = os.getenv("SERVER_PORT")
+server_name = os.getenv("SERVER_NAME")
+query_string = os.getenv("QUERY_STRING")
+cookie = os.getenv("COOKIE")
+
+
+
+
+
+print(f"query_string : {query_string}")
+print(f"cookie : {cookie}")
+print(f"server_port : {server_port}")
+print(f"server_name : {server_name}")
+sys.stdout.flush()
+
+print("\n")
 print("HELLO from CGI")
-print()
+print("\n")
 sys.stdout.flush()
 
 # Non-blocking check - simulate some work

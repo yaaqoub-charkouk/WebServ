@@ -320,9 +320,9 @@ void    Cgi::buildEnvp(const HttpRequest &req)
     env_vect.push_back("GATEWAY_INTERFACE=CGI/1.1");
     env_vect.push_back("SERVER_PROTOCOL=HTTP/1.0");
     env_vect.push_back("SERVER_SOFTWARE=WebServ/1.0");
-    env_vect.push_back("REMOTE_ADDR=" + req.clientAddr);
     env_vect.push_back(("SERVER_PORT=" + ultostr(req.serverPort)));
     env_vect.push_back("SERVER_NAME=" + req.serverName);
+    env_vect.push_back("COOKIE=" + req.headers.at("cookie"));
 
     buildHeaders(req);
 

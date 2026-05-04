@@ -9,8 +9,6 @@ params = urllib.parse.parse_qs(body, keep_blank_values=True)
 name = params.get("name", [""])[0]
 email = params.get("email", [""])[0]
 
-print("Content-Type: text/plain")
-print()
 print(f"HELLO {name} from {email} CGI")
 print("Starting CGI process...")
 # while(1)

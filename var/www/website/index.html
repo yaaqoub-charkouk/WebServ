@@ -9,77 +9,235 @@
     form { margin: 15px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
     input, button, textarea { margin: 5px; padding: 8px; }
     pre { background: #f4f4f4; padding: 10px; border-radius: 5px; overflow-x: auto; }
+    #response-box { margin-top: 10px; display: none; }
+    #response-box pre { white-space: pre-wrap; word-wrap: break-word; }
+
+    /* Upload progress styles */
+    .progress-container {
+      display: none;
+      margin-top: 10px;
+    }
+    .progress-bar-bg {
+      width: 100%;
+      height: 22px;
+      background: #e0e0e0;
+      border-radius: 11px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: #4caf50;
+      border-radius: 11px;
+      transition: width 0.2s ease;
+    }
+    .progress-text {
+      font-size: 13px;
+      margin-top: 4px;
+      color: #555;
+    }
+    .status-msg {
+      margin-top: 8px;
+      padding: 8px 12px;
+      border-radius: 5px;
+      font-size: 14px;
+      display: none;
+    }
+    .status-msg.success { display: block; background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+    .status-msg.error   { display: block; background: #ffebee; color: #c62828; border: 1px solid #ef9a9a; }
   </style>
 </head>
 <body>
 
   <h1>Test Web Server Methods</h1>
 
-  <!-- GET Request -->
-  <form action="/api/data" method="GET">
-    <h3>GET Request</h3>
+  <!-- GET Request via CGI -->
+  <form action="/cgi/hello.py" method="GET">
+    <h3>GET Request (CGI)</h3>
     <label>Query: <input type="text" name="q" placeholder="Enter search term" /></label>
     <button type="submit">Send GET</button>
   </form>
 
-  <!-- POST Request with Text -->
+  <!-- POST Request with Text via CGI -->
   <form action="/cgi/hello_post.py" method="POST">
-    <h3>POST Request (Text)</h3>
+    <h3>POST Request (CGI)</h3>
     <label>Name: <input type="text" name="name" required /></label>
     <label>Email: <input type="email" name="email" required /></label>
     <button type="submit">Send POST</button>
   </form>
 
-  <!-- File Upload (POST with multipart/form-data) -->
-  <form action="/api/upload" method="POST" enctype="multipart/form-data">
+  <!-- File Upload (POST with multipart/form-data) to /uploads -->
+  <form id="uploadForm" action="/uploads" method="POST" enctype="multipart/form-data">
     <h3>File Upload</h3>
-    <label>Upload File: <input type="file" name="file" required /></label>
-    <button type="submit">Upload File</button>
+    <label>Upload File: <input type="file" name="file" id="fileInput" required /></label>
+    <button type="submit" id="uploadBtn">Upload File</button>
+
+    <!-- Progress bar -->
+    <div class="progress-container" id="progressContainer">
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progressFill"></div>
+      </div>
+      <div class="progress-text" id="progressText">0%</div>
+    </div>
+    <div class="status-msg" id="uploadStatus"></div>
   </form>
 
-  <!-- Simulated DELETE via POST with _method override -->
-  <form action="/api/data/123" method="POST">
-    <h3>DELETE Request (Simulated)</h3>
-    <input type="hidden" name="_method" value="DELETE" />
-    <button type="submit">Delete Item (Simulated)</button>
-  </form>
-
-  <!-- Submit via JavaScript for true DELETE (if backend supports it) -->
+  <!-- DELETE Request — enter a filename from /uploads -->
   <form id="deleteForm">
-    <h3>DELETE Request (JavaScript)</h3>
-    <button type="button" onclick="submitDelete()">Send True DELETE</button>
+    <h3>DELETE Request</h3>
+    <label>Filename: <input type="text" id="deleteFilename" placeholder="e.g. myfile.txt" required /></label>
+    <button type="button" onclick="submitDelete()">Send DELETE</button>
+    <div class="status-msg" id="deleteStatus"></div>
   </form>
 
-  <script>
-    function submitDelete() {
-      fetch('/api/data/123', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' }
-      })
-      .then(response => response.text())
-      .then(data => alert('Deleted: ' + data))
-      .catch(error => alert('Error: ' + error));
-    }
-  </script>
+  <h3 id="response-toggle" style="cursor:pointer; user-select:none;">▸ Last Response</h3>
+  <div id="response-box"><pre id="response-content"></pre></div>
 
-  <h3>Server Response (Example)</h3>
+  <h3>Server Routes Reference</h3>
   <pre>
-GET /api/data?q=test
-  → Returns filtered data
+GET  /cgi/hello.py?q=test
+  → Runs hello.py CGI script
 
-POST /api/data
+POST /cgi/hello_post.py
   → Body: name=John&email=john@example.com
-  → Creates new record
+  → Runs hello_post.py CGI script
 
-POST /api/upload (multipart/form-data)
-  → File saved to server
+POST /uploads (multipart/form-data)
+  → File saved to server uploads directory
 
-POST /api/data/123 + _method=DELETE
-  → Server interprets as DELETE (via middleware like Express.js methodOverride)
-
-DELETE /api/data/123 (via fetch)
-  → Direct deletion (requires CORS and server support)
+DELETE /uploads/&lt;filename&gt;
+  → Deletes the specified file from uploads
   </pre>
 
 </body>
+
+<script>
+  // -- Toggle response box --
+  document.getElementById('response-toggle').addEventListener('click', function() {
+    var box = document.getElementById('response-box');
+    if (box.style.display === 'none' || box.style.display === '') {
+      box.style.display = 'block';
+      this.textContent = '▾ Last Response';
+    } else {
+      box.style.display = 'none';
+      this.textContent = '▸ Last Response';
+    }
+  });
+
+  function showResponse(text) {
+    document.getElementById('response-content').textContent = text;
+    document.getElementById('response-box').style.display = 'block';
+    document.getElementById('response-toggle').textContent = '▾ Last Response';
+  }
+
+  // -- File Upload with progress --
+  document.getElementById('uploadForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    var fileInput = document.getElementById('fileInput');
+    if (!fileInput.files.length) return;
+
+    var formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+
+    var xhr = new XMLHttpRequest();
+    var progressContainer = document.getElementById('progressContainer');
+    var progressFill = document.getElementById('progressFill');
+    var progressText = document.getElementById('progressText');
+    var uploadStatus = document.getElementById('uploadStatus');
+    var uploadBtn = document.getElementById('uploadBtn');
+
+    // Reset & show progress
+    progressContainer.style.display = 'block';
+    progressFill.style.width = '0%';
+    progressText.textContent = '0%';
+    uploadStatus.className = 'status-msg';
+    uploadStatus.style.display = 'none';
+    uploadBtn.disabled = true;
+    uploadBtn.textContent = 'Uploading…';
+
+    xhr.upload.addEventListener('progress', function(evt) {
+      if (evt.lengthComputable) {
+        var pct = Math.round((evt.loaded / evt.total) * 100);
+        progressFill.style.width = pct + '%';
+        progressText.textContent = pct + '% — ' + formatBytes(evt.loaded) + ' / ' + formatBytes(evt.total);
+      }
+    });
+
+    xhr.addEventListener('load', function() {
+      uploadBtn.disabled = false;
+      uploadBtn.textContent = 'Upload File';
+      if (xhr.status >= 200 && xhr.status < 400) {
+        progressFill.style.background = '#4caf50';
+        uploadStatus.className = 'status-msg success';
+        uploadStatus.textContent = '✓ Upload complete! (HTTP ' + xhr.status + ')';
+        showResponse(xhr.responseText || '(empty response body)');
+      } else {
+        progressFill.style.background = '#e53935';
+        uploadStatus.className = 'status-msg error';
+        uploadStatus.textContent = '✗ Upload failed — HTTP ' + xhr.status;
+        showResponse(xhr.responseText || '(empty response body)');
+      }
+    });
+
+    xhr.addEventListener('error', function() {
+      uploadBtn.disabled = false;
+      uploadBtn.textContent = 'Upload File';
+      progressFill.style.background = '#e53935';
+      uploadStatus.className = 'status-msg error';
+      uploadStatus.textContent = '✗ Network error — could not reach server.';
+    });
+
+    xhr.addEventListener('abort', function() {
+      uploadBtn.disabled = false;
+      uploadBtn.textContent = 'Upload File';
+      uploadStatus.className = 'status-msg error';
+      uploadStatus.textContent = 'Upload aborted.';
+    });
+
+    xhr.open('POST', '/uploads', true);
+    xhr.send(formData);
+  });
+
+  // -- DELETE request --
+  function submitDelete() {
+    var filename = document.getElementById('deleteFilename').value.trim();
+    var deleteStatus = document.getElementById('deleteStatus');
+
+    if (!filename) {
+      deleteStatus.className = 'status-msg error';
+      deleteStatus.textContent = 'Please enter a filename.';
+      return;
+    }
+
+    var url = '/uploads/' + encodeURIComponent(filename);
+
+    fetch(url, { method: 'DELETE' })
+      .then(function(response) {
+        return response.text().then(function(text) {
+          if (response.ok) {
+            deleteStatus.className = 'status-msg success';
+            deleteStatus.textContent = '✓ Deleted "' + filename + '" (HTTP ' + response.status + ')';
+          } else {
+            deleteStatus.className = 'status-msg error';
+            deleteStatus.textContent = '✗ Delete failed — HTTP ' + response.status;
+          }
+          showResponse(text || '(empty response body)');
+        });
+      })
+      .catch(function(err) {
+        deleteStatus.className = 'status-msg error';
+        deleteStatus.textContent = '✗ Network error: ' + err.message;
+      });
+  }
+
+  // -- Utility --
+  function formatBytes(bytes) {
+    if (bytes === 0) return '0 B';
+    var k = 1024;
+    var sizes = ['B', 'KB', 'MB', 'GB'];
+    var i = Math.floor(Math.log(bytes) / Math.log(k));
+    return (bytes / Math.pow(k, i)).toFixed(1) + ' ' + sizes[i];
+  }
+</script>
 </html>
