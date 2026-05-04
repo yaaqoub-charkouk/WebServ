@@ -82,7 +82,7 @@ void    Server::run()
 {
     while (1337)
     {
-        int ret = poll(pollFds.data(), pollFds.size(), -1);
+        int ret = poll(pollFds.data(), pollFds.size(), 1000);//LEHWAAAAAAA
 
         if (ret < 0)
             throw std::runtime_error("poll failed can't listen on servers sockets");
@@ -147,6 +147,18 @@ void    Server::run()
             
             if (!clientRemoved)
                 ++i;
+        }
+        std::map<int, Client>::iterator it;
+        for (it = clients.begin(); it != clients.end(); ++it)
+        {
+            if (it->second.isCgi && it->second.cgi != NULL && it->second.cgi->checkTimeout())
+            {
+                it->second.response = RequestHandler::makeErrorResponse(504, it->second.serverConfig);
+                it->second.response_str = it->second.response.getResponse();
+                // Should we close the cgi pipes here?
+                changePollEvent(it->first, POLLOUT);
+
+            }
         }
     }
 }
