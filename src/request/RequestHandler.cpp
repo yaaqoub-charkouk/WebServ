@@ -76,8 +76,10 @@ HttpResponse RequestHandler::handleGet(
         if (location && location->getAutoindex())
         {
             if (location->getIndex().empty())
+            {
                 return HttpResponse::makeAutoindexRes(filePath);//I changed this because I need the file path not the uri
-            return HttpResponse::makeFileRes(filePath + "/" + location->getIndex());
+            }
+                return HttpResponse::makeFileRes(filePath + "/" + location->getIndex());
         }
         return makeErrorResponse(403, server);
     }

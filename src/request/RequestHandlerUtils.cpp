@@ -55,8 +55,23 @@ std::string RequestHandler::buildFilePath(
 
     if (fileExists(filePath + ".html"))
         return filePath + ".html";
-    if (fileExists(filePath + "/index.html"))
+
+    std::string indexName;
+    if (location && !location->getIndex().empty())
+        indexName = location->getIndex();
+    else if (!server.getIndex().empty())
+        indexName = server.getIndex();
+
+    if (!indexName.empty())
+    {
+        std::string indexPath = joinPath(filePath, indexName);
+        if (fileExists(indexPath))
+            return indexPath;
+    }
+    else if (fileExists(filePath + "/index.html"))
+    {
         return filePath + "/index.html";
+    }
 
     return filePath;
 }
