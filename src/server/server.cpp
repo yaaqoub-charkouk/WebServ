@@ -2,27 +2,17 @@
 
 
 
+
 Server::Server(const std::vector<ServerConfig>& servers)
 {
     for (size_t i = 0; i < servers.size(); ++i)
     {
         int newServerSocket = addListeningSocket(servers[i].getPort());
-        // configs[newServerSocket] = servers[i];
         configs.insert(std::make_pair(newServerSocket, servers[i])); // may need to check if exists
 
-        std::cout << "listening on : " <<  servers[i].getPort() << "  fd :" << newServerSocket << std::endl; // for debugging
+        std::cout << "listening on : " <<  servers[i].getPort() << "  fd :" << newServerSocket << std::endl; // debugging
     }
     clientRemoved = false;
-}
-
-
-
-
-static std::string intToString(int value)
-{
-    std::ostringstream oss;
-    oss << value;
-    return oss.str();
 }
 
 int    Server::addListeningSocket(int port)
@@ -67,16 +57,15 @@ int    Server::addListeningSocket(int port)
 
     struct pollfd pfd;
     pfd.fd = newServSocket;
-    pfd.events = POLLIN; // what are all possible events
+    pfd.events = POLLIN;
     pfd.revents = 0;
 
+    // adding serverSocket to listenSockets & pollFds
     listenSockets.push_back(newServSocket);
     pollFds.push_back(pfd);
-    // now i have all servers sockets & poll in
 
     return (newServSocket);
 }
-
 
 void    Server::run()
 {
@@ -86,68 +75,62 @@ void    Server::run()
 
         if (ret < 0)
             throw std::runtime_error("poll failed can't listen on servers sockets");
-        std::cout << "------------new poll cycle -----------------" << std::endl;
-        std::cout << "pollFds size : " << pollFds.size() << std::endl;
+
+        std::cout << "------------new poll cycle -----------------" << std::endl; // debugging
+        std::cout << "pollFds size : " << pollFds.size() << std::endl; // debugging
+
         for (size_t i = 0; i < pollFds.size();)
         {
-            
             if (pollFds[i].revents == 0) {
                 ++i;
-                continue ; // just to optimise ignore sockets with no events .
+                std::cout << "ignore sockets with no events " << std::endl; // debugging
+                continue ;
             }
             clientRemoved = false;
 
-            if (pollFds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
+            if (pollFds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) { // debugging : check if cgi pipe got POLLERR | POLLNVAL
                 if (isCgiPipe(pollFds[i].fd)) {
-                    std::cout << "=====----++++==== pollFds[i].fd : " << pollFds[i].fd  << std::endl;
-                    
-                    // if (pollFds[i].revents & POLLIN) // Added the POLLHUP so we read even if the child closed the pipe
-                    //     processCgiReadEvent(pollFds[i].fd); // DANGER : invalid reference , allocating new client while processing another cgi_client
-                    // else if (pollFds[i].revents & POLLOUT)
-                    //     processCgiWriteEvent(pollFds[i].fd);
-
+                    std::cout << "=====----++++==== pollFds[i].fd : " << pollFds[i].fd  << std::endl; // debugging
                     if (pollFds[i].revents & POLLHUP)
                         processCgiEvent(pollFds[i].fd);
+                    // cgi pipe may get POLLERR 
 
-                    std::cout << "cgi pipe got POLLHUP" << std::endl;
+                    std::cout << "cgi pipe got POLLHUP" << std::endl; // debugging
                     // continue;
                 }
                 else {
-                    closeSocket(pollFds[i].fd); // exclude cgi pipe
+                    closeSocket(pollFds[i].fd);
                     continue ;
                 }
             }
+
+            // check for client read event
             if (!clientRemoved && pollFds[i].revents & POLLIN)
             {
                 if (isListeningSocket(pollFds[i].fd))
                     acceptClient(pollFds[i].fd);
+                
                 else if (isCgiPipe(pollFds[i].fd))
-                {
-                    processCgiReadEvent(pollFds[i].fd); // DANGER : invalid reference , allocate new client while processing another cgi_client
-                }
+                    processCgiReadEvent(pollFds[i].fd);
                 else
-                {
-                    readFromClient(pollFds[i].fd); // DANGER : invalid reference , new cgi pipes may be added to pollFds , vector may reallocate !
-                    std::cout << "------ after reading request from a new client ---- " << std::endl;
-                }
+                    readFromClient(pollFds[i].fd);
             }
-            // std::cout << "client Removed " << clientRemoved << std::endl;
-            // std::cout << "write condition : " << (!clientRemoved && pollFds[i].revents & POLLOUT) << std::endl;
+
+            // check for client write event
             if (!clientRemoved && (pollFds[i].revents & POLLOUT))
             {
                 if (isCgiPipe(pollFds[i].fd))
                     processCgiWriteEvent(pollFds[i].fd);
                 else
                     writeToClient(pollFds[i].fd);
-
-                //  std::cout << "write to client  poll size :" << pollFds.size() << std::endl
-                //     << "    i : " << i << std::endl;
             }
 
             
             if (!clientRemoved)
                 ++i;
         }
+
+        // CGI: timeout check
         std::map<int, Client>::iterator it;
         for (it = clients.begin(); it != clients.end(); ++it)
         {
@@ -155,14 +138,13 @@ void    Server::run()
             {
                 it->second.response = RequestHandler::makeErrorResponse(504, it->second.serverConfig);
                 it->second.response_str = it->second.response.getResponse();
-                // Should we close the cgi pipes here?
+                // Should we close the cgi pipes here? LEHWAAA : "no you should not . client close connection after he write response back to client and closes its cgi pipes" .
                 changePollEvent(it->first, POLLOUT);
 
             }
         }
     }
 }
-
 
 bool Server::isListeningSocket(int fd)
 {
@@ -173,8 +155,8 @@ bool Server::isListeningSocket(int fd)
 
 void    Server::closeSocket(int fd)
 {
-    std::cout << "closeSocket called on " << fd << std::endl;
-    if (isListeningSocket(fd)) // if serverSocket remove it from listenSocket && configs.
+    std::cout << "closeSocket called on " << fd << std::endl; // debugging
+    if (isListeningSocket(fd))
     {
         configs.erase(fd);
 
@@ -187,28 +169,20 @@ void    Server::closeSocket(int fd)
             }
         }
     }
-    // else if (isCgiPipe(fd)) {
-    //     cgi_clients.erase(fd);
-        
-    // }
-    else // add if for cgi.
+    else
     {
-        if (isCgiPipe(fd))
-        {
-            std::cout << "close socket called on " << fd << std::endl;
-            exit(0);
-        }
+        if (clients.find(fd) == clients.end()) // debugging : may slow down the server tow lookups
+            return ;
         Client& client = clients.at(fd);
         if (client.isCgi)
         {
-            close_cgi_client(client.cgi->script_out[0]); // DANGER : the method closes cgi fd
-            // close the other cgi pipe . script_in[1]
+            close_cgi_client(client.cgi->script_out[0]);
             close_cgi_client(client.cgi->script_in[1]);
         }
         clients.erase(fd);
     }
 
-    close(fd); // cgi pipe may be closed at cgi.
+    close(fd);
 
     // remove from pollFds
     for (size_t i = 0; i < pollFds.size(); ++i)
@@ -222,9 +196,7 @@ void    Server::closeSocket(int fd)
 
 }
 
-
-// pollFds lookup to change event.
-void    Server::changePollEvent(int fd, int event)
+void    Server::changePollEvent(int fd, short int event)
 {
     for (size_t i = 0; i < pollFds.size(); ++i)
     {
@@ -239,11 +211,17 @@ void    Server::changePollEvent(int fd, int event)
 
 void    Server::setHttpClientResponse(Cgi& cgi, int http_client_fd)
 {
-    std::cout << "setting response to : " << http_client_fd << std::endl;
     // Cookies checking
     cookies.checkRequest(clients.at(http_client_fd).request);
     if (cookies.shouldSetCookie)
         cgi.res.setHeaders(cookies.key, cookies.value);
 
     clients.at(http_client_fd).response_str = cgi.getResponse();
+}
+
+std::string intToString(int value)
+{
+    std::ostringstream oss;
+    oss << value;
+    return oss.str();
 }

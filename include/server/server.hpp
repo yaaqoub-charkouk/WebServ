@@ -49,7 +49,7 @@ private:
     bool    isListeningSocket(int fd);
     void    closeSocket(int fd);
 
-    void    changePollEvent(int fd, int event);
+    void    changePollEvent(int fd, short int event);
     
     int     addListeningSocket(int port); // setup
 
@@ -60,15 +60,12 @@ private:
     void    processCgiEvent(int cgi_pipe);
     void    processCgiReadEvent(int   cgi_pipe);
     void    processCgiWriteEvent(int cgi_pipe);
-    void    close_cgi_client(int cgi_pipe_fd);
     void    setHttpClientResponse(Cgi& cgi, int http_client_fd);
+    void    close_cgi_client(int cgi_pipe_fd);
 
 public:
     void    run();
 
-    // APIs
-    std::string getRequest(int clientFd);
-    void        sendResponse(int clientFd, const std::string& data);
 
 
 
@@ -80,6 +77,4 @@ public:
 //     ~Server();
 };
 
-
-// this class is the server machine
-// the server socket is the NIC
+std::string intToString(int value);

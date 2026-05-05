@@ -19,10 +19,6 @@ void    Server::acceptClient(int serverFd)
             throw std::runtime_error("Failed to add new client accept failed");
         }
 
-        // checking if client now allowed to request
-        std::cout << "++++server host: " << configs[serverFd].getHost() << std::endl;
-        std::cout << "++++new client address : " << inet_ntoa(client.sin_addr) << std::endl;
-
         if (configs[serverFd].getHost() == std::string("0.0.0.0"))
         {
             std::cout << "++++++ACCEPTING ALL CLIENTS " << std::endl;
@@ -312,7 +308,7 @@ void Server::closeClient(int clientFd) // client who calls it = 100% sure that c
 
 
     Client& client = clients.at(clientFd);
-    if (client.isCgi /*&& client.cgi != NULL*/)
+    if (client.isCgi && client.cgi != NULL)
     {
         
         close_cgi_client(client.cgi->script_out[0]);
