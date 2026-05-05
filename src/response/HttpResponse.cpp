@@ -35,6 +35,10 @@ std::string HttpResponse::getStatusMsg(int code)
         case 405: return "Method Not Allowed";
         case 413: return "Content Too Large";
         case 500: return "Internal Server Error";
+        case 501: return "Not Implemented";
+        case 502: return "Bad Gateway";
+        case 503: return "Service Unavailable";
+        case 504: return "Gateway Timeout";
         default:  return "Unknown";
     }
 }
@@ -111,7 +115,7 @@ std::string HttpResponse::getResponse() const
 //   <hr>
 // </body>
 // </html>
-HttpResponse HttpResponse::makeAutoindexRes(const std::string &path)
+HttpResponse HttpResponse::makeAutoindexRes(const std::string &path, const std::string &uri)
 {
     DIR *dir;
     struct dirent *entry;
@@ -123,8 +127,10 @@ HttpResponse HttpResponse::makeAutoindexRes(const std::string &path)
     if (!dir)
         return (makeErrorRes(403, "403.html"));
     
-    body << "<!DOCTYPE html>\n<html>\n<head><meta charset=\"utf-8\"><title>Index of " << path << "</title></head>"
-        << "<body><h1>Index of " << path << "</h1><hr><ul>\n";
+    std::string uriPath = (uri.empty() || uri[uri.size() - 1] != '/') ? uri + "/" : uri;
+    
+    body << "<!DOCTYPE html>\n<html>\n<head><meta charset=\"utf-8\"><title>Index of " << uriPath << "</title></head>"
+        << "<body><h1>Index of " << uriPath << "</h1><hr><ul>\n";
         while ((entry = readdir(dir)) != NULL)
         {
             std::string name = entry->d_name;
@@ -132,7 +138,7 @@ HttpResponse HttpResponse::makeAutoindexRes(const std::string &path)
                 continue;
             if ( entry->d_type == DT_DIR)
                 name += "/";
-            body << "<li><a href=\"/uploads/" << name << "\">" << name << "</a></li>\n"; // hna dima ki3tini index of uploads
+            body << "<li><a href=\"" << uriPath + name << "\">" << name << "</a></li>\n";
 
         }
     body << "</ul><hr></body>\n</html>";

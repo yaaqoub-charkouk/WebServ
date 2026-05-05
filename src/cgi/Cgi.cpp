@@ -355,14 +355,14 @@ void    Cgi::buildEnvp(const HttpRequest &req)
 
 bool Cgi::checkTimeout()
 {
-    if (cgi_status != CGI_SUCCESS)
+    if (cgi_status != CGI_READING && cgi_status != CGI_WRITING)
         return false;
     time_t curr = time(NULL);
     if (difftime(curr, start_time) > timeout)
     {
         cgi_status = CGI_TIMEOUT;
         kill(pid, SIGKILL);
-        waitpid(pid, &status, 0);
+        waitpid(pid, &status, WNOHANG);
         return true;
     }
     return false;
