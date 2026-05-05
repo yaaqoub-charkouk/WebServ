@@ -71,10 +71,26 @@ void    Server::run()
 {
     while (1337)
     {
-        int ret = poll(pollFds.data(), pollFds.size(), 1000);//LEHWAAAAAAA
+        int ret = poll(pollFds.data(), pollFds.size(), 6000);//LEHWAAAAAAA
 
         if (ret < 0)
             throw std::runtime_error("poll failed can't listen on servers sockets");
+
+        // CGI: timeout check
+        // this part has segv should be fixed
+        std::map<int, Client>::iterator it;
+        for (it = clients.begin(); it != clients.end(); ++it)
+        {
+            if (it->second.isCgi && it->second.cgi != NULL && it->second.cgi->checkTimeout())
+            {
+                it->second.response = RequestHandler::makeErrorResponse(504, it->second.serverConfig);
+                it->second.response_str = it->second.response.getResponse();
+                // Should we close the cgi pipes here? LEHWAAA : "no you should not . client close connection after he write response back to client and closes its cgi pipes" .
+                changePollEvent(it->first, POLLOUT);
+                // timeout = true;
+
+            }
+        }
 
         std::cout << "------------new poll cycle -----------------" << std::endl; // debugging
         std::cout << "pollFds size : " << pollFds.size() << std::endl; // debugging
@@ -130,19 +146,7 @@ void    Server::run()
                 ++i;
         }
 
-        // CGI: timeout check
-        std::map<int, Client>::iterator it;
-        for (it = clients.begin(); it != clients.end(); ++it)
-        {
-            if (it->second.isCgi && it->second.cgi != NULL && it->second.cgi->checkTimeout())
-            {
-                it->second.response = RequestHandler::makeErrorResponse(504, it->second.serverConfig);
-                it->second.response_str = it->second.response.getResponse();
-                // Should we close the cgi pipes here? LEHWAAA : "no you should not . client close connection after he write response back to client and closes its cgi pipes" .
-                changePollEvent(it->first, POLLOUT);
-
-            }
-        }
+        
     }
 }
 
