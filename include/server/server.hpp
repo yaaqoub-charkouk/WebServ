@@ -42,16 +42,18 @@ private:
     Cookie  cookies;
 
 private:
+    int     addListeningSocket(int port); // setup
+    bool    isListeningSocket(int fd);
+    void    closeSocket(int fd);
+    
+    // HTTP
     void    acceptClient(int serverFd); // session creation
     void    readFromClient(int client_fd);
     void    writeToClient(int client_fd);
-    void    closeClient(int clientFd);
-    bool    isListeningSocket(int fd);
-    void    closeSocket(int fd);
-
     void    changePollEvent(int fd, short int event);
+    void    closeClient(int clientFd);
+    void    sendErrorResponse(int client_fd, int serverFd, struct sockaddr_in client, int error_code);
     
-    int     addListeningSocket(int port); // setup
 
     // CGI:
     void    make_cgi_pipes_nonblocking(int& script_in, int& script_out);

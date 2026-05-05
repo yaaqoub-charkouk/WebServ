@@ -18,24 +18,14 @@ Client::~Client()
     }
 }
 
-// Client& Client::operator=(const Client& newClient) {
-//     if (this != &newClient)
-//     {
-//         serverConfig = newClient.serverConfig;
-
-//     }
-// }
 
 void Client::parseRequest()
 {
-    // extract the full header
     if (state == READING_HEADERS)
     {
         parseRequestHeaders();
     }
-    
-    // extract the body 
-    // READING_BODY
+
     if (state == READING_BODY)
     {
         parseRequestBody();
@@ -46,7 +36,6 @@ void    Client::parseRequestHeaders()
 {
     size_t  pos = request_str.find("\r\n\r\n");
     if (pos == std::string::npos) {
-        // state = INCOMPLETE;
         return ;
     }
     header_end_pos = pos;
@@ -141,7 +130,6 @@ void    Client::parseRequestBody()
         }
         request.body.clear();
         request.body = request_str.substr(body_start, request.contentLength);
-		std::cout << "body: " << request.body << std::endl;
     }
     state = COMPLETE;
 }
@@ -158,3 +146,5 @@ std::string trim(const std::string& s)
 
     return s.substr(start, end - start);
 }
+
+CgiClient::CgiClient(int client_fd, Cgi* cgi, bool is_write) : is_write_end(is_write), http_client_fd(client_fd), cgi(cgi), processed(false) { }
