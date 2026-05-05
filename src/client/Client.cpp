@@ -7,6 +7,14 @@ Client::Client(const ServerConfig& serverConfig,  int clientPort, std::string cl
                   state(READING_HEADERS), isCgi(false), isCgiResponseError(false), cgi(NULL), bytes_sent(0) {
     request.contentLength = 0;
     error_code = 400;
+
+    // uint32_t ip = ntohl(client.sin_addr.s_addr);
+    // std::ostringstream oss;
+    // oss << ((ip >> 24) & 0xFF) << "."
+    //     << ((ip >> 16) & 0xFF) << "."
+    //     << ((ip >> 8) & 0xFF) << "."
+    //     << (ip & 0xFF);
+    // std::string ipStr = oss.str();
 }
 
 Client::~Client()

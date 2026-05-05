@@ -1,4 +1,7 @@
 # include "../../include/server/server.hpp"
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <netdb.h>
 
 
 
@@ -7,15 +10,49 @@ Server::Server(const std::vector<ServerConfig>& servers)
 {
     for (size_t i = 0; i < servers.size(); ++i)
     {
-        int newServerSocket = addListeningSocket(servers[i].getPort());
+        int         port = servers[i].getPort();
+        std::string host = servers[i].getHost();
+        int         newServerSocket = addListeningSocket(port, host);
+
         configs.insert(std::make_pair(newServerSocket, servers[i])); // may need to check if exists
 
-        std::cout << "listening on : " <<  servers[i].getPort() << "  fd :" << newServerSocket << std::endl; // debugging
+        std::cout << "listening on : " << host << ":" << port  << "  fd : " << newServerSocket << std::endl; // debugging
     }
     clientRemoved = false;
 }
 
-int    Server::addListeningSocket(int port)
+void    Server::bindSocket(int newServerSocket, int port, std::string host)
+{
+    struct sockaddr_in nic;
+
+
+    memset(&nic, 0, sizeof(nic));
+    nic.sin_family = AF_INET;
+    nic.sin_port = htons(port);
+
+    if (host == "0.0.0.0")
+        nic.sin_addr.s_addr = htonl(INADDR_ANY);
+    else
+    {
+        struct addrinfo  addrType;
+        struct addrinfo* res = 0;
+
+        memset(&addrType, 0, sizeof(addrType));
+        addrType.ai_family = AF_INET;
+        addrType.ai_socktype = SOCK_STREAM;
+
+        if (getaddrinfo(host.c_str(), 0, &addrType, &res) != 0 || res == 0)
+            throw std::runtime_error("Failed to bind socket with port " + intToString(port));
+        
+        nic.sin_addr = ((struct sockaddr_in*)res->ai_addr)->sin_addr;
+        freeaddrinfo(res);
+    }
+
+    if (bind(newServerSocket, reinterpret_cast<sockaddr*>(&nic), sizeof(nic)) == -1)
+        throw std::runtime_error("Failed to bind socket with port " + intToString(port));
+}
+
+int    Server::addListeningSocket(int port, std::string host)
 {
     int newServSocket;
 
@@ -29,26 +66,12 @@ int    Server::addListeningSocket(int port)
         throw std::runtime_error("Failed to set socket options " + intToString(port));
     }
 
-    struct sockaddr_in nic;
-    memset(&nic, 0, sizeof(nic));
-    nic.sin_family = AF_INET;
-    nic.sin_port = htons(port);
-    if (inet_pton(nic.sin_family, "0.0.0.0", &nic.sin_addr) <= 0) {
-        close(newServSocket);
-        throw std::runtime_error("Failed to set listening ip " + intToString(port));
-    }
-
-    if (bind(newServSocket, reinterpret_cast<sockaddr*>(&nic), sizeof(nic)) == -1) {
-        close(newServSocket);
-        throw std::runtime_error("Failed to bind socket with port " + intToString(port));
-    }
+    bindSocket(newServSocket, port, host);
 
     if (listen(newServSocket, SOMAXCONN) == -1) {
         close(newServSocket);
         throw std::runtime_error("Failed to listen on socket binded to port : " + intToString(port));
     }
-
-
 
     if (fcntl(newServSocket, F_SETFL, O_NONBLOCK) == -1) {
         close(newServSocket);
@@ -71,13 +94,12 @@ void    Server::run()
 {
     while (1337)
     {
-        int ret = poll(pollFds.data(), pollFds.size(), 6000);//LEHWAAAAAAA
+        int ret = poll(pollFds.data(), pollFds.size(), 6000);
 
         if (ret < 0)
             throw std::runtime_error("poll failed can't listen on servers sockets");
 
         // CGI: timeout check
-        // this part has segv should be fixed
         std::map<int, Client>::iterator it;
         for (it = clients.begin(); it != clients.end(); ++it)
         {
@@ -109,8 +131,6 @@ void    Server::run()
                     std::cout << "=====----++++==== pollFds[i].fd : " << pollFds[i].fd  << std::endl; // debugging
                     if (pollFds[i].revents & POLLHUP)
                         processCgiEvent(pollFds[i].fd);
-                    // cgi pipe may get POLLERR 
-
                     std::cout << "cgi pipe got POLLHUP" << std::endl; // debugging
                     // continue;
                 }

@@ -20,10 +20,3 @@ print(f"BYE {name} from {email} CGI")
 #   -d "name=alice&email=rabat@example.com" \
 #   http://localhost:4242/cgi/hello_post.py
 
-
-
-# ➜  WebServ git:(yaaqoub) ✗ curl -X POST \
-#   -H "Content-Type: application/x-www-form-urlencoded" \
-#   -d "name=alice&city=rabat" \
-#   http://localhost:4242/cgi/hello_post.py
-# curl: (1) Unsupported HTTP/1 subversion in response

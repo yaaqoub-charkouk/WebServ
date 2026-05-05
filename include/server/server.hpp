@@ -42,7 +42,8 @@ private:
     Cookie  cookies;
 
 private:
-    int     addListeningSocket(int port); // setup
+    int     addListeningSocket(int port, std::string host);
+    void    bindSocket(int newServerSocket, int port, std::string host);
     bool    isListeningSocket(int fd);
     void    closeSocket(int fd);
     
@@ -80,3 +81,4 @@ public:
 };
 
 std::string intToString(int value);
+std::string ipToString(uint32_t addr);

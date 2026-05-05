@@ -18,14 +18,6 @@ void    Server::acceptClient(int serverFd)
             throw std::runtime_error("Failed to add new client accept failed");
         }
 
-        if (configs[serverFd].getHost() != std::string("0.0.0.0")  && 
-                inet_ntoa(client.sin_addr) != configs[serverFd].getHost())
-        {
-            std::cout << "client is not allowed to connect " << inet_ntoa(client.sin_addr) << std::endl; // debugging
-            sendErrorResponse(client_fd, serverFd, client, 403);
-            continue ;
-        }
-
         if (fcntl(client_fd, F_SETFL, O_NONBLOCK) == -1)
         {
             sendErrorResponse(client_fd, serverFd, client, 500);
@@ -41,10 +33,11 @@ void    Server::acceptClient(int serverFd)
         pollFds.push_back(pfd);
         clients.insert(std::make_pair(client_fd, 
                         Client(configs[serverFd], ntohs(client.sin_port),
-                        inet_ntoa(client.sin_addr))));
-
+                        ipToString(client.sin_addr.s_addr))));
+        
 
         std::cout << "============ NEW CLIENT ACCEPTED : CLIENT LOGS (fd = " << pfd.fd <<  ")============" << std::endl; // debugging
+        std::cout << "Client ip: " << ipToString(client.sin_addr.s_addr) << std::endl;
         printf("Client port: %d\n", ntohs(client.sin_port)); // debugging
 
     }
@@ -212,7 +205,7 @@ void    Server::sendErrorResponse(int client_fd, int serverFd, struct sockaddr_i
 {
     clients.insert(std::make_pair(client_fd, 
                         Client(configs[serverFd], ntohs(client.sin_port),
-                        inet_ntoa(client.sin_addr))));
+                        ipToString(client.sin_addr.s_addr))));
             
     Client&  http = clients.at(client_fd);
 
@@ -248,4 +241,15 @@ void Server::closeClient(int clientFd)
     clients.erase(clientFd);
 
     clientRemoved = true;
+}
+
+std::string ipToString(uint32_t addr)
+{
+    uint32_t ip = ntohl(addr);
+    std::ostringstream oss;
+    oss << ((ip >> 24) & 0xFF) << "."
+        << ((ip >> 16) & 0xFF) << "."
+        << ((ip >> 8) & 0xFF) << "."
+        << (ip & 0xFF);
+    return oss.str();
 }
