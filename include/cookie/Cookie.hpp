@@ -3,6 +3,7 @@
 
 #include "../request/HttpRequest.hpp"
 #include <map>
+#include <cstdlib>
 
 #define HALF_HOUR 1800
 

@@ -53,11 +53,13 @@ void    Cookie::checkRequest(const HttpRequest &req)
 void    Cookie::generateToken()
 {
     expireTime = time(NULL);
-    size_t t = expireTime;
+    std::srand(expireTime);
+    size_t t;
     token = "";
-
-    for (int i = 0; i < 15; i++)
+    
+    for (int i = 0; i < 16; i++)
     {
+        t = std::rand();
         std::stringstream ss;
         ss << base.at(t % 16);
         token.append(ss.str());
