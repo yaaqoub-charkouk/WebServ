@@ -15,23 +15,6 @@ std::string RequestHandler::buildFilePath(
     else
         root = server.getRoot();
 
-    if (location && location->getRoot().empty())
-    {
-        const std::string& uploadStore = location->getUploadStore();
-        if (!uploadStore.empty())
-        {
-            std::string locPath = location->getPath();
-            if (!locPath.empty() && locPath[0] == '/')
-                locPath = locPath.substr(1);
-
-            std::string storePath = uploadStore;
-            if (!storePath.empty() && storePath[0] == '/')
-                storePath = storePath.substr(1);
-
-            if (!locPath.empty() && locPath == storePath)
-                root = joinPath(server.getRoot(), storePath);
-        }
-    }
 
     if (root.empty())
         root = ".";

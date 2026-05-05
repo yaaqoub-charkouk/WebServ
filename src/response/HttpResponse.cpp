@@ -132,7 +132,7 @@ HttpResponse HttpResponse::makeAutoindexRes(const std::string &path)
                 continue;
             if ( entry->d_type == DT_DIR)
                 name += "/";
-            body << "<li><a href=\"/uploads/" << name << "\">" << name << "</a></li>\n";
+            body << "<li><a href=\"/uploads/" << name << "\">" << name << "</a></li>\n"; // hna dima ki3tini index of uploads
 
         }
     body << "</ul><hr></body>\n</html>";

@@ -153,41 +153,19 @@ HttpResponse RequestHandler::handlePost(
     const ServerConfig& server,
     const LocationConfig* location)
 {
-    if (!location || location->getUploadStore().empty())
-    {
-        return makeErrorResponse(403, server);
-    }
-
-    if (!location->hasMethod("POST"))
-    {
+    if (!location || !location->hasMethod("POST"))
         return makeErrorResponse(405, server);
-    }
+
+    if (location->getUploadStore().empty())
+        return makeErrorResponse(403, server);
 
     std::string uploadDir = location->getUploadStore();
-    if (uploadDir.empty())
-        return makeErrorResponse(403, server);
-
-    std::string baseRoot = server.getRoot();
-    if (!location->getRoot().empty())
-        baseRoot = location->getRoot();
-
-    std::string locPath = location->getPath();
-    std::string storePath = uploadDir;
-    if (!locPath.empty() && locPath[0] == '/')
-        locPath = locPath.substr(1);
-    if (!storePath.empty() && storePath[0] == '/')
-        storePath = storePath.substr(1);
-
-    if (!locPath.empty() && !storePath.empty() && locPath == storePath)
-        uploadDir = joinPath(baseRoot, storePath);
 
     std::string filename = "";
     std::string fileContent = body;
 
-    // Check if this is a multipart form data request
     if (body.find("Content-Disposition") != std::string::npos && body.find("filename=") != std::string::npos)
     {
-        // Extract boundary from Content-Type header
         std::string boundary = "";
         size_t boundaryPos = body.find("boundary=");
         if (boundaryPos != std::string::npos)
@@ -199,9 +177,8 @@ HttpResponse RequestHandler::handlePost(
             if (boundaryEnd != std::string::npos)
                 boundary = body.substr(boundaryPos, boundaryEnd - boundaryPos);
         }
-        
-        // Fallback: extract boundary from the body itself
-        if (boundary.empty()) // exist in headers if you want to support multipart form data, but just in case we will try to extract it from the body
+
+        if (boundary.empty())
         {
             size_t boundStart = body.find("--");
             if (boundStart != std::string::npos)
@@ -213,38 +190,31 @@ HttpResponse RequestHandler::handlePost(
                     boundary = body.substr(boundStart + 2, boundEnd - boundStart - 2);
             }
         }
-        
-        // Extract filename from multipart data
+
         filename = extractFilenameFromMultipart(body);
         fileContent = extractFileContentFromMultipart(body, boundary);
-		// check if boundary still exist in the body
     }
-    
-    // Fallback: extract from URL if no filename in multipart
+
     if (filename.empty())
     {
         std::string uriPath = stripQueryString(uri);
         const std::string& locationPath = location->getPath();
         filename = uriPath;
-        
+
         if (!locationPath.empty() && uriPath.find(locationPath) == 0)
-        {
             filename = uriPath.substr(locationPath.length());
-        }
-        
-        // Remove leading slash if present
+
         if (!filename.empty() && filename[0] == '/')
             filename = filename.substr(1);
     }
-    
-    // Use generated filename if still empty
+
     if (filename.empty())
     {
         std::ostringstream oss;
-        oss << "upload_" << filename;
+        oss << "upload_" << std::time(0);
         filename = oss.str();
     }
-    
+
     std::string savePath = joinPath(uploadDir, filename);
 
     std::ofstream outfile(savePath.c_str(), std::ios::binary);
@@ -260,6 +230,7 @@ HttpResponse RequestHandler::handlePost(
     response.setBody("File uploaded successfully");
     return response;
 }
+
 
 HttpResponse RequestHandler::handleDelete(
     const std::string& uri,
