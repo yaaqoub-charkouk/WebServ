@@ -3,6 +3,7 @@
 #include <sys/socket.h>
 #include <netdb.h>
 
+#include "../../include/logger/Logger.hpp"
 
 
 
@@ -16,7 +17,9 @@ Server::Server(const std::vector<ServerConfig>& servers)
 
         configs.insert(std::make_pair(newServerSocket, servers[i])); // may need to check if exists
 
-        std::cout << "listening on : " << host << ":" << port  << "  fd : " << newServerSocket << std::endl; // debugging
+        std::ostringstream logMessage;
+        logMessage << "Listening on " << host << ":" << port << " (fd " << newServerSocket << ")";
+        Logger::info(logMessage.str());
     }
     clientRemoved = false;
 }
@@ -114,24 +117,27 @@ void    Server::run()
             }
         }
 
-        std::cout << "------------new poll cycle -----------------" << std::endl; // debugging
-        std::cout << "pollFds size : " << pollFds.size() << std::endl; // debugging
+        std::ostringstream pollLog;
+        pollLog << "Polling cycle started (pollFds size: " << pollFds.size() << ")";
+        Logger::debug(pollLog.str());
 
         for (size_t i = 0; i < pollFds.size();)
         {
             if (pollFds[i].revents == 0) {
                 ++i;
-                std::cout << "ignore sockets with no events " << std::endl; // debugging
+                Logger::debug("Ignoring socket with no events");
                 continue ;
             }
             clientRemoved = false;
 
             if (pollFds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) { // debugging : check if cgi pipe got POLLERR | POLLNVAL
                 if (isCgiPipe(pollFds[i].fd)) {
-                    std::cout << "=====----++++==== pollFds[i].fd : " << pollFds[i].fd  << std::endl; // debugging
+                    std::ostringstream pollErr;
+                    pollErr << "Poll error on CGI pipe fd " << pollFds[i].fd;
+                    Logger::debug(pollErr.str());
                     if (pollFds[i].revents & POLLHUP)
                         processCgiEvent(pollFds[i].fd);
-                    std::cout << "cgi pipe got POLLHUP" << std::endl; // debugging
+                    Logger::debug("CGI pipe received POLLHUP");
                     // continue;
                 }
                 else {
@@ -179,7 +185,9 @@ bool Server::isListeningSocket(int fd)
 
 void    Server::closeSocket(int fd)
 {
-    std::cout << "closeSocket called on " << fd << std::endl; // debugging
+    std::ostringstream closeLog;
+    closeLog << "Closing socket fd " << fd;
+    Logger::info(closeLog.str());
     if (isListeningSocket(fd))
     {
         configs.erase(fd);

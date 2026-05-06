@@ -5,6 +5,7 @@
 #include <ctime>
 #include "../../include/cgi/Cgi.hpp"
 #include "../../include/client/Client.hpp"
+#include "../../include/logger/Logger.hpp"
 
 HttpResponse RequestHandler::handleRequest(const Client& client)
 {
@@ -22,7 +23,7 @@ HttpResponse RequestHandler::handleRequest(const Client& client)
     // if ((request.method == "GET" || request.method == "POST") && isCgiRequest(request.uri, location))
     //     return handleCgi(request.method, request.uri, request.body, server, location);
 
-    std::cout << "Root : .... " << request.uri << std::endl;
+    Logger::debug("Handling request for URI: " + request.uri);
 
     if (request.method == "GET")
         return handleGet(request.uri, server, location);
@@ -241,7 +242,7 @@ HttpResponse RequestHandler::handleDelete(
         return makeErrorResponse(405, server);
 
     std::string filePath = buildFilePath(uri, server, location);
-    std::cout << "PATH : " << filePath << std::endl ;
+    Logger::debug("Resolved delete path: " + filePath);
 
     if (!fileExists(filePath) || directoryExists(filePath))
         return makeErrorResponse(404, server);

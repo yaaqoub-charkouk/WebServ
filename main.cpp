@@ -3,6 +3,7 @@
 #include "include/config/Parser.hpp"
 #include "include/config/Validator.hpp"
 #include "include/server/server.hpp"
+#include "include/logger/Logger.hpp"
 
 int main(int ac, char **av)
 {
@@ -14,17 +15,17 @@ int main(int ac, char **av)
 
 	try
 	{
-		std::cout << "==========================================\n" << std::endl;
+		Logger::info("Starting WebServ");
 
 		Lexer lexer(av[1]);
 
 		Parser parser(lexer.getTokens());
 		parser.parse();
-		std::cout << "--- Parsing Complete ---" << std::endl;
+		Logger::info("Parsing complete");
 
 		Validator validator(parser.getServers());
 		validator.validate();
-		std::cout << "--- Validator Complete ---" << std::endl;
+		Logger::info("Validation complete");
 
 		Server		server(parser.getServers());
 		server.run();
@@ -33,7 +34,7 @@ int main(int ac, char **av)
 	}
 	catch (std::exception& e)
 	{
-		std::cerr << "\n✗ Error: " << e.what() << std::endl;
+		Logger::error(std::string("Error: ") + e.what());
 		return 1;
 	}
 }

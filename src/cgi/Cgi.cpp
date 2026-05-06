@@ -1,4 +1,5 @@
 #include "../../include/cgi/Cgi.hpp"
+#include "../../include/logger/Logger.hpp"
 
 Cgi::Cgi() : pid(-1), status(0), envp(NULL), cgi_status(CGI_IDLE), start_time(0), timeout(0), written(0)
 {
@@ -41,7 +42,7 @@ void    Cgi::build_response()
     if (output.empty())
     {
         cgi_status = CGI_EXEC_ERROR;
-        std::cerr << "Error : CGI: Failed to execute script: " << script_path << std::endl;
+        Logger::error("CGI failed to execute script: " + script_path);
         return;
     }
     cgi_status = CGI_SUCCESS;
@@ -261,7 +262,7 @@ void    Cgi::read_output()
 {
     if (cgi_status == CGI_READING)
     {
-        std::cout << "read output from cgi child" << std::endl;
+         Logger::debug("Reading output from CGI child");
         char buff[4096];
         // std::cout << "read 10 bytes " << std::endl;
         read_bytes = read(script_out[0], buff, sizeof(buff));
@@ -269,7 +270,7 @@ void    Cgi::read_output()
             output.append(buff, read_bytes);
         else if (read_bytes == 0) // is it enough
         {
-            std::cout << "cgi done " << std::endl;
+            Logger::debug("CGI finished reading output");
             cgi_status = CGI_DONE_READING;
             // close(script_out[0]);
             // script_out[0] = -1;
@@ -338,7 +339,7 @@ void    Cgi::buildEnvp(const HttpRequest &req)
     else
     {
         cgi_status = CGI_ENV_ERROR;
-        std::cerr << "Error : CGI: Unsupported script type: " << ext << std::endl;
+        Logger::error("CGI unsupported script type: " + ext);
         return;
     }
 

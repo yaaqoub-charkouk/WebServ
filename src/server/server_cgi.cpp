@@ -1,4 +1,5 @@
 # include "../../include/server/server.hpp"
+# include "../../include/logger/Logger.hpp"
 
 
 
@@ -47,7 +48,9 @@ void    Server::processCgiReadEvent(int cgi_pipe)
 
     if (cgi_client.processed)
     {
-        std::cout << "CGI ALREADY PROCESSED FOR CGI PIPE : " << cgi_pipe << std::endl; // debugging
+        std::ostringstream alreadyProcessed;
+        alreadyProcessed << "CGI already processed for pipe " << cgi_pipe;
+        Logger::debug(alreadyProcessed.str());
 
         changePollEvent(cgi_pipe, POLLIN);
         return ; // set another poll event to cgi_pipe;
@@ -83,13 +86,15 @@ void    Server::processCgiReadEvent(int cgi_pipe)
 
 void    Server::processCgiWriteEvent(int cgi_pipe)
 {
-    std::cout << "  processCgiWriteEvent" << std::endl; // debugging
+    Logger::debug("Processing CGI write event");
 
     CgiClient& cgi_client = cgi_clients.at(cgi_pipe);
 
     if (cgi_client.processed)
     {
-        std::cout << "CGI ALREADY PROCESSED FOR CGI PIPE : " << cgi_pipe << std::endl; // debugging
+        std::ostringstream alreadyProcessed;
+        alreadyProcessed << "CGI already processed for pipe " << cgi_pipe;
+        Logger::debug(alreadyProcessed.str());
         return ;
     }
     if (cgi_client.cgi == NULL)
@@ -97,7 +102,10 @@ void    Server::processCgiWriteEvent(int cgi_pipe)
 
     if (clients.find(cgi_client.http_client_fd) == clients.end())
     {
-        std::cout << "http client closed :" << cgi_client.http_client_fd << " for cgi : " << cgi_pipe << std::endl; // debugging
+        std::ostringstream clientClosed;
+        clientClosed << "HTTP client closed for CGI pipe " << cgi_pipe
+                     << " (client fd " << cgi_client.http_client_fd << ")";
+        Logger::warn(clientClosed.str());
         return ;
     }
 
@@ -122,7 +130,9 @@ void    Server::processCgiWriteEvent(int cgi_pipe)
         cgi_client.cgi->script_in[1] = -1;
         cgi_clients.erase(cgi_pipe);
 
-        std::cout << "cgi done writing : " << cgi_pipe << std::endl; // debugging
+        std::ostringstream doneWriting;
+        doneWriting << "CGI done writing for pipe " << cgi_pipe;
+        Logger::info(doneWriting.str());
     }
 }
 
@@ -131,7 +141,9 @@ void    Server::close_cgi_client(int fd)
 {
     if (fd == -1)
         return ;
-    std::cout << "close cgi client " << fd << std::endl; // debugging
+    std::ostringstream closeLog;
+    closeLog << "Closing CGI client fd " << fd;
+    Logger::info(closeLog.str());
     CgiClient& cgi_client = cgi_clients.at(fd);
 
     kill(cgi_client.cgi->pid, SIGKILL);

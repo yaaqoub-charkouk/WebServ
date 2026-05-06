@@ -12,6 +12,7 @@ RESPONSE_SRC = src/response
 CGI_SRC = src/cgi
 REQUEST_SRC = src/request
 COOKIE_SRC = src/cookie
+LOGGER_SRC = src/logger
 
 NAME = webserv
 
@@ -32,6 +33,7 @@ SRCS = main.cpp \
 	$(RESPONSE_SRC)/HttpResponse.cpp \
 	$(RESPONSE_SRC)/FileUtils.cpp \
 	$(CGI_SRC)/Cgi.cpp \
+	$(LOGGER_SRC)/Logger.cpp \
 	$(COOKIE_SRC)/Cookie.cpp \
 	$(REQUEST_SRC)/HttpRequest.cpp \
 	$(REQUEST_SRC)/RequestHandler.cpp \
@@ -54,6 +56,7 @@ HEADERS = include/config/ConfigException.hpp \
           include/cgi/Cgi.hpp \
           include/cookie/Cookie.hpp \
           include/request/HttpRequest.hpp \
+          include/logger/Logger.hpp \
           include/request/RequestHandler.hpp
 
 GREEN = \033[0;32m
