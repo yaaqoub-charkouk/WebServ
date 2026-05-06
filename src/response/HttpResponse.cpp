@@ -10,6 +10,11 @@ void    HttpResponse::setStatus(int code, const std::string &msg)
     status_msg = msg;
 }
 
+int     HttpResponse::getStatusCode()
+{
+    return status;
+}
+
 void    HttpResponse::setBody(const std::string &body)
 {
     this->body = body;

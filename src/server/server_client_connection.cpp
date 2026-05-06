@@ -1,4 +1,5 @@
 # include "../../include/server/server.hpp"
+#include <sstream>
 
 
 void    Server::acceptClient(int serverFd)
@@ -36,29 +37,44 @@ void    Server::acceptClient(int serverFd)
                         ipToString(client.sin_addr.s_addr))));
         
 
-        std::cout << "============ NEW CLIENT ACCEPTED : CLIENT LOGS (fd = " << pfd.fd <<  ")============" << std::endl; // debugging
-        std::cout << "Client ip: " << ipToString(client.sin_addr.s_addr) << std::endl;
-        printf("Client port: %d\n", ntohs(client.sin_port)); // debugging
 
+        std::ostringstream logMessage;
+        logMessage << "Accepted client " << ipToString(client.sin_addr.s_addr)
+                   << ":" << ntohs(client.sin_port)
+                   << " (fd " << pfd.fd << ")";
+        Logger::info(logMessage.str());
     }
 }
 
 void    Server::readFromClient(int  client_fd)
 {
-    std::cout << "read From client fd : " << client_fd << std::endl;
+    if (Logger::isEnabled(Logger::DEBUG))
+    {
+        std::ostringstream readLog;
+        readLog << "Reading from client fd " << client_fd;
+        Logger::debug(readLog.str());
+    }
 
     char buffer[4096];
 
     if (clients.find(client_fd) == clients.end()) {
-        std::cout << "LAHWAAA !!!!! reading from client ,, fd : " << client_fd << " does not exist" << std::endl; // debugging
+        std::ostringstream missingClient;
+        missingClient << "Attempted to read from unknown client fd " << client_fd;
+        Logger::warn(missingClient.str());
         return ;
     }
 
     Client&  client = clients.at(client_fd);
     if (client.isCgi)
     {
-        std::cout << "client reading request and he is already cgi " << client_fd << std::endl; // debugging
+        if (Logger::isEnabled(Logger::DEBUG))
+        {
+            std::ostringstream cgiRead;
+            cgiRead << "Client fd " << client_fd << " is already in CGI state";
+            Logger::debug(cgiRead.str());
+        }
     }
+
     while (true)
     {
         int n = recv(client_fd, buffer, sizeof(buffer), 0);
@@ -67,15 +83,20 @@ void    Server::readFromClient(int  client_fd)
             client.request_str.append(buffer, n);
             client.parseRequest();
 
-            // check client.state
             if (client.state == COMPLETE)
             {
+                std::ostringstream requestLog;
+                requestLog << client.clientAddress << ":" << client.clientPort
+                           << " -> " << client.request.method << " " << client.request.uri;
+                Logger::info(requestLog.str());
+
+
                 const LocationConfig* location = RequestHandler::findLocation(client.request.uri, client.serverConfig);
 
                 if ((client.request.method == "GET" || client.request.method == "POST") &&
                                 RequestHandler::isCgiRequest(client.request.uri, location))
                 {
-                    std::cout << "  ===== CGI request ====" << std::endl;
+                    Logger::info("Handling CGI request");
                     RequestHandler::handleCgi(client, location);
                     
                     if (!client.isCgiResponseError)
@@ -135,10 +156,20 @@ void    Server::readFromClient(int  client_fd)
                     client.response.setHeaders(cookies.key, cookies.value);
 
                 client.response_str = client.response.getResponse();
+
+                std::stringstream message;
+                message  << "[RESPONSE] status=" << client.response.getStatusCode()
+                    << " uri=" << client.request.uri << std::endl;
+                Logger::info(message.str());
+
                 changePollEvent(client_fd, POLLOUT);
                 return ;
             }
             else if (client.state == ERROR) {
+                std::ostringstream errorLog;
+                errorLog << "Bad request from " << client.clientAddress << ":" << client.clientPort
+                         << " (error " << client.error_code << ")";
+                Logger::warn(errorLog.str());
 
                 client.response = RequestHandler::makeErrorResponse(client.error_code, client.serverConfig);
                 client.response_str = client.response.getResponse();
@@ -182,11 +213,23 @@ void Server::writeToClient(int  client_fd)
 
     if (bytes_sent > 0)
     {
-        std::cout << "server sent " << bytes_sent << " bytes to client : " << client.clientPort << std::endl; // debugging
+        if (Logger::isEnabled(Logger::DEBUG))
+        {
+            std::ostringstream sendLog;
+            sendLog << "Sent " << bytes_sent << " bytes to "
+                    << client.clientAddress << ":" << client.clientPort;
+            Logger::debug(sendLog.str());
+        }
 
         client.bytes_sent += bytes_sent;
 
-        std::cout << "still " << client.response_str.size() - client.bytes_sent << " bytes to send" << std::endl; // debugging
+        if (Logger::isEnabled(Logger::DEBUG))
+        {
+            std::ostringstream remainingLog;
+            remainingLog << "Remaining bytes to send: "
+                         << client.response_str.size() - client.bytes_sent;
+            Logger::debug(remainingLog.str());
+        }
 
         if (client.bytes_sent == client.response_str.size())
             closeClient(client_fd);
@@ -223,6 +266,11 @@ void Server::closeClient(int clientFd)
         close_cgi_client(client.cgi->script_out[0]);
         close_cgi_client(client.cgi->script_in[1]);
     }
+
+    std::ostringstream closeLog;
+    closeLog << "Closed client " << client.clientAddress << ":" << client.clientPort
+             << " (fd " << clientFd << ")";
+    Logger::info(closeLog.str());
 
     close(clientFd);
 

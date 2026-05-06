@@ -20,6 +20,7 @@ public:
     HttpResponse();
     // Response building
     void    setStatus(int code, const std::string &msg);
+    int   getStatusCode();
     void    setHeaders(const std::string &key, const std::string &val);
     void    setBody(const std::string &body);
     static std::string getStatusMsg(int code);

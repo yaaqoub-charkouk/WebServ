@@ -6,6 +6,8 @@
 #include "../config/ServerConfig.hpp"
 #include "../config/LocationConfig.hpp"
 #include "../response/HttpResponse.hpp"
+#include "../logger/Logger.hpp"
+
 
 class Client;
 

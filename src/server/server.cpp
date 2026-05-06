@@ -16,7 +16,9 @@ Server::Server(const std::vector<ServerConfig>& servers)
 
         configs.insert(std::make_pair(newServerSocket, servers[i])); // may need to check if exists
 
-        std::cout << "listening on : " << host << ":" << port  << "  fd : " << newServerSocket << std::endl; // debugging
+        std::ostringstream logMessage;
+        logMessage << "Listening on " << host << ":" << port << " (fd " << newServerSocket << ")";
+        Logger::info(logMessage.str());
     }
     clientRemoved = false;
 }
@@ -99,12 +101,24 @@ void    Server::run()
         if (ret < 0)
             throw std::runtime_error("poll failed can't listen on servers sockets");
 
+        if (Logger::isEnabled(Logger::DEBUG))
+        {
+            std::ostringstream pollLog;
+            pollLog << "Polling cycle started (pollFds size: " << pollFds.size() << ")";
+            Logger::debug(pollLog.str());
+        }
+
         // CGI: timeout check
+        Logger::debug("Checking clients Timeout ");
         std::map<int, Client>::iterator it;
         for (it = clients.begin(); it != clients.end(); ++it)
         {
             if (it->second.isCgi && it->second.cgi != NULL && it->second.cgi->checkTimeout())
             {
+                std::stringstream   message;
+                message  << "[CGI_TIMEOUT] pid=" << it->second.cgi->pid << "Sending error response & closing client " << std::endl;
+                Logger::warn(message.str());
+
                 it->second.response = RequestHandler::makeErrorResponse(504, it->second.serverConfig);
                 it->second.response_str = it->second.response.getResponse();
                 // Should we close the cgi pipes here? LEHWAAA : "no you should not . client close connection after he write response back to client and closes its cgi pipes" .
@@ -114,25 +128,18 @@ void    Server::run()
             }
         }
 
-        std::cout << "------------new poll cycle -----------------" << std::endl; // debugging
-        std::cout << "pollFds size : " << pollFds.size() << std::endl; // debugging
-
         for (size_t i = 0; i < pollFds.size();)
         {
             if (pollFds[i].revents == 0) {
                 ++i;
-                std::cout << "ignore sockets with no events " << std::endl; // debugging
                 continue ;
             }
             clientRemoved = false;
 
             if (pollFds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) { // debugging : check if cgi pipe got POLLERR | POLLNVAL
                 if (isCgiPipe(pollFds[i].fd)) {
-                    std::cout << "=====----++++==== pollFds[i].fd : " << pollFds[i].fd  << std::endl; // debugging
                     if (pollFds[i].revents & POLLHUP)
                         processCgiEvent(pollFds[i].fd);
-                    std::cout << "cgi pipe got POLLHUP" << std::endl; // debugging
-                    // continue;
                 }
                 else {
                     closeSocket(pollFds[i].fd);
@@ -179,7 +186,10 @@ bool Server::isListeningSocket(int fd)
 
 void    Server::closeSocket(int fd)
 {
-    std::cout << "closeSocket called on " << fd << std::endl; // debugging
+    std::ostringstream closeLog;
+    closeLog << "Closing socket fd " << fd;
+    Logger::info(closeLog.str());
+
     if (isListeningSocket(fd))
     {
         configs.erase(fd);

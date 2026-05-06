@@ -12,6 +12,7 @@ RESPONSE_SRC = src/response
 CGI_SRC = src/cgi
 REQUEST_SRC = src/request
 COOKIE_SRC = src/cookie
+LOGGER_SRC = src/logger
 
 NAME = webserv
 
@@ -29,6 +30,7 @@ SRCS = main.cpp \
 	$(SERVER_SRC)/server_client_connection.cpp \
 	$(SERVER_SRC)/server_cgi.cpp \
 	$(CLIENT_SRC)/Client.cpp \
+	$(LOGGER_SRC)/Logger.cpp \
 	$(RESPONSE_SRC)/HttpResponse.cpp \
 	$(RESPONSE_SRC)/FileUtils.cpp \
 	$(CGI_SRC)/Cgi.cpp \

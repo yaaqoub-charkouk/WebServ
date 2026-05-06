@@ -14,17 +14,17 @@ int main(int ac, char **av)
 
 	try
 	{
-		std::cout << "==========================================\n" << std::endl;
+		// std::cout << "==========================================\n" << std::endl;
 
 		Lexer lexer(av[1]);
 
 		Parser parser(lexer.getTokens());
 		parser.parse();
-		std::cout << "--- Parsing Complete ---" << std::endl;
+		Logger::info("Configuration parsed successfully");
 
 		Validator validator(parser.getServers());
 		validator.validate();
-		std::cout << "--- Validator Complete ---" << std::endl;
+		Logger::info("Configuration validated successfully");
 
 		Server		server(parser.getServers());
 		server.run();

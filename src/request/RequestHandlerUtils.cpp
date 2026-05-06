@@ -61,6 +61,9 @@ std::string RequestHandler::buildFilePath(
 
 std::string RequestHandler::stripQueryString(const std::string& uri)
 {
+    if (Logger::isEnabled(Logger::DEBUG))
+        Logger::debug("Stripping query string from URI: " + uri);
+
     size_t qPos = uri.find('?');
     std::cout << "uri : " << uri << std::endl;
     if (qPos == std::string::npos)

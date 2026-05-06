@@ -22,7 +22,10 @@ HttpResponse RequestHandler::handleRequest(const Client& client)
     // if ((request.method == "GET" || request.method == "POST") && isCgiRequest(request.uri, location))
     //     return handleCgi(request.method, request.uri, request.body, server, location);
 
-    std::cout << "Root : .... " << request.uri << std::endl;
+    if (Logger::isEnabled(Logger::DEBUG))
+        Logger::debug("Handling request for URI: " + request.uri);
+
+    // std::cout << "Root : .... " << request.uri << std::endl;
 
     if (request.method == "GET")
         return handleGet(request.uri, server, location);
@@ -241,7 +244,9 @@ HttpResponse RequestHandler::handleDelete(
         return makeErrorResponse(405, server);
 
     std::string filePath = buildFilePath(uri, server, location);
-    std::cout << "PATH : " << filePath << std::endl ;
+    // std::cout << "PATH : " << filePath << std::endl ;
+    if (Logger::isEnabled(Logger::DEBUG))
+        Logger::debug("Resolved delete path: " + filePath);
 
     if (!fileExists(filePath) || directoryExists(filePath))
         return makeErrorResponse(404, server);
