@@ -262,7 +262,8 @@ void    Cgi::read_output()
 {
     if (cgi_status == CGI_READING)
     {
-        Logger::debug("Reading output from CGI child");
+        if (Logger::isEnabled(Logger::DEBUG))
+            Logger::debug("Reading output from CGI child");
         char buff[4096];
         // std::cout << "read 10 bytes " << std::endl;
         read_bytes = read(script_out[0], buff, sizeof(buff));
@@ -270,7 +271,8 @@ void    Cgi::read_output()
             output.append(buff, read_bytes);
         else if (read_bytes == 0) // is it enough
         {
-            Logger::debug("CGI finished reading output");
+            if (Logger::isEnabled(Logger::DEBUG))
+                Logger::debug("CGI finished reading output");
             cgi_status = CGI_DONE_READING;
             // close(script_out[0]);
             // script_out[0] = -1;

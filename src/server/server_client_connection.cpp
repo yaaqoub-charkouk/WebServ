@@ -48,9 +48,12 @@ void    Server::acceptClient(int serverFd)
 
 void    Server::readFromClient(int  client_fd)
 {
-    std::ostringstream readLog;
-    readLog << "Reading from client fd " << client_fd;
-    Logger::debug(readLog.str());
+    if (Logger::isEnabled(Logger::DEBUG))
+    {
+        std::ostringstream readLog;
+        readLog << "Reading from client fd " << client_fd;
+        Logger::debug(readLog.str());
+    }
 
     char buffer[4096];
 
@@ -64,9 +67,12 @@ void    Server::readFromClient(int  client_fd)
     Client&  client = clients.at(client_fd);
     if (client.isCgi)
     {
-        std::ostringstream cgiRead;
-        cgiRead << "Client fd " << client_fd << " is already in CGI state";
-        Logger::debug(cgiRead.str());
+        if (Logger::isEnabled(Logger::DEBUG))
+        {
+            std::ostringstream cgiRead;
+            cgiRead << "Client fd " << client_fd << " is already in CGI state";
+            Logger::debug(cgiRead.str());
+        }
     }
     while (true)
     {
@@ -200,17 +206,23 @@ void Server::writeToClient(int  client_fd)
 
     if (bytes_sent > 0)
     {
-        std::ostringstream sendLog;
-        sendLog << "Sent " << bytes_sent << " bytes to "
-                << client.clientAddress << ":" << client.clientPort;
-        Logger::debug(sendLog.str());
+        if (Logger::isEnabled(Logger::DEBUG))
+        {
+            std::ostringstream sendLog;
+            sendLog << "Sent " << bytes_sent << " bytes to "
+                    << client.clientAddress << ":" << client.clientPort;
+            Logger::debug(sendLog.str());
+        }
 
         client.bytes_sent += bytes_sent;
 
-        std::ostringstream remainingLog;
-        remainingLog << "Remaining bytes to send: "
-                     << client.response_str.size() - client.bytes_sent;
-        Logger::debug(remainingLog.str());
+        if (Logger::isEnabled(Logger::DEBUG))
+        {
+            std::ostringstream remainingLog;
+            remainingLog << "Remaining bytes to send: "
+                         << client.response_str.size() - client.bytes_sent;
+            Logger::debug(remainingLog.str());
+        }
 
         if (client.bytes_sent == client.response_str.size())
             closeClient(client_fd);

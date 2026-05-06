@@ -16,6 +16,7 @@ public:
 
     static void setLevel(Level level);
     static Level getLevel();
+    static bool isEnabled(Level level);
 
     static void log(Level level, const std::string& message);
     static void debug(const std::string& message);

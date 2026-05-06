@@ -17,10 +17,14 @@ Logger::Level Logger::getLevel()
     return currentLevel;
 }
 
+bool Logger::isEnabled(Level level)
+{
+    return level >= currentLevel;
+}
+
 void Logger::log(Level level, const std::string& message)
 {
-    bool shouldLog = level >= currentLevel;
-    if (!shouldLog)
+    if (!isEnabled(level))
         return;
     std::ostream& out = streamFor(level);
     out << "[" << timestamp() << "] "
@@ -76,8 +80,8 @@ const char* Logger::levelLabel(Level level)
         case INFO: return "INFO";
         case WARN: return "WARN";
         case ERROR: return "ERROR";
+        default: return "INFO";
     }
-    return "INFO";
 }
 
 std::ostream& Logger::streamFor(Level level)

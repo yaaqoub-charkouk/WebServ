@@ -117,27 +117,35 @@ void    Server::run()
             }
         }
 
-        std::ostringstream pollLog;
-        pollLog << "Polling cycle started (pollFds size: " << pollFds.size() << ")";
-        Logger::debug(pollLog.str());
+        if (Logger::isEnabled(Logger::DEBUG))
+        {
+            std::ostringstream pollLog;
+            pollLog << "Polling cycle started (pollFds size: " << pollFds.size() << ")";
+            Logger::debug(pollLog.str());
+        }
 
         for (size_t i = 0; i < pollFds.size();)
         {
             if (pollFds[i].revents == 0) {
                 ++i;
-                Logger::debug("Ignoring socket with no events");
+                if (Logger::isEnabled(Logger::DEBUG))
+                    Logger::debug("Ignoring socket with no events");
                 continue ;
             }
             clientRemoved = false;
 
             if (pollFds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) { // debugging : check if cgi pipe got POLLERR | POLLNVAL
                 if (isCgiPipe(pollFds[i].fd)) {
-                    std::ostringstream pollErr;
-                    pollErr << "Poll error on CGI pipe fd " << pollFds[i].fd;
-                    Logger::debug(pollErr.str());
+                    if (Logger::isEnabled(Logger::DEBUG))
+                    {
+                        std::ostringstream pollErr;
+                        pollErr << "Poll error on CGI pipe fd " << pollFds[i].fd;
+                        Logger::debug(pollErr.str());
+                    }
                     if (pollFds[i].revents & POLLHUP)
                         processCgiEvent(pollFds[i].fd);
-                    Logger::debug("CGI pipe received POLLHUP");
+                    if (Logger::isEnabled(Logger::DEBUG))
+                        Logger::debug("CGI pipe received POLLHUP");
                     // continue;
                 }
                 else {
