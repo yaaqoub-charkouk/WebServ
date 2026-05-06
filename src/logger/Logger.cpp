@@ -19,7 +19,8 @@ Logger::Level Logger::getLevel()
 
 void Logger::log(Level level, const std::string& message)
 {
-    if (level < currentLevel)
+    bool shouldLog = level >= currentLevel;
+    if (!shouldLog)
         return;
     std::ostream& out = streamFor(level);
     out << "[" << timestamp() << "] "

@@ -262,7 +262,7 @@ void    Cgi::read_output()
 {
     if (cgi_status == CGI_READING)
     {
-         Logger::debug("Reading output from CGI child");
+        Logger::debug("Reading output from CGI child");
         char buff[4096];
         // std::cout << "read 10 bytes " << std::endl;
         read_bytes = read(script_out[0], buff, sizeof(buff));
