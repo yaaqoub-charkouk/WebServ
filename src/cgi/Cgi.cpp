@@ -158,7 +158,7 @@ void Cgi::parseOutput(const std::string &output)
     size_t pos = output.find("\r\n\r\n");
     if (pos != std::string::npos)
     {
-        parseOutputHeaders(output.substr(0, pos));
+        parseOutputHeaders(output.substr(0, pos + 2));
         body = output.substr(pos + 4);
     }
     else

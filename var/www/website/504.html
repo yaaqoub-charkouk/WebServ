@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>400 - Bad Request</title>
+    <title>504 - Gateway Timeout</title>
     <style>
         :root {
             --bg-1: #0f172a;
@@ -26,10 +26,7 @@
             min-height: 100vh;
             font-family: "Trebuchet MS", "Gill Sans", sans-serif;
             color: var(--text);
-            background:
-                radial-gradient(circle at 10% 20%, rgba(245, 158, 11, 0.18), transparent 35%),
-                radial-gradient(circle at 90% 80%, rgba(239, 68, 68, 0.15), transparent 40%),
-                linear-gradient(130deg, var(--bg-1), var(--bg-2));
+            background: radial-gradient(circle at 10% 20%, rgba(245, 158, 11, 0.18), transparent 35%), radial-gradient(circle at 90% 80%, rgba(239, 68, 68, 0.15), transparent 40%), linear-gradient(130deg, var(--bg-1), var(--bg-2));
             display: grid;
             place-items: center;
             padding: 24px;
@@ -57,7 +54,6 @@
         h1 {
             margin-top: 10px;
             font-size: clamp(24px, 4vw, 36px);
-            line-height: 1.2;
         }
 
         p {
@@ -68,7 +64,6 @@
 
         .actions {
             display: flex;
-            flex-wrap: wrap;
             gap: 12px;
             margin-top: 26px;
         }
@@ -78,7 +73,6 @@
             border-radius: 10px;
             padding: 12px 18px;
             font-weight: 700;
-            transition: transform 180ms ease, opacity 180ms ease, background 180ms ease;
         }
 
         .btn-primary {
@@ -90,11 +84,6 @@
             border: 1px solid rgba(148, 163, 184, 0.45);
             color: var(--text);
             background: rgba(148, 163, 184, 0.08);
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            opacity: 0.95;
         }
 
 
@@ -115,9 +104,9 @@
 
 <body>
     <main class="card">
-        <div class="code">400</div>
-        <h1>Bad Request</h1>
-        <p>The server could not understand the request due to invalid syntax.</p>
+        <div class="code">504</div>
+        <h1>Gateway Timeout</h1>
+        <p>The server is currently unable to handle the request. Please try again later.</p>
         <div class="actions">
             <a class="btn btn-primary" href="/">Go to Home</a>
             <a class="btn btn-secondary" href="/scripts.html">View CGI Scripts</a>
