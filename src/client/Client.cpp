@@ -107,9 +107,69 @@ void    Client::parseRequestHeaders()
         state = COMPLETE;
 }
 
+
+// HTTP/1.1 200 OK
+// Transfer-Encoding: chunked
+
+// 4\r\n
+// Wiki\r\n
+// 5\r\n
+// pedia\r\n
+// 0\r\n
+// \r\n
+
 void    Client::parseRequestBody()
 {
-    if (request.headers.find("content-length") != request.headers.end())
+    if (request.headers.count("transfer-encoding"))
+    {
+        std::string chunk = request.headers.at("transfer-encoding");
+        if (chunk == "chunked")
+        {
+            std::string body = "";
+            std::string req_body = request_str.substr(header_end_pos + 4);
+            while (true)
+            {
+                size_t  length;
+                std::string part;
+                length = std::strtol(req_body.c_str(), NULL, 16);
+                if (length == 0)
+                    break ;
+                size_t pos = req_body.find("\r\n");
+                if (pos != std::string::npos)
+                {
+                    pos += 2;
+                    req_body = req_body.substr(pos);
+                    part = req_body.substr(0, length);
+                    body.append(part);
+                    pos = req_body.find("\r\n");
+                    if (pos != std::string::npos)
+                    {
+                        pos += 2;
+                        req_body = req_body.substr(pos);
+                    }
+                    else {
+                        state = ERROR;
+                        error_code = 400;
+                    }
+                }
+                else {
+                    state = ERROR;
+                    error_code = 400;
+                }
+            }
+            if (req_body.compare("\r\n\r\n"))
+            {
+                request.body.clear();
+                request.body = body;
+                return ;
+            }
+            else {
+                state = ERROR;
+                error_code = 400;
+            }
+        }
+    }
+    else if (request.headers.find("content-length") != request.headers.end())
     {
         if (request.method == "GET") {
             state = ERROR; // !!!!!! still need to check
