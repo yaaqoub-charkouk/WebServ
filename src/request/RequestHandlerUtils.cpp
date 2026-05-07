@@ -19,22 +19,27 @@ std::string RequestHandler::buildFilePath(
     if (root.empty())
         root = ".";
 
-    std::string relativePath = uriPath;
-    if (location)
-    {
-        const std::string& locationPath = location->getPath();
-        if (!locationPath.empty() && uriPath.find(locationPath) == 0)
-        {
-            relativePath = uriPath.substr(locationPath.length());
-            if (relativePath.empty())
-                relativePath = "/";
-        }
-    }
+    bool hasLocationRoot = (location && !location->getRoot().empty());
+
+	std::string relativePath = uriPath;
+
+	if (location && hasLocationRoot)
+	{
+		const std::string& locationPath = location->getPath();
+		if (!locationPath.empty() && uriPath.find(locationPath) == 0)
+		{
+			relativePath = uriPath.substr(locationPath.length());
+			if (relativePath.empty())
+				relativePath = "/";
+		}
+	}
 
     if (!relativePath.empty() && relativePath[0] == '/')
         relativePath = relativePath.substr(1);
 
+
     std::string filePath = joinPath(root, relativePath);
+
 
     if (fileExists(filePath + ".html"))
         return filePath + ".html";
@@ -55,7 +60,6 @@ std::string RequestHandler::buildFilePath(
     {
         return filePath + "/index.html";
     }
-
     return filePath;
 }
 
