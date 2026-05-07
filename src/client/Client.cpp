@@ -150,11 +150,13 @@ void    Client::parseRequestBody()
                     else {
                         state = ERROR;
                         error_code = 400;
+                        return ;
                     }
                 }
                 else {
                     state = ERROR;
                     error_code = 400;
+                    return ;
                 }
             }
             if (req_body.compare("\r\n\r\n"))
@@ -166,6 +168,7 @@ void    Client::parseRequestBody()
             else {
                 state = ERROR;
                 error_code = 400;
+                return ;
             }
         }
     }
