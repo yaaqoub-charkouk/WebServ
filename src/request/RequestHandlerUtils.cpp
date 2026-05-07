@@ -37,11 +37,8 @@ std::string RequestHandler::buildFilePath(
     if (!relativePath.empty() && relativePath[0] == '/')
         relativePath = relativePath.substr(1);
 
-	std::cout << "relativePath : " << relativePath << std::endl; 
 
     std::string filePath = joinPath(root, relativePath);
-
-	std::cout << "filePath : " << filePath << std::endl;
 
 
     if (fileExists(filePath + ".html"))
