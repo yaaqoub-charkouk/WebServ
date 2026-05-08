@@ -24,16 +24,6 @@ Cgi::Cgi(const HttpRequest &req, const std::string &scriptPath, const std::map<s
         res = HttpResponse::makeErrorRes(500, "");
         return;
     }
-    // execute();
-    // if (output.empty())
-    // {
-    //     cgi_status = CGI_EXEC_ERROR;
-    //     std::cerr << "Error : CGI: Failed to execute script: " << scriptPath << std::endl;
-    //     return;
-    // }
-    // cgi_status = CGI_SUCCESS;
-    // parseOutput(output);
-    // makeResponse();
 }
 
 void    Cgi::build_response()
@@ -41,7 +31,6 @@ void    Cgi::build_response()
     if (output.empty())
     {
         cgi_status = CGI_EXEC_ERROR;
-        // std::cerr << "Error : CGI: Failed to execute script: " << script_path << std::endl;
         Logger::error("CGI failed to execute script: " + script_path);
         return;
     }
@@ -52,16 +41,6 @@ void    Cgi::build_response()
 
 Cgi::~Cgi()
 {
-    // if (cgi_status == CGI_SUCCESS)
-    // {
-    //     closePipes();
-    //     waitpid(pid, &status, 0);
-    // }
-    // else if (pid > 0)
-    // {
-    //     kill(pid, SIGKILL);
-    //     waitpid(pid, &status, 0);
-    // }
     free_envp();
 }
 
@@ -215,75 +194,34 @@ void Cgi::execute()
     close(script_in[0]);
     close(script_out[1]);
     start_time = time(NULL);
-    // size_t total_written = 0;
 
-    // if (method == "POST" && fcntl(script_in[1], F_SETFL, O_NONBLOCK) == -1) {
-    //     close(script_in[1]);
-    //     throw std::runtime_error("Failed to make the client cgi pipes nonblocking");
-    // }
-    // else
     if (method == "GET")
     {
-        close(script_in[1]);// we dont need to write to child
+        close(script_in[1]);// we dont need to write to the cgi child
         script_in[1] = -1;
     }
-
-    // if (fcntl(script_out[0], F_SETFL, O_NONBLOCK) == -1) {
-    //     close(script_out[0]);
-    //     throw std::runtime_error("Failed to make the client cgi pipes nonblocking");
-    // }
-    // only if the method is post or put
-    // while (total_written < req_body.size())
-    // {
-    //     ssize_t written = write(script_in[1], req_body.c_str() + total_written, req_body.size() - total_written);
-    //     if (written <= 0)
-    //     {
-    //         cgi_status = CGI_EXEC_ERROR;
-    //         close(script_in[1]);
-    //         return;
-    //     }
-    //     total_written += written;
-    // }
-    // if (method == "POST" && req_body.size() != 0)
-    // {
-    //     cgi_status = CGI_WRITING;
-    //     write_body();// should be called from server
-    // }
-    // cgi_status = CGI_READING;
-    // read_output();// should be called from server
-    // close(script_in[1]);
-    // script_in[1] = -1;
-    // close(script_out[0]);
-    // script_out[0] = -1;
-    // return output;
 }
 
 void    Cgi::read_output()
 {
     if (cgi_status == CGI_READING)
     {
-        // std::cout << "read output from cgi child" << std::endl;
         if (Logger::isEnabled(Logger::DEBUG))
             Logger::debug("Reading output from CGI child");
 
-
         char buff[4096];
-        // std::cout << "read 10 bytes " << std::endl;
         read_bytes = read(script_out[0], buff, sizeof(buff));
         if (read_bytes > 0)
             output.append(buff, read_bytes);
-        else if (read_bytes == 0) // is it enough
+        else if (read_bytes == 0)
         {
-            // std::cout << "cgi done " << std::endl;
             if (Logger::isEnabled(Logger::DEBUG))
                 Logger::debug("CGI finished reading output");
 
             cgi_status = CGI_DONE_READING;
-            // close(script_out[0]);
-            // script_out[0] = -1;
             return ;
         }
-        else if (read_bytes == -1 && (errno == EAGAIN || errno == EWOULDBLOCK)) // need to check for real error
+        else if (read_bytes == -1 && (errno == EAGAIN || errno == EWOULDBLOCK))
             return ;
     }
 }
@@ -299,8 +237,6 @@ void    Cgi::write_body()
         else if (written == req_body.size())
         {
             cgi_status = CGI_DONE_WRITING;
-            // close(script_in[1]); // LEHWAAAA
-            // script_in[1] = -1;
             return ;
         }
         else if (write_bytes == -1 && (errno == EAGAIN || errno == EWOULDBLOCK))
@@ -339,14 +275,9 @@ void    Cgi::buildEnvp(const HttpRequest &req)
     std::string ext = (pos != std::string::npos) ? script_name.substr(pos) : "";
     if (cgi_extensions.count(ext))
         script_interpreter = cgi_extensions.at(ext);
-    // if (ext == ".py")
-    //     script_interpreter = "/usr/bin/python3";
-    // else if (ext == ".php")
-    //     script_interpreter = "/usr/bin/php";
     else
     {
         cgi_status = CGI_ENV_ERROR;
-        // std::cerr << "Error : CGI: Unsupported script type: " << ext << std::endl;
         Logger::error("CGI unsupported script type: " + ext);
         
         return;

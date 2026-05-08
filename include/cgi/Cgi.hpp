@@ -32,10 +32,10 @@ class Cgi
 {
 private:
     std::vector<std::string> env_vect;
-public:
-    pid_t pid;
     int status;
     char **envp;
+public:
+    pid_t pid;
     int     script_in[2];
     int     script_out[2];
     CgiStatus cgi_status;

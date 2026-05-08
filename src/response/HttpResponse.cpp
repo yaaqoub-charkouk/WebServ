@@ -81,13 +81,6 @@ std::string HttpResponse::getFileExtension(const std::string &filename)
 }
 
 
-// Response example
-// HTTP/1.1 200 OK\r\n
-// Content-Type: text/html\r\n
-// Content-Length: 150\r\n
-// \r\n
-// <html>...</html>
-
 std::string HttpResponse::getResponse() const
 {
     std::string CRLF = "\r\n";
@@ -105,21 +98,7 @@ std::string HttpResponse::getResponse() const
     return (rs.str());
 }
 
-// <!doctype html>
-// <html>
-// <head><meta charset="utf-8"><title>Index of /images/</title></head>
-// <body>
-//   <h1>Index of /images/</h1>
-//   <hr>
-//   <ul>
-//     <li><a href="../">../</a></li>
-//     <li><a href="/images/cat.jpg">cat.jpg</a></li>
-//     <li><a href="/images/icons/">icons/</a></li>
-//     <li><a href="/images/notes.txt">notes.txt</a></li>
-//   </ul>
-//   <hr>
-// </body>
-// </html>
+
 HttpResponse HttpResponse::makeAutoindexRes(const std::string &path, const std::string &uri)
 {
     DIR *dir;
@@ -134,8 +113,8 @@ HttpResponse HttpResponse::makeAutoindexRes(const std::string &path, const std::
     
     std::string uriPath = (uri.empty() || uri[uri.size() - 1] != '/') ? uri + "/" : uri;
     
-    body << "<!DOCTYPE html>\n<html>\n<head><meta charset=\"utf-8\"><title>Index of " << uriPath << "</title></head>"
-        << "<body><h1>Index of " << uriPath << "</h1><hr><ul>\n";
+    body << "<!DOCTYPE html>\n<html>\n<head><meta charset=\"utf-8\"><title>Index of " << uri << "</title></head>"
+        << "<body><h1>Index of " << uri << "</h1><hr><ul>\n";
         while ((entry = readdir(dir)) != NULL)
         {
             std::string name = entry->d_name;
@@ -188,11 +167,6 @@ HttpResponse HttpResponse::makeErrorRes(int code, const std::string &path)
     return res;
 }
 
-// Redirection example
-// HTTP/1.0 301 Moved Permanently\r\n
-// Location: /new-url\r\n
-// Content-Length: 0\r\n
-// \r\n
 
 HttpResponse HttpResponse::makeRedireRes(int code, const std::string &location)
 {

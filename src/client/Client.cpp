@@ -107,17 +107,6 @@ void    Client::parseRequestHeaders()
         state = COMPLETE;
 }
 
-
-// HTTP/1.1 200 OK
-// Transfer-Encoding: chunked
-
-// 4\r\n
-// Wiki\r\n
-// 5\r\n
-// pedia\r\n
-// 0\r\n
-// \r\n
-
 void    Client::parseRequestBody()
 {
     if (request.headers.count("transfer-encoding"))
@@ -129,47 +118,59 @@ void    Client::parseRequestBody()
             std::string req_body = request_str.substr(header_end_pos + 4);
             while (true)
             {
+                size_t pos = req_body.find("\r\n");
+                if (pos == std::string::npos)
+                    return ; // Wait for more data
+
                 size_t  length;
                 std::string part;
                 length = std::strtol(req_body.c_str(), NULL, 16);
                 if (length == 0)
                     break ;
-                size_t pos = req_body.find("\r\n");
-                if (pos != std::string::npos)
-                {
-                    pos += 2;
-                    req_body = req_body.substr(pos);
-                    part = req_body.substr(0, length);
-                    body.append(part);
-                    pos = req_body.find("\r\n");
-                    if (pos != std::string::npos)
-                    {
-                        pos += 2;
-                        req_body = req_body.substr(pos);
-                    }
-                    else {
-                        state = ERROR;
-                        error_code = 400;
-                        return ;
-                    }
-                }
+
+                pos += 2;
+                req_body = req_body.substr(pos);
+
+                if (req_body.length() < length)
+                    return ; // Wait again
+
+                part = req_body.substr(0, length);
+                body.append(part);
+                req_body = req_body.substr(length);
+
+                if (req_body.length() < 2)
+                    return ;
+
+                if (req_body.substr(0, 2) == "\r\n")
+                    req_body = req_body.substr(2);
                 else {
                     state = ERROR;
                     error_code = 400;
                     return ;
                 }
+                
+                if (body.size() > serverConfig.getClientMaxBodySize()) {
+                    state = ERROR;
+                    error_code = 413;
+                    return ;
+                }
             }
-            if (req_body.compare("\r\n\r\n"))
+
+            if (req_body.find("\r\n\r\n") != std::string::npos)
             {
                 request.body.clear();
                 request.body = body;
+                state = COMPLETE;
                 return ;
             }
             else {
-                state = ERROR;
-                error_code = 400;
                 return ;
             }
+        }
+        else {
+            state = ERROR;
+            error_code = 501;
+            return ;
         }
     }
     else if (request.headers.find("content-length") != request.headers.end())
