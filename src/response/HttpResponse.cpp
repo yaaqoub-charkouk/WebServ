@@ -153,23 +153,8 @@ HttpResponse HttpResponse::makeErrorRes(int code, const std::string &path)
     }
     else
     {
-        def << "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><title>" << code << " - " << getStatusMsg(code) << "</title>"
-            << "<style>:root{--bg-1:#0f172a;--bg-2:#1e293b;--text:#e5e7eb;--muted:#94a3b8;--accent:#f59e0b;--accent-2:#ef4444;}"
-            << "*{box-sizing:border-box;margin:0;padding:0;} "
-            << "body{min-height:100vh;font-family:sans-serif;color:var(--text);"
-            << "background:radial-gradient(circle at 10% 20%, rgba(245,158,11,0.18), transparent 35%),radial-gradient(circle at 90% 80%, rgba(239,68,68,0.15), transparent 40%),linear-gradient(130deg, var(--bg-1), var(--bg-2));"
-            << "display:grid;place-items:center;padding:24px;text-align:center;} "
-            << ".card{width:min(720px,100%);background:linear-gradient(180deg,rgba(17,24,39,0.92),rgba(2,6,23,0.92));border:1px solid rgba(148,163,184,0.25);border-radius:18px;padding:36px;box-shadow:0 24px 60px rgba(0,0,0,0.45);} "
-            << ".code{font-size:112px;font-weight:800;color:var(--accent);text-shadow:0 0 28px rgba(245,158,11,0.35);line-height:1;margin-bottom:10px;} "
-            << "h1{font-size:36px;margin-bottom:14px;} "
-            << "p{color:var(--muted);font-size:18px;margin-bottom:26px;} "
-            << ".btn{text-decoration:none;border-radius:10px;padding:12px 18px;font-weight:700;color:#0b1020;background:linear-gradient(90deg,var(--accent),var(--accent-2));display:inline-block;} "
-            << "</style></head><body>"
-            << "<main class=\"card\"><div class=\"code\">" << code << "</div>"
-            << "<h1>" << getStatusMsg(code) << "</h1>"
-            << "<p>We could not process this request.</p>"
-            << "<a class=\"btn\" href=\"/\">Go to Home</a>"
-            << "</main></body></html>";
+        def << "<html><body><style>body{display:flex;justify-content:center;height:100vh;}</style><h1>" << code << " " 
+        << getStatusMsg(code) <<"</h1></body></html>";
         content = def.str();
         size << content.size();
     }
