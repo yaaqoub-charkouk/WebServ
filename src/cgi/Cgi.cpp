@@ -32,6 +32,7 @@ void    Cgi::build_response()
     {
         cgi_status = CGI_EXEC_ERROR;
         Logger::error("CGI failed to execute script: " + script_path);
+        makeResponse();
         return;
     }
     cgi_status = CGI_SUCCESS;
