@@ -101,7 +101,8 @@ void    Client::parseRequestHeaders()
         
         request.headers[key] = value;
     }
-    if (request.headers.find("content-length") != request.headers.end())
+    if (request.headers.find("content-length") != request.headers.end() ||
+        request.headers.find("transfer-encoding") != request.headers.end()) //for chunked body and there s no content-length
         state = READING_BODY;
     else
         state = COMPLETE;
