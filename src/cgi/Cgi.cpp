@@ -1,6 +1,6 @@
 #include "../../include/cgi/Cgi.hpp"
 
-Cgi::Cgi() : pid(-1), status(0), envp(NULL), cgi_status(CGI_IDLE), start_time(0), timeout(0), written(0)
+Cgi::Cgi() : status(0), envp(NULL), pid(-1), cgi_status(CGI_IDLE), start_time(0), timeout(0), written(0)
 {
     script_in[0] = -1;
     script_in[1] = -1;
@@ -9,7 +9,7 @@ Cgi::Cgi() : pid(-1), status(0), envp(NULL), cgi_status(CGI_IDLE), start_time(0)
 };
 
 Cgi::Cgi(const HttpRequest &req, const std::string &scriptPath, const std::map<std::string, std::string> &cgiExtension, time_t timeout)
-    : pid(-1), status(0), envp(NULL), cgi_status(CGI_IDLE), start_time(0)
+    : status(0), envp(NULL), pid(-1), cgi_status(CGI_IDLE), start_time(0)
     , method(req.method), timeout(timeout), script_path(scriptPath), cgi_extensions(cgiExtension)
     , written(0), req_body(req.body)
 {
