@@ -109,7 +109,71 @@ void    Client::parseRequestHeaders()
 
 void    Client::parseRequestBody()
 {
-    if (request.headers.find("content-length") != request.headers.end())
+    if (request.headers.count("transfer-encoding"))
+    {
+        std::string chunk = request.headers.at("transfer-encoding");
+        if (chunk == "chunked")
+        {
+            std::string body = "";
+            std::string req_body = request_str.substr(header_end_pos + 4);
+            while (true)
+            {
+                size_t pos = req_body.find("\r\n");
+                if (pos == std::string::npos)
+                    return ; // Wait for more data
+
+                size_t  length;
+                std::string part;
+                length = std::strtol(req_body.c_str(), NULL, 16);
+                if (length == 0)
+                    break ;
+
+                pos += 2;
+                req_body = req_body.substr(pos);
+
+                if (req_body.length() < length)
+                    return ; // Wait again
+
+                part = req_body.substr(0, length);
+                body.append(part);
+                req_body = req_body.substr(length);
+
+                if (req_body.length() < 2)
+                    return ;
+
+                if (req_body.substr(0, 2) == "\r\n")
+                    req_body = req_body.substr(2);
+                else {
+                    state = ERROR;
+                    error_code = 400;
+                    return ;
+                }
+                
+                if (body.size() > serverConfig.getClientMaxBodySize()) {
+                    state = ERROR;
+                    error_code = 413;
+                    return ;
+                }
+            }
+
+            if (req_body.find("\r\n\r\n") != std::string::npos)
+            {
+                request.body.clear();
+                request.body = body;
+                state = COMPLETE;
+                return ;
+            }
+            else {
+                return ;
+            }
+        }
+        else {
+            state = ERROR;
+            error_code = 501;
+            return ;
+        }
+    }
+    else if (request.headers.find("content-length") != request.headers.end())
     {
         if (request.method == "GET") {
             state = ERROR; // !!!!!! still need to check

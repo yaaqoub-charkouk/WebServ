@@ -22,7 +22,6 @@ public:
     std::string value;
     Cookie();
     bool    shouldSetCookie;
-    // Cookie(const HttpRequest &req);
     void    checkRequest(const HttpRequest &req);
 
 };

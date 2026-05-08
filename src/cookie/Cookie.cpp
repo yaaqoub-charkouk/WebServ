@@ -7,10 +7,6 @@ Cookie::Cookie(): token(""), base("0123456789ABCDEF"), shouldSetCookie(false) {}
 
 void    Cookie::checkRequest(const HttpRequest &req)
 {
-    // for (auto it = req.headers.begin(); it != req.headers.end(); it++)
-    // {
-    //     std::cout << it->first << "---" << it->second << std::endl;
-    // }
     if (req.headers.find("cookie") != req.headers.end())
     {
         const std::map<std::string , std::string>::const_iterator it = req.headers.find("cookie");
@@ -26,29 +22,20 @@ void    Cookie::checkRequest(const HttpRequest &req)
                 }
                 else
                     shouldSetCookie = false;
-            //     std::cout << "++++------------+++++++++++ COOKIE IS ALREADY SET\n" ;
             }
             else
                 generateToken();
         }
         else
-        // {
             generateToken();
-        //     std::cout << "++++------------+++++++++++ COOKIE GENERATION\n" ;
-
-        // }
     }
     else
-    // {
         generateToken();
-        // std::cout << "++++------------+++++++++++ COOKIE GENERATION\n" ;
-    // }
 }
 
 // HTTP/1.0 200 OK
 // Content-type: text/html
-// Set-Cookie: theme=light
-// Set-Cookie: sessionToken=abc123; Expires=Wed, 9 Jun 2021 10:18:14 GMT
+// Set-Cookie: sessionToken=123ABC; Path=/; HttpOnly
 
 void    Cookie::generateToken()
 {
@@ -72,9 +59,6 @@ void    Cookie::generateToken()
 }
 
 
-// GET /spec.html HTTP/1.1
-// Host: www.example.org
-// Cookie: theme=light; sessionToken=abc123
 
 void    Cookie::extractToken(const std::string &cookie)
 {
