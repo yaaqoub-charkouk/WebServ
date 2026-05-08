@@ -85,8 +85,6 @@ void    Server::processCgiReadEvent(int cgi_pipe)
 
 void    Server::processCgiWriteEvent(int cgi_pipe)
 {
-    std::cout << "  processCgiWriteEvent" << std::endl; // debugging
-
     CgiClient& cgi_client = cgi_clients.at(cgi_pipe);
 
     if (cgi_client.processed)

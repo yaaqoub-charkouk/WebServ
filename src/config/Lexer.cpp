@@ -10,6 +10,7 @@ Lexer::Lexer(const std::string& filename)
 	  line(1),
 	  column(1)
 {
+	signal(SIGPIPE, SIG_IGN);
 	readFile();
 	removeComments();
 	tokenize();

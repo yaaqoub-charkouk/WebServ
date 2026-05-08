@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include <signal.h>
 #include "Token.hpp"
 #include "ConfigException.hpp"
 

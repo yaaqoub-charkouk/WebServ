@@ -180,6 +180,7 @@ void Cgi::execute()
     }
     if (pid == 0)
     {
+        signal(SIGPIPE, SIG_IGN);
         dup2(script_in[0], STDIN_FILENO);
         dup2(script_out[1], STDOUT_FILENO);
         closePipes();
