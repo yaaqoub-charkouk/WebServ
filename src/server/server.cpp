@@ -14,7 +14,7 @@ Server::Server(const std::vector<ServerConfig>& servers)
         std::string host = servers[i].getHost();
         int         newServerSocket = addListeningSocket(port, host);
 
-        configs.insert(std::make_pair(newServerSocket, servers[i])); // may need to check if exists
+        configs.insert(std::make_pair(newServerSocket, servers[i])); 
 
         std::ostringstream logMessage;
         logMessage << "Listening on " << host << ":" << port << " (fd " << newServerSocket << ")";
@@ -85,7 +85,6 @@ int    Server::addListeningSocket(int port, std::string host)
     pfd.events = POLLIN;
     pfd.revents = 0;
 
-    // adding serverSocket to listenSockets & pollFds
     listenSockets.push_back(newServSocket);
     pollFds.push_back(pfd);
 
@@ -96,7 +95,7 @@ void    Server::run()
 {
     while (1337)
     {
-        int ret = poll(pollFds.data(), pollFds.size(), 6000);
+        int ret = poll(pollFds.data(), pollFds.size(), 1000);
 
         if (ret < 0)
             throw std::runtime_error("poll failed can't listen on servers sockets");
@@ -113,7 +112,20 @@ void    Server::run()
         std::map<int, Client>::iterator it;
         for (it = clients.begin(); it != clients.end(); ++it)
         {
-            if (it->second.isCgi && it->second.cgi != NULL && it->second.cgi->checkTimeout())
+			if (!it->second.isCgi && !it->second.timeout && time(NULL) - it->second.start_time >= TIMEOUT)
+			{
+				std::stringstream   message;
+                message  << "[HTTP_TIMEOUT] port=" << it->second.clientPort << " Sending error response & closing client " << std::endl;
+                Logger::warn(message.str());
+
+                it->second.timeout = true;
+				it->second.response = RequestHandler::makeErrorResponse(504, it->second.serverConfig);
+                it->second.response_str = it->second.response.getResponse();
+                changePollEvent(it->first, POLLOUT);
+				// writeToClient(it->first);
+			}
+
+            else if (it->second.isCgi && it->second.cgi != NULL && it->second.cgi->checkTimeout())
             {
                 std::stringstream   message;
                 message  << "[CGI_TIMEOUT] pid=" << it->second.cgi->pid << "Sending error response & closing client " << std::endl;
@@ -121,9 +133,7 @@ void    Server::run()
 
                 it->second.response = RequestHandler::makeErrorResponse(504, it->second.serverConfig);
                 it->second.response_str = it->second.response.getResponse();
-                // Should we close the cgi pipes here? LEHWAAA : "no you should not . client close connection after he write response back to client and closes its cgi pipes" .
                 changePollEvent(it->first, POLLOUT);
-                // timeout = true;
 
             }
         }
@@ -136,7 +146,7 @@ void    Server::run()
             }
             clientRemoved = false;
 
-            if (pollFds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) { // debugging : check if cgi pipe got POLLERR | POLLNVAL
+            if (pollFds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
                 if (isCgiPipe(pollFds[i].fd)) {
                     if (pollFds[i].revents & POLLHUP)
                         processCgiEvent(pollFds[i].fd);
@@ -203,9 +213,10 @@ void    Server::closeSocket(int fd)
             }
         }
     }
+	
     else
     {
-        if (clients.find(fd) == clients.end()) // debugging : may slow down the server tow lookups
+        if (clients.find(fd) == clients.end())
             return ;
         Client& client = clients.at(fd);
         if (client.isCgi)

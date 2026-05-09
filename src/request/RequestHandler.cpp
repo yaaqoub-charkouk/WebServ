@@ -1,10 +1,12 @@
 #include "../../include/request/RequestHandler.hpp"
+#include <iostream>
 #include <unistd.h>
 #include <fstream>
 #include <sstream>
 #include <ctime>
 #include "../../include/cgi/Cgi.hpp"
 #include "../../include/client/Client.hpp"
+
 
 HttpResponse RequestHandler::handleRequest(const Client& client)
 {
@@ -17,15 +19,17 @@ HttpResponse RequestHandler::handleRequest(const Client& client)
     }
 
     const LocationConfig* location = findLocation(request.uri, server);
-    
-    // you don't need this anymore TAHALLA :
-    // if ((request.method == "GET" || request.method == "POST") && isCgiRequest(request.uri, location))
-    //     return handleCgi(request.method, request.uri, request.body, server, location);
 
     if (Logger::isEnabled(Logger::DEBUG))
         Logger::debug("Handling request for URI: " + request.uri);
 
-    // std::cout << "Root : .... " << request.uri << std::endl;
+	for(size_t i = 0; i < location->getMethods().size(); i++) {
+		if (location->getMethods()[i] == request.method)
+			break ;
+		if (i == location->getMethods().size() - 1)
+			return makeErrorResponse(405, server);
+	}
+	
 
     if (request.method == "GET")
         return handleGet(request.uri, server, location);
@@ -74,13 +78,13 @@ HttpResponse RequestHandler::handleGet(
 
     std::string filePath = buildFilePath(uri, server, location);
 
-    if (directoryExists(filePath))// This condition needs to be checked first for the autoindex else it will always return 404
+    if (directoryExists(filePath))
     {
         if (location && location->getAutoindex())
         {
             if (location->getIndex().empty())
             {
-                return HttpResponse::makeAutoindexRes(filePath, uri);//I changed this because I need the file path not the uri
+                return HttpResponse::makeAutoindexRes(filePath, uri);
             }
                 return HttpResponse::makeFileRes(filePath + "/" + location->getIndex());
         }
@@ -156,6 +160,7 @@ HttpResponse RequestHandler::handlePost(
     const ServerConfig& server,
     const LocationConfig* location)
 {
+	static int suffix = 0;
     if (!location || !location->hasMethod("POST"))
         return makeErrorResponse(405, server);
 
@@ -214,7 +219,7 @@ HttpResponse RequestHandler::handlePost(
     if (filename.empty())
     {
         std::ostringstream oss;
-        oss << "upload_" << std::time(0);
+        oss << "upload_" << std::time(0) << ++suffix;
         filename = oss.str();
     }
 
@@ -244,7 +249,6 @@ HttpResponse RequestHandler::handleDelete(
         return makeErrorResponse(405, server);
 
     std::string filePath = buildFilePath(uri, server, location);
-    // std::cout << "PATH : " << filePath << std::endl ;
     if (Logger::isEnabled(Logger::DEBUG))
         Logger::debug("Resolved delete path: " + filePath);
 
@@ -275,6 +279,16 @@ void RequestHandler::handleCgi(Client& client, const LocationConfig* location)
         client.isCgiResponseError = true;
         return ;
     }
+	for(size_t i = 0; i < location->getMethods().size(); i++) {
+		if (location->getMethods()[i] == client.request.method)
+			break ;
+		if (i == location->getMethods().size() - 1)
+		{
+			client.response = makeErrorResponse(405, client.serverConfig);
+			client.isCgiResponseError = true;
+			return ;
+		}
+	}
     std::string scriptPath = buildFilePath(client.request.uri, client.serverConfig, location);
     if (!fileExists(scriptPath)) {
         client.response = makeErrorResponse(404, client.serverConfig);
@@ -303,7 +317,4 @@ void RequestHandler::handleCgi(Client& client, const LocationConfig* location)
     Cgi* cgi_init = new Cgi(cgiRequest, scriptPath, location->getCgiExtensions()); // allocate;
     // assign cgi to client 
     client.cgi = cgi_init;
-
-    
-    // return cgi_init.getResponse(); // need to be deleted !!!
 }
