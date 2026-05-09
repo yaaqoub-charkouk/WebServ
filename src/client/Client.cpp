@@ -7,14 +7,8 @@ Client::Client(const ServerConfig& serverConfig,  int clientPort, std::string cl
                   state(READING_HEADERS), isCgi(false), isCgiResponseError(false), cgi(NULL), bytes_sent(0) {
     request.contentLength = 0;
     error_code = 400;
-
-    // uint32_t ip = ntohl(client.sin_addr.s_addr);
-    // std::ostringstream oss;
-    // oss << ((ip >> 24) & 0xFF) << "."
-    //     << ((ip >> 16) & 0xFF) << "."
-    //     << ((ip >> 8) & 0xFF) << "."
-    //     << (ip & 0xFF);
-    // std::string ipStr = oss.str();
+	start_time = time(NULL);
+    timeout = false;
 }
 
 Client::~Client()
@@ -54,7 +48,7 @@ void    Client::parseRequestHeaders()
 
     // READING_HEADERS
     std::string line;
-    if (std::getline(header_stream, line)) // first line
+    if (std::getline(header_stream, line))
     {
         if (!line.empty() && line[line.size() - 1] == '\r')
             line.erase(line.size() - 1);
@@ -66,7 +60,7 @@ void    Client::parseRequestHeaders()
             error_code = 400;
             return ;
         };
-        if (!(request.method == "GET" || request.method == "POST" || request.method == "DELETE")) { // || PUT
+        if (!(request.method == "GET" || request.method == "POST" || request.method == "DELETE")) {
             state = ERROR;
             error_code = 501;
             return ;
@@ -102,7 +96,7 @@ void    Client::parseRequestHeaders()
         request.headers[key] = value;
     }
     if (request.headers.find("content-length") != request.headers.end() ||
-        request.headers.find("transfer-encoding") != request.headers.end()) //for chunked body and there s no content-length
+        request.headers.find("transfer-encoding") != request.headers.end())
         state = READING_BODY;
     else
         state = COMPLETE;
@@ -121,7 +115,7 @@ void    Client::parseRequestBody()
             {
                 size_t pos = req_body.find("\r\n");
                 if (pos == std::string::npos)
-                    return ; // Wait for more data
+                    return ;
 
                 size_t  length;
                 std::string part;
@@ -133,7 +127,7 @@ void    Client::parseRequestBody()
                 req_body = req_body.substr(pos);
 
                 if (req_body.length() < length)
-                    return ; // Wait again
+                    return ;
 
                 part = req_body.substr(0, length);
                 body.append(part);
@@ -177,7 +171,7 @@ void    Client::parseRequestBody()
     else if (request.headers.find("content-length") != request.headers.end())
     {
         if (request.method == "GET") {
-            state = ERROR; // !!!!!! still need to check
+            state = ERROR;
             return ;
         }
         std::istringstream length_stream(request.headers["content-length"]);
@@ -188,7 +182,7 @@ void    Client::parseRequestBody()
             error_code = 400;
             return ;
         }
-        size_t client_max_body_size = serverConfig.getClientMaxBodySize(); // using serverConfig instead
+        size_t client_max_body_size = serverConfig.getClientMaxBodySize();
         if (length > client_max_body_size) {
             state = ERROR;
             error_code = 413;
@@ -198,7 +192,6 @@ void    Client::parseRequestBody()
         request.contentLength = length;
         size_t body_start = header_end_pos + 4;
         if (request_str.size() < body_start + request.contentLength) {
-            // state = INCOMPLETE;
             return ;
         }
         request.body.clear();

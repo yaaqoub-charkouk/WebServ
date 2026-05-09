@@ -15,7 +15,6 @@ Lexer::Lexer(const std::string& filename)
 	removeComments();
 	tokenize();
 	addToken(TOKEN_END, "");
-	// printTokens();
 }
 
 Lexer::~Lexer()
@@ -114,7 +113,7 @@ bool Lexer::isWordChar(char c) const
 	       (c >= 'A' && c <= 'Z') ||
 	       (c >= '0' && c <= '9') ||
 	       c == '_' || c == '-' || c == '.' || c == '/' ||
-	       c == ':' || c == '*';
+	       c == ':' || c == '*' || c == '?' || c == '~' || c == '$' || c == '@' || c == '=' ;
 }
 
 void Lexer::skipWhitespace()
@@ -178,22 +177,3 @@ const std::vector<Token>& Lexer::getTokens() const
 	return token;
 }
 
-// void Lexer::printTokens() const
-// {
-// 	for (size_t i = 0; i < token.size(); ++i)
-// 	{
-// 		const Token& tok = token[i];
-// 		std::cout << "Token(";
-		
-// 		switch (tok.type)
-// 		{
-// 			case TOKEN_WORD: std::cout << "WORD"; break;
-// 			case TOKEN_SEMICOLON: std::cout << "SEMICOLON"; break;
-// 			case TOKEN_OPEN_BRACE: std::cout << "OPEN_BRACE"; break;
-// 			case TOKEN_CLOSE_BRACE: std::cout << "CLOSE_BRACE"; break;
-// 			case TOKEN_END: std::cout << "END"; break;
-// 		}
-		
-// 		std::cout << ", \"" << tok.value << "\", " << tok.line << ":" << tok.column << ")" << std::endl;
-// 	}
-// }

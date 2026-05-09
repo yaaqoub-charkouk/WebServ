@@ -2,6 +2,7 @@
 #include <sys/stat.h>
 #include <iostream>
 
+
 std::string RequestHandler::buildFilePath(
     const std::string& uri,
     const ServerConfig& server,
@@ -69,7 +70,6 @@ std::string RequestHandler::stripQueryString(const std::string& uri)
         Logger::debug("Stripping query string from URI: " + uri);
 
     size_t qPos = uri.find('?');
-    std::cout << "uri : " << uri << std::endl;
     if (qPos == std::string::npos)
         return uri;
     return uri.substr(0, qPos);
@@ -87,9 +87,6 @@ bool RequestHandler::isCgiRequest(const std::string& uri, const LocationConfig* 
         return false;
 
     std::string uriPath = stripQueryString(uri);
-    // Need to be removed now that we have multiple cgi extensions
-    // if (uriPath.length() < cgiExt.begin()->first.length())
-    //     return false;
     std::string ext;
     for (it = cgiExt.begin(); it != cgiExt.end(); it++)
     {

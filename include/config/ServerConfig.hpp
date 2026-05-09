@@ -10,8 +10,8 @@ class ServerConfig
 {
 private:
 	int port;
-	std::string host; // should i handle 
-	std::string serverName; // out of scope ghi haydo . 
+	std::string host;
+	std::string serverName;
 	std::string root;
 	std::string index;
 	size_t clientMaxBodySize;

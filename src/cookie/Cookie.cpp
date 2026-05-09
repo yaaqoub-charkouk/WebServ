@@ -33,9 +33,7 @@ void    Cookie::checkRequest(const HttpRequest &req)
         generateToken();
 }
 
-// HTTP/1.0 200 OK
-// Content-type: text/html
-// Set-Cookie: sessionToken=123ABC; Path=/; HttpOnly
+
 
 void    Cookie::generateToken()
 {

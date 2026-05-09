@@ -25,7 +25,7 @@
 # include "../client/Client.hpp"
 # include "../cookie/Cookie.hpp"
 
-
+# define TIMEOUT 10
 
 
 class Server
@@ -74,10 +74,6 @@ public:
 
 public:
     Server(const std::vector<ServerConfig>& servers);
-//     Server();
-//     Server(const Server& other);
-//     Server& operator=(const Server& other);
-//     ~Server();
 };
 
 std::string intToString(int value);

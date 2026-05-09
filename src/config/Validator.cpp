@@ -113,7 +113,7 @@ void Validator::validateLocation(const LocationConfig& location)
 				ss << "CGI extension must start with dot: " << it->first;
 				throw ValidatorException(ss.str());
 			}
-			if (!isValidCgiInterpreterPath(it->second)) // Maybe check the path is valid
+			if (!isValidCgiInterpreterPath(it->second))
 			{
 				std::stringstream ss;
 				ss << "Invalid CGI interpreter path: " << it->second;

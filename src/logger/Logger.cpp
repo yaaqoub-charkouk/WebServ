@@ -1,7 +1,7 @@
 #include "../../include/logger/Logger.hpp"
 
 
-Logger::Level Logger::currentLevel = Logger::DEBUG;
+Logger::Level Logger::currentLevel = Logger::INFO;
 
 void Logger::setLevel(Level level)
 {

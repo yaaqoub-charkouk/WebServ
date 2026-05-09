@@ -114,7 +114,6 @@ void    Server::processCgiWriteEvent(int cgi_pipe)
                         {
                             pollFds.erase(pollFds.begin() + i);
                             clientRemoved = true;
-                            // break ;
                         }
                     }
         

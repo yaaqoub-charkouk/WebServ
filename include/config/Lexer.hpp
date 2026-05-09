@@ -36,7 +36,6 @@ public:
 	~Lexer();
 
 	const std::vector<Token>& getTokens() const;
-	void printTokens() const; // For debugging
 };
 
 #endif

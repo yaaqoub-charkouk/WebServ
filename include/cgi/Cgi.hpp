@@ -11,7 +11,7 @@
 #include <sstream>
 #include <iostream>
 #include <cstring>
-#include <signal.h> // Added for kill() function
+#include <signal.h>
 #include "../logger/Logger.hpp"
 
 enum CgiStatus

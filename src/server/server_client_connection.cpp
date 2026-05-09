@@ -96,57 +96,59 @@ void    Server::readFromClient(int  client_fd)
                 if ((client.request.method == "GET" || client.request.method == "POST") &&
                                 RequestHandler::isCgiRequest(client.request.uri, location))
                 {
-                    Logger::info("Handling CGI request");
-                    RequestHandler::handleCgi(client, location);
-                    
-                    if (!client.isCgiResponseError)
-                    {
-                        client.cgi->execute();
-                        
-                        if (client.cgi->cgi_status == CGI_PIPE_ERROR || client.cgi->cgi_status == CGI_EXEC_ERROR || client.cgi->cgi_status == CGI_ENV_ERROR)
-                        {
-                            client.response = RequestHandler::makeErrorResponse(500, client.serverConfig);
-                            client.response_str = client.response.getResponse();
-                            changePollEvent(client_fd, POLLOUT);
-                            return ;
-                        }
+					if (!location->hasRedirect()) {
+						Logger::info("Handling CGI request");
+						RequestHandler::handleCgi(client, location);
+						
+						if (!client.isCgiResponseError)
+						{
+							client.cgi->execute();
+							
+							if (client.cgi->cgi_status == CGI_PIPE_ERROR || client.cgi->cgi_status == CGI_EXEC_ERROR || client.cgi->cgi_status == CGI_ENV_ERROR)
+							{
+								client.response = RequestHandler::makeErrorResponse(500, client.serverConfig);
+								client.response_str = client.response.getResponse();
+								changePollEvent(client_fd, POLLOUT);
+								return ;
+							}
 
-                        if (client.request.method == "POST")
-                            client.cgi->cgi_status = CGI_WRITING;
-                        else //if (client.request.method == "GET")
-                            client.cgi->cgi_status = CGI_READING;
+							if (client.request.method == "POST")
+								client.cgi->cgi_status = CGI_WRITING;
+							else
+								client.cgi->cgi_status = CGI_READING;
 
-                        try{
-                            make_cgi_pipes_nonblocking(client.cgi->script_in[1], client.cgi->script_out[0]);
-                        }
-                        catch (...) {
+							try{
+								make_cgi_pipes_nonblocking(client.cgi->script_in[1], client.cgi->script_out[0]);
+							}
+							catch (...) {
 
-                            client.cgi->closePipes();
-                            kill(client.cgi->pid, SIGKILL);
-                            waitpid(client.cgi->pid, NULL, WNOHANG);
-                            client.response = RequestHandler::makeErrorResponse(500, client.serverConfig);
-                            client.response_str = client.response.getResponse();
-                            changePollEvent(client_fd, POLLOUT);
-                            return ;
-                        }
-                        
-                        add_cgi_pipes_to_pollFds(client.cgi->script_in[1], client.cgi->script_out[0]);
+								client.cgi->closePipes();
+								kill(client.cgi->pid, SIGKILL);
+								waitpid(client.cgi->pid, NULL, WNOHANG);
+								client.response = RequestHandler::makeErrorResponse(500, client.serverConfig);
+								client.response_str = client.response.getResponse();
+								changePollEvent(client_fd, POLLOUT);
+								return ;
+							}
+							
+							add_cgi_pipes_to_pollFds(client.cgi->script_in[1], client.cgi->script_out[0]);
 
-                        // associate cgi pipes to client & .
-                        cgi_clients.insert(std::make_pair(client.cgi->script_out[0], CgiClient(client_fd, client.cgi, 0)));
-                        if (client.cgi->script_in[1] != -1 || client.request.method == "POST")
-                            cgi_clients.insert(std::make_pair(client.cgi->script_in[1], CgiClient(client_fd, client.cgi, 1)));
-                        
-                        client.isCgi = true;
-                        return ;
+							// associate cgi pipes to client & .
+							cgi_clients.insert(std::make_pair(client.cgi->script_out[0], CgiClient(client_fd, client.cgi, 0)));
+							if (client.cgi->script_in[1] != -1 || client.request.method == "POST")
+								cgi_clients.insert(std::make_pair(client.cgi->script_in[1], CgiClient(client_fd, client.cgi, 1)));
+							
+							client.isCgi = true;
+							return ;
 
-                    }
-                    else
-                    {
-                        client.response_str = client.response.getResponse();
-                        changePollEvent(client_fd, POLLOUT);
-                        return ;
-                    }
+						}
+						else
+						{
+							client.response_str = client.response.getResponse();
+							changePollEvent(client_fd, POLLOUT);
+							return ;
+						}
+					}
                 }
 
                 client.response  = RequestHandler::handleRequest(client);
