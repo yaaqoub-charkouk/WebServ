@@ -18,6 +18,8 @@ enum ParseState {
 class Client
 {
 public:
+	time_t 				start_time;
+    bool                timeout;
     // server config
     int                 http_fd; // UPDATE
 
