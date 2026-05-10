@@ -23,14 +23,16 @@ HttpResponse RequestHandler::handleRequest(const Client& client)
     if (Logger::isEnabled(Logger::DEBUG))
         Logger::debug("Handling request for URI: " + request.uri);
 
-	for(size_t i = 0; i < location->getMethods().size(); i++) {
+		
+	for (size_t i = 0; i < location->getMethods().size(); i++) {
 		if (location->getMethods()[i] == request.method)
 			break ;
 		if (i == location->getMethods().size() - 1)
 			return makeErrorResponse(405, server);
 	}
+	if (location->getMethods().empty() && (request.method != "GET"))
+		return (makeErrorResponse(405, server));
 	
-
     if (request.method == "GET")
         return handleGet(request.uri, server, location);
     else if (request.method == "POST")

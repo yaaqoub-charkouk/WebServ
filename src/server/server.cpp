@@ -95,7 +95,7 @@ void    Server::run()
 {
     while (1337)
     {
-        int ret = poll(pollFds.data(), pollFds.size(), 1000);
+        int ret = poll(pollFds.data(), pollFds.size(), 6000);
 
         if (ret < 0)
             throw std::runtime_error("poll failed can't listen on servers sockets");
