@@ -78,6 +78,7 @@ void Validator::validateLocation(const LocationConfig& location)
 		throw ValidatorException("Location path cannot be empty");
 
 	const std::vector<std::string>& methods = location.getMethods();
+		
 	for (size_t i = 0; i < methods.size(); ++i)
 	{
 		if (!isValidMethod(methods[i]))

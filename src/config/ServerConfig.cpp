@@ -44,6 +44,24 @@ ServerConfig::~ServerConfig()
 {
 }
 
+int ServerConfig::getPort() const { return port; }
+const std::string& ServerConfig::getHost() const { return host; }
+const std::string& ServerConfig::getServerName() const { return serverName; }
+const std::string& ServerConfig::getRoot() const { return root; }
+const std::string& ServerConfig::getIndex() const { return index; }
+size_t ServerConfig::getClientMaxBodySize() const { return clientMaxBodySize; }
+const std::map<int, std::string>& ServerConfig::getErrorPages() const { return errorPages; }
+const std::vector<LocationConfig>& ServerConfig::getLocations() const { return locations; }
+
+void ServerConfig::setPort(int port) { this->port = port; }
+void ServerConfig::setHost(const std::string& host) { this->host = host; }
+void ServerConfig::setServerName(const std::string& serverName) { this->serverName = serverName; }
+void ServerConfig::setRoot(const std::string& root) { this->root = root; }
+void ServerConfig::setIndex(const std::string& index) { this->index = index; }
+void ServerConfig::setClientMaxBodySize(size_t size) { this->clientMaxBodySize = size; }
+void ServerConfig::addErrorPage(int code, const std::string& path) { errorPages[code] = path; }
+void ServerConfig::addLocation(const LocationConfig& location) { locations.push_back(location); }
+
 std::string ServerConfig::getErrorPage(int code) const
 {
 	std::map<int, std::string>::const_iterator it = errorPages.find(code);

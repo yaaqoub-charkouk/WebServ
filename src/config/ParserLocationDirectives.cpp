@@ -31,7 +31,12 @@ void Parser::parseMethods(LocationConfig& location)
 		location.addMethod(currentToken().value);
 		advance();
 	}
-
+	if(location.getMethods().empty())
+	{
+		std::stringstream ss;
+		ss << "Methods cannot be Empty";
+		throw ParserException(ss.str());
+	}
 	expect(TOKEN_SEMICOLON, "methods directive");
 	advance();
 }
