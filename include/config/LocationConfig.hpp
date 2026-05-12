@@ -47,24 +47,4 @@ public:
 	bool hasRedirect() const;
 };
 
-// Inline implementations for simple getters
-inline const std::string& LocationConfig::getPath() const { return path; }
-inline const std::vector<std::string>& LocationConfig::getMethods() const { return methods; }
-inline const std::string& LocationConfig::getRoot() const { return root; }
-inline const std::string& LocationConfig::getIndex() const { return index; }
-inline bool LocationConfig::getAutoindex() const { return autoindex; }
-inline const std::string& LocationConfig::getUploadStore() const { return uploadStore; }
-inline const std::map<std::string, std::string>& LocationConfig::getCgiExtensions() const { return cgiExtensions; }
-inline int LocationConfig::getRedirectCode() const { return redirectCode; }
-inline const std::string& LocationConfig::getRedirectUrl() const { return redirectUrl; }
-
-inline void LocationConfig::setPath(const std::string& path) { this->path = path; }
-inline void LocationConfig::addMethod(const std::string& method) { methods.push_back(method); }
-inline void LocationConfig::setRoot(const std::string& root) { this->root = root; }
-inline void LocationConfig::setIndex(const std::string& index) { this->index = index; }
-inline void LocationConfig::setAutoindex(bool autoindex) { this->autoindex = autoindex; }
-inline void LocationConfig::setUploadStore(const std::string& uploadStore) { this->uploadStore = uploadStore; }
-inline void LocationConfig::addCgiExtension(const std::string& ext, const std::string& interpreter) { cgiExtensions[ext] = interpreter; }
-inline bool LocationConfig::hasRedirect() const { return redirectCode != 0; }
-
 #endif

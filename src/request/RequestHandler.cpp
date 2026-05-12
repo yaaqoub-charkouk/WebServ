@@ -21,7 +21,7 @@ HttpResponse RequestHandler::handleRequest(const Client& client)
     const LocationConfig* location = findLocation(request.uri, server);
 
     if (Logger::isEnabled(Logger::DEBUG))
-        Logger::debug("Handling request for URI: " + request.uri);
+            Logger::debug("Handling request for URI: " + request.uri);
 
 		
 	for (size_t i = 0; i < location->getMethods().size(); i++) {
